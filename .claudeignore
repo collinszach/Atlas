@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.superpowers/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+.next/
+*.pem
+*.key
+minio-data/
+postgres-data/

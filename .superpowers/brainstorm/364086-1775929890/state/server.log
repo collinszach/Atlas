@@ -1,0 +1,4 @@
+{"type":"server-started","port":56168,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:56168","screen_dir":"/home/zach/Atlas/.superpowers/brainstorm/364086-1775929890/content","state_dir":"/home/zach/Atlas/.superpowers/brainstorm/364086-1775929890/state"}
+{"type":"screen-added","file":"/home/zach/Atlas/.superpowers/brainstorm/364086-1775929890/content/nav-layout.html"}
+{"type":"screen-added","file":"/home/zach/Atlas/.superpowers/brainstorm/364086-1775929890/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}

@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --atlas-bg: #0a0e1a;
+    --atlas-surface: #111827;
+    --atlas-border: #1e2d45;
+    --atlas-accent: #c9a84c;
+    --atlas-accent-cool: #4a90d9;
+    --atlas-text: #e2e8f0;
+    --atlas-text-muted: #64748b;
+  }
+
+  html,
+  body {
+    @apply bg-atlas-bg text-atlas-text font-sans;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* maplibre-gl requires a non-zero size container */
+  #map-container {
+    width: 100%;
+    height: 100%;
+  }
+}

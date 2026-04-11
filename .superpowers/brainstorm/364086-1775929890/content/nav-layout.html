@@ -1,0 +1,109 @@
+<style>
+  .preview-wrap { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; }
+  .preview { flex: 1; min-width: 280px; border: 1px solid #1e2d45; border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
+  .preview.selected { border-color: #c9a84c; box-shadow: 0 0 0 2px #c9a84c44; }
+  .preview-label { background: #111827; padding: 8px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #c9a84c; border-bottom: 1px solid #1e2d45; }
+  .preview-body { background: #0a0e1a; height: 220px; display: flex; position: relative; overflow: hidden; }
+
+  /* Option A: Left sidebar */
+  .sidebar-a { width: 52px; background: #111827; border-right: 1px solid #1e2d45; display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 14px; }
+  .sidebar-a .icon { width: 28px; height: 28px; border-radius: 6px; background: #1e2d45; }
+  .sidebar-a .icon.active { background: #c9a84c22; border: 1px solid #c9a84c55; }
+  .main-a { flex: 1; background: #0a0e1a; position: relative; }
+  .map-placeholder { position: absolute; inset: 0; background: radial-gradient(ellipse at 55% 50%, #0d1829 0%, #0a0e1a 70%); }
+  .map-grid { position: absolute; inset: 0; background-image: linear-gradient(#1e2d4512 1px, transparent 1px), linear-gradient(90deg, #1e2d4512 1px, transparent 1px); background-size: 30px 30px; }
+  .country-blob { position: absolute; border-radius: 50%; opacity: 0.35; }
+
+  /* Option B: Top nav */
+  .topnav-b { position: absolute; top: 0; left: 0; right: 0; height: 36px; background: #111827; border-bottom: 1px solid #1e2d45; display: flex; align-items: center; padding: 0 14px; gap: 18px; z-index: 1; }
+  .topnav-b .logo { font-size: 11px; font-weight: 700; color: #c9a84c; letter-spacing: 0.12em; text-transform: uppercase; margin-right: 8px; }
+  .topnav-b .nav-item { font-size: 10px; color: #64748b; }
+  .topnav-b .nav-item.active { color: #e2e8f0; }
+  .main-b { position: absolute; inset: 36px 0 0 0; }
+
+  /* Option C: Bottom tab bar (mobile-first) */
+  .main-c { position: absolute; inset: 0 0 40px 0; }
+  .bottomnav-c { position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: #111827; border-top: 1px solid #1e2d45; display: flex; align-items: center; justify-content: space-around; }
+  .bottomnav-c .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .bottomnav-c .tab-icon { width: 16px; height: 16px; border-radius: 3px; background: #1e2d45; }
+  .bottomnav-c .tab.active .tab-icon { background: #c9a84c33; border: 1px solid #c9a84c66; }
+  .bottomnav-c .tab-label { font-size: 8px; color: #64748b; }
+  .bottomnav-c .tab.active .tab-label { color: #c9a84c; }
+</style>
+
+<h2>Navigation Layout</h2>
+<p class="subtitle">How does the app shell look? The globe/map is always the hero.</p>
+
+<div class="preview-wrap">
+  <div class="preview" data-choice="a" onclick="toggleSelect(this)">
+    <div class="preview-label">A — Icon sidebar (collapsed)</div>
+    <div class="preview-body">
+      <div class="sidebar-a">
+        <div style="font-size:9px;color:#c9a84c;font-weight:700;letter-spacing:0.1em">A</div>
+        <div class="icon active"></div>
+        <div class="icon"></div>
+        <div class="icon"></div>
+        <div class="icon"></div>
+        <div class="icon"></div>
+        <div style="flex:1"></div>
+        <div class="icon"></div>
+      </div>
+      <div class="main-a">
+        <div class="map-placeholder"><div class="map-grid"></div></div>
+        <div class="country-blob" style="width:60px;height:40px;background:#4a90d9;top:60px;left:100px"></div>
+        <div class="country-blob" style="width:90px;height:55px;background:#4a90d9;top:90px;left:50px"></div>
+        <div class="country-blob" style="width:45px;height:30px;background:#c9a84c;top:50px;left:170px"></div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;font-size:11px;color:#64748b;">
+      Icon-only rail, ~52px wide. Map gets maximum width. Tooltips on hover. Like VS Code / Linear.
+    </div>
+  </div>
+
+  <div class="preview" data-choice="b" onclick="toggleSelect(this)">
+    <div class="preview-label">B — Top navigation bar</div>
+    <div class="preview-body" style="position:relative;">
+      <div class="topnav-b">
+        <span class="logo">Atlas</span>
+        <span class="nav-item active">Map</span>
+        <span class="nav-item">Trips</span>
+        <span class="nav-item">Plan</span>
+        <span class="nav-item">Discover</span>
+        <span class="nav-item">Stats</span>
+        <div style="flex:1"></div>
+        <div style="width:20px;height:20px;border-radius:50%;background:#1e2d45;"></div>
+      </div>
+      <div class="main-b">
+        <div class="map-placeholder"><div class="map-grid"></div></div>
+        <div class="country-blob" style="width:60px;height:40px;background:#4a90d9;top:40px;left:80px"></div>
+        <div class="country-blob" style="width:90px;height:55px;background:#4a90d9;top:70px;left:30px"></div>
+        <div class="country-blob" style="width:45px;height:30px;background:#c9a84c;top:30px;left:150px"></div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;font-size:11px;color:#64748b;">
+      Horizontal nav at top. Full page width for map below. Familiar pattern — less immersive on desktop.
+    </div>
+  </div>
+
+  <div class="preview" data-choice="c" onclick="toggleSelect(this)">
+    <div class="preview-label">C — Bottom tab bar (mobile-first)</div>
+    <div class="preview-body" style="position:relative;">
+      <div class="main-c">
+        <div class="map-placeholder"><div class="map-grid"></div></div>
+        <div class="country-blob" style="width:60px;height:40px;background:#4a90d9;top:55px;left:90px"></div>
+        <div class="country-blob" style="width:90px;height:55px;background:#4a90d9;top:80px;left:35px"></div>
+        <div class="country-blob" style="width:45px;height:30px;background:#c9a84c;top:45px;left:155px"></div>
+      </div>
+      <div class="bottomnav-c">
+        <div class="tab active"><div class="tab-icon"></div><div class="tab-label">Map</div></div>
+        <div class="tab"><div class="tab-icon"></div><div class="tab-label">Trips</div></div>
+        <div class="tab"><div class="tab-icon"></div><div class="tab-label">Plan</div></div>
+        <div class="tab"><div class="tab-icon"></div><div class="tab-label">Discover</div></div>
+        <div class="tab"><div class="tab-icon"></div><div class="tab-label">Stats</div></div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;font-size:11px;color:#64748b;">
+      Tabs at bottom — native mobile feel, good for PWA. Map gets full viewport on desktop too.
+    </div>
+  </div>
+</div>

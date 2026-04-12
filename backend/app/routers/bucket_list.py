@@ -7,6 +7,7 @@ from app.auth import CurrentUser
 from app.database import get_db
 from app.models.bucket_list import BucketList
 from app.schemas.bucket_list import BucketListCreate, BucketListRead, BucketListUpdate
+from app.services import ai as ai_service
 
 router = APIRouter(prefix="/bucket-list", tags=["bucket-list"])
 
@@ -71,3 +72,33 @@ async def delete_bucket_list_item(
         raise HTTPException(status_code=404, detail="Bucket list item not found")
     await db.delete(item)
     await db.flush()
+
+
+@router.post("/{item_id}/enrich", response_model=BucketListRead)
+async def enrich_bucket_list_item(
+    item_id: uuid.UUID,
+    user_id: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+) -> BucketList:
+    """Generate and persist an AI summary for a bucket list item."""
+    result = await db.execute(
+        select(BucketList).where(BucketList.id == item_id, BucketList.user_id == user_id)
+    )
+    item = result.scalar_one_or_none()
+    if item is None:
+        raise HTTPException(status_code=404, detail="Bucket list item not found")
+
+    try:
+        summary = await ai_service.enrich_bucket_list_item(
+            country_name=item.country_name,
+            country_code=item.country_code,
+            city=item.city,
+            reason=item.reason,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="AI service unavailable") from exc
+
+    item.ai_summary = summary
+    await db.flush()
+    await db.refresh(item)
+    return item

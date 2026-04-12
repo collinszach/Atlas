@@ -67,6 +67,20 @@ async def db_session():
 _TEST_USER_ID = "user_test_atlas_001"
 _OTHER_USER_ID = "user_test_other_002"
 
+# Public aliases for import in test modules
+TEST_USER_ID = _TEST_USER_ID
+OTHER_USER_ID = _OTHER_USER_ID
+
+
+@pytest_asyncio.fixture
+async def auth_client(client, seed_test_users):
+    """Client with auth dependency overridden to TEST_USER_ID."""
+    from app.main import app
+    from app.auth import get_current_user_id
+    app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
+    yield client
+    app.dependency_overrides.pop(get_current_user_id, None)
+
 
 @pytest_asyncio.fixture(autouse=False, scope="function")
 async def seed_test_users(db_session):

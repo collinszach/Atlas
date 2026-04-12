@@ -1,10 +1,8 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import CurrentUser
-from app.database import get_db
 from app.services import open_meteo
 from app.services.map_cache import get_cached, set_cached
 
@@ -32,7 +30,6 @@ class BestTimeResponse(BaseModel):
 async def best_time(
     country_code: str,
     user_id: CurrentUser,
-    db: AsyncSession = Depends(get_db),
     city: str | None = Query(default=None),
 ) -> BestTimeResponse:
     """Return 30-year monthly climate averages and suggested best months to visit."""

@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     minio_public_url: str = "http://localhost:9000"
     storage_backend: str = "minio"
 
+    # AI
+    anthropic_api_key: str = ""
+
     # App
     app_env: str = "development"
 

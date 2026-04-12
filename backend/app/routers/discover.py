@@ -34,7 +34,7 @@ async def best_time(
 ) -> BestTimeResponse:
     """Return 30-year monthly climate averages and suggested best months to visit."""
     search_name = city if city else country_code
-    cache_key = f"discover:best-time:{search_name.lower()}"
+    cache_key = f"discover:best-time:{country_code.lower()}:{(city or '').lower()}"
     cached = await get_cached(cache_key)
     if cached is not None:
         return BestTimeResponse(**cached)
@@ -44,13 +44,13 @@ async def best_time(
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
-        logger.warning("Open-Meteo geocode failed: %s", exc)
+        logger.warning("Open-Meteo geocode failed for %r: %s", search_name, exc)
         raise HTTPException(status_code=502, detail="Geocoding service unavailable")
 
     try:
         monthly_data = await open_meteo.fetch_monthly_averages(lat, lng)
     except Exception as exc:
-        logger.warning("Open-Meteo climate failed: %s", exc)
+        logger.warning("Open-Meteo climate fetch failed for (%s, %s): %s", lat, lng, exc)
         raise HTTPException(status_code=502, detail="Climate data service unavailable")
 
     best = open_meteo.pick_best_months(monthly_data)

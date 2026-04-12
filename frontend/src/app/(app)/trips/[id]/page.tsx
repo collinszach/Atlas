@@ -150,7 +150,7 @@ export default function TripDetailPage() {
                       {leg.departure_at.slice(0, 10)}
                     </p>
                   )}
-                  {leg.duration_min && (
+                  {leg.duration_min != null && (
                     <p className="text-xs text-atlas-muted">
                       {Math.floor(leg.duration_min / 60)}h {leg.duration_min % 60}m
                     </p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useMapStore } from "@/store/mapStore";
@@ -16,6 +16,7 @@ export function WorldMap() {
   const { data: countries = [] } = useMapCountries();
   const { data: cities = [] } = useMapCities();
   const { data: arcs = [] } = useMapArcs();
+  const [mapLoaded, setMapLoaded] = useState(false);
   const countriesRef = useRef(countries);
 
   useEffect(() => { countriesRef.current = countries; }, [countries]);
@@ -31,6 +32,8 @@ export function WorldMap() {
       zoom: 1.5,
       projection: projection === "globe" ? "globe" : "mercator",
     } as maplibregl.MapOptions);
+
+    map.current.on("load", () => setMapLoaded(true));
 
     map.current.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
 
@@ -60,14 +63,14 @@ export function WorldMap() {
 
   // Update choropleth when countries data changes
   useEffect(() => {
-    if (!map.current || !map.current.isStyleLoaded() || countries.length === 0) return;
+    if (!map.current || !mapLoaded || countries.length === 0) return;
     const expr = buildChoroplethExpression(countries);
     map.current.setPaintProperty("country-fill", "fill-color", expr);
-  }, [countries]);
+  }, [countries, mapLoaded]);
 
   // Add city markers when cities data changes
   useEffect(() => {
-    if (!map.current || !map.current.isStyleLoaded() || cities.length === 0) return;
+    if (!map.current || !mapLoaded || cities.length === 0) return;
 
     const geojson: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
@@ -95,11 +98,11 @@ export function WorldMap() {
         },
       });
     }
-  }, [cities]);
+  }, [cities, mapLoaded]);
 
   // Flight arc layer
   useEffect(() => {
-    if (!map.current || !map.current.isStyleLoaded() || arcs.length === 0) return;
+    if (!map.current || !mapLoaded || arcs.length === 0) return;
 
     const geojson: GeoJSON.FeatureCollection = {
       type: "FeatureCollection",
@@ -138,7 +141,7 @@ export function WorldMap() {
         map.current.getLayer("city-markers") ? "city-markers" : undefined,
       );
     }
-  }, [arcs]);
+  }, [arcs, mapLoaded]);
 
   const handleToggleProjection = useCallback(() => {
     const next = projection === "globe" ? "mercator" : "globe";

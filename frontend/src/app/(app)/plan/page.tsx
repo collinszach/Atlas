@@ -106,6 +106,7 @@ export default function PlanPage() {
   const [addReason, setAddReason] = useState("");
 
   const [enrichingId, setEnrichingId] = useState<string | null>(null);
+  const [enrichError, setEnrichError] = useState<string | null>(null);
 
   const { data: tripsData, isLoading: tripsLoading } = useTrips();
   const trips = tripsData?.items ?? [];
@@ -115,9 +116,12 @@ export default function PlanPage() {
   const enrichItem = useEnrichBucketListItem();
 
   async function handleEnrich(id: string) {
+    setEnrichError(null);
     setEnrichingId(id);
     try {
       await enrichItem.mutateAsync(id);
+    } catch {
+      setEnrichError("Failed to enrich. Please try again.");
     } finally {
       setEnrichingId(null);
     }
@@ -190,9 +194,14 @@ export default function PlanPage() {
         {/* Bucket List */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-atlas-text uppercase tracking-widest">
-              Bucket List
-            </h2>
+            <div>
+              <h2 className="text-sm font-semibold text-atlas-text uppercase tracking-widest">
+                Bucket List
+              </h2>
+              {enrichError && (
+                <p className="text-xs text-red-400 mt-0.5">{enrichError}</p>
+              )}
+            </div>
             <button
               onClick={() => setShowAddForm((v) => !v)}
               className="flex items-center gap-1.5 text-xs text-atlas-accent hover:text-atlas-accent/80 transition-colors"

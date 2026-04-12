@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sparkles, MapPin, ChevronRight, X, Loader2 } from "lucide-react";
 import { useRecommendations, useDestinationBrief } from "@/hooks/useDiscover";
+import { useMapCountries } from "@/hooks/useMapData";
 import type { Recommendation, DestinationBriefResponse, RecommendationPreferences } from "@/types";
 
 const MONTH_NAMES = [
@@ -10,7 +11,7 @@ const MONTH_NAMES = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-const CLIMATE_OPTIONS = ["warm", "cool", "tropical", "temperate", "any"];
+const CLIMATE_OPTIONS = ["warm", "cool", "tropical", "temperate"];
 const BUDGET_OPTIONS = ["budget", "moderate", "luxury"];
 const INTEREST_OPTIONS = ["food", "history", "hiking", "beaches", "culture", "nightlife", "wildlife", "architecture"];
 
@@ -137,9 +138,11 @@ export default function DiscoverPage() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [region, setRegion] = useState("");
   const [activeBrief, setActiveBrief] = useState<DestinationBriefResponse | null>(null);
+  const [briefError, setBriefError] = useState<string | null>(null);
 
   const recommend = useRecommendations();
   const getBrief = useDestinationBrief();
+  const { data: mapCountries } = useMapCountries();
 
   function toggleInterest(interest: string) {
     setSelectedInterests((prev) =>
@@ -154,16 +157,22 @@ export default function DiscoverPage() {
     if (month) prefs.travel_month = month;
     if (selectedInterests.length > 0) prefs.interests = selectedInterests;
     if (region) prefs.departure_region = region;
-    await recommend.mutateAsync({ preferences: prefs, already_visited: [] });
+    const alreadyVisited = mapCountries?.map((c) => c.country_code) ?? [];
+    await recommend.mutateAsync({ preferences: prefs, already_visited: alreadyVisited });
   }
 
   async function handleViewBrief(rec: Recommendation) {
-    const brief = await getBrief.mutateAsync({
-      country: rec.country,
-      country_code: rec.country_code ?? undefined,
-      city: rec.city ?? undefined,
-    });
-    setActiveBrief(brief);
+    setBriefError(null);
+    try {
+      const brief = await getBrief.mutateAsync({
+        country: rec.country,
+        country_code: rec.country_code ?? undefined,
+        city: rec.city ?? undefined,
+      });
+      setActiveBrief(brief);
+    } catch {
+      setBriefError("Failed to load destination brief. Try again.");
+    }
   }
 
   return (
@@ -277,6 +286,10 @@ export default function DiscoverPage() {
               <RecommendationCard key={i} rec={rec} onViewBrief={handleViewBrief} />
             ))}
           </div>
+        )}
+
+        {briefError && (
+          <p className="mt-4 text-xs text-red-400">{briefError}</p>
         )}
 
         {getBrief.isPending && (

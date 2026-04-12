@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, MapPin, Globe, Trash2, Star } from "lucide-react";
+import { Plus, MapPin, Globe, Trash2, Star, Sparkles, Loader2 } from "lucide-react";
 import { useTrips } from "@/hooks/useTrips";
-import { useBucketList, useDeleteBucketListItem, useAddBucketListItem } from "@/hooks/useBucketList";
+import { useBucketList, useDeleteBucketListItem, useAddBucketListItem, useEnrichBucketListItem } from "@/hooks/useBucketList";
 import type { BucketListItem } from "@/types";
 
 const SEASON_LABELS: Record<string, string> = {
@@ -37,7 +37,17 @@ function PriorityStars({ priority }: { priority: number }) {
   );
 }
 
-function BucketCard({ item, onDelete }: { item: BucketListItem; onDelete: () => void }) {
+function BucketCard({
+  item,
+  onDelete,
+  onEnrich,
+  isEnriching,
+}: {
+  item: BucketListItem;
+  onDelete: () => void;
+  onEnrich: () => void;
+  isEnriching: boolean;
+}) {
   return (
     <div className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-3 flex items-start gap-4">
       <div className="flex h-8 w-8 items-center justify-center rounded bg-atlas-accent/10 text-atlas-accent shrink-0 mt-0.5">
@@ -50,12 +60,31 @@ function BucketCard({ item, onDelete }: { item: BucketListItem; onDelete: () => 
         {item.reason && (
           <p className="text-xs text-atlas-muted mt-0.5 line-clamp-2">{item.reason}</p>
         )}
+        {item.ai_summary && (
+          <blockquote className="mt-2 border-l-2 border-atlas-accent/40 pl-3 text-xs italic text-atlas-muted leading-relaxed">
+            {item.ai_summary}
+          </blockquote>
+        )}
         <div className="flex items-center gap-3 mt-1.5">
           <PriorityStars priority={item.priority} />
           {item.ideal_season && (
             <span className="text-xs text-atlas-muted font-mono">
               {SEASON_LABELS[item.ideal_season] ?? item.ideal_season}
             </span>
+          )}
+          {!item.ai_summary && (
+            <button
+              onClick={onEnrich}
+              disabled={isEnriching}
+              className="flex items-center gap-1 text-xs text-atlas-muted hover:text-atlas-accent transition-colors disabled:opacity-50"
+            >
+              {isEnriching ? (
+                <Loader2 size={10} className="animate-spin" />
+              ) : (
+                <Sparkles size={10} />
+              )}
+              Enrich
+            </button>
           )}
         </div>
       </div>
@@ -76,11 +105,23 @@ export default function PlanPage() {
   const [addCountry, setAddCountry] = useState("");
   const [addReason, setAddReason] = useState("");
 
+  const [enrichingId, setEnrichingId] = useState<string | null>(null);
+
   const { data: tripsData, isLoading: tripsLoading } = useTrips();
   const trips = tripsData?.items ?? [];
   const { data: bucketList = [], isLoading: bucketLoading } = useBucketList();
   const deleteItem = useDeleteBucketListItem();
   const addItem = useAddBucketListItem();
+  const enrichItem = useEnrichBucketListItem();
+
+  async function handleEnrich(id: string) {
+    setEnrichingId(id);
+    try {
+      await enrichItem.mutateAsync(id);
+    } finally {
+      setEnrichingId(null);
+    }
+  }
 
   const plannedTrips = trips.filter((t) => t.status === "planned" || t.status === "dream");
 
@@ -213,6 +254,8 @@ export default function PlanPage() {
                 key={item.id}
                 item={item}
                 onDelete={() => deleteItem.mutate(item.id)}
+                onEnrich={() => handleEnrich(item.id)}
+                isEnriching={enrichingId === item.id}
               />
             ))}
           </div>

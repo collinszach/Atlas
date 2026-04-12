@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 from unittest.mock import AsyncMock, patch
 from httpx import AsyncClient
 
@@ -51,7 +52,7 @@ SAMPLE_BRIEF = {
 }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_client(client):
     from app.auth import get_current_user_id
     app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID

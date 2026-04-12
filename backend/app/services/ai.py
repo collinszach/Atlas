@@ -19,6 +19,8 @@ MODEL = "claude-haiku-4-5-20251001"
 def _get_client() -> AsyncAnthropic:
     global _client
     if _client is None:
+        if not settings.anthropic_api_key:
+            raise RuntimeError("ANTHROPIC_API_KEY is not configured")
         _client = AsyncAnthropic(api_key=settings.anthropic_api_key)
     return _client
 

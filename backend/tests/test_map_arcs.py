@@ -59,10 +59,10 @@ async def test_map_arcs_excludes_flights_without_geo(authed_client):
     await _seed_flight(authed_client, with_geo=False)
     resp = await authed_client.get("/api/v1/map/arcs")
     assert resp.status_code == 200
-    # The no-geo flight should not appear
+    # The no-geo flight should not appear in the arc list at all
     arcs = resp.json()
-    no_geo_arcs = [a for a in arcs if a.get("origin_lat") is None]
-    assert len(no_geo_arcs) == 0
+    ua900_arcs = [a for a in arcs if a.get("flight_number") == "UA900"]
+    assert len(ua900_arcs) == 0
 
 
 @pytest.mark.asyncio
@@ -92,8 +92,16 @@ async def test_map_arcs_excludes_non_flight_legs(authed_client):
 @pytest.mark.integration
 async def test_map_arcs_user_isolation(client, seed_test_users):
     """User B's flights do not appear in User A's arc response."""
+    import redis.asyncio as aioredis
+    from app.config import settings
     from app.main import app
     from app.auth import get_current_user_id
+
+    # Clear cache for both users so we don't read stale results
+    r = aioredis.from_url(settings.redis_url, decode_responses=True)
+    await r.delete(f"map:arcs:{TEST_USER_ID}")
+    await r.delete(f"map:arcs:{OTHER_USER_ID}")
+    await r.aclose()
 
     # User B seeds a flight
     app.dependency_overrides[get_current_user_id] = lambda: OTHER_USER_ID

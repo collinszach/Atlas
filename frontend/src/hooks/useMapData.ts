@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { apiGet } from "@/lib/api";
-import type { MapCountry, MapCity } from "@/types";
+import type { MapCountry, MapCity, MapArc } from "@/types";
 
 export function useMapCountries() {
   const { getToken } = useAuth();
@@ -24,6 +24,19 @@ export function useMapCities() {
       const token = await getToken();
       if (!token) throw new Error("Not authenticated");
       return apiGet<MapCity[]>("/map/cities", token);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useMapArcs() {
+  const { getToken } = useAuth();
+  return useQuery<MapArc[]>({
+    queryKey: ["map", "arcs"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+      return apiGet<MapArc[]>("/map/arcs", token);
     },
     staleTime: 5 * 60 * 1000,
   });

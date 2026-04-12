@@ -65,7 +65,7 @@ export function useSetCoverPhoto(tripId: string) {
   return useMutation<{ cover_photo_id: string }, Error, string>({
     mutationFn: async (photoId: string) => {
       const token = await getToken();
-      return apiPost(`/photos/${photoId}/set-cover`, {}, token!);
+      return apiPost(`/photos/${photoId}/set-cover`, token!, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["photos", tripId] });

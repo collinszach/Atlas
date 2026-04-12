@@ -77,12 +77,76 @@ export interface Photo {
   size_bytes: number | null;
   is_cover: boolean;
   order_index: number | null;
-  created_at: string;
   url: string;
   thumbnail_url: string | null;
+  created_at: string;
 }
 
 export interface PhotoListResponse {
   items: Photo[];
   total: number;
+  page: number;
+  limit: number;
+}
+
+export interface TransportLeg {
+  id: string;
+  trip_id: string;
+  user_id: string;
+  type: "flight" | "car" | "train" | "ferry" | "bus" | "walk" | "other";
+  flight_number: string | null;
+  airline: string | null;
+  origin_iata: string | null;
+  dest_iata: string | null;
+  origin_city: string | null;
+  dest_city: string | null;
+  departure_at: string | null;
+  arrival_at: string | null;
+  duration_min: number | null;
+  distance_km: number | null;
+  seat_class: string | null;
+  booking_ref: string | null;
+  cost: number | null;
+  currency: string;
+  notes: string | null;
+  origin_lat: number | null;
+  origin_lng: number | null;
+  dest_lat: number | null;
+  dest_lng: number | null;
+  created_at: string;
+}
+
+export interface Accommodation {
+  id: string;
+  trip_id: string;
+  user_id: string;
+  destination_id: string | null;
+  name: string;
+  type: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  check_in: string | null;
+  check_out: string | null;
+  confirmation: string | null;
+  cost_per_night: number | null;
+  currency: string;
+  rating: number | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface MapArc {
+  id: string;
+  trip_id: string;
+  flight_number: string | null;
+  origin_city: string | null;
+  dest_city: string | null;
+  origin_iata: string | null;
+  dest_iata: string | null;
+  departure_at: string | null;
+  origin_lat: number;
+  origin_lng: number;
+  dest_lat: number;
+  dest_lng: number;
 }

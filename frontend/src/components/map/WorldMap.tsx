@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useMapStore } from "@/store/mapStore";
-import { useMapCountries, useMapCities } from "@/hooks/useMapData";
+import { useMapCountries, useMapCities, useMapArcs } from "@/hooks/useMapData";
 import { buildChoroplethExpression, ATLAS_DARK_STYLE } from "@/lib/maplibre";
 import { MapControls } from "./MapControls";
 import { CountryPanel } from "./CountryPanel";
@@ -15,6 +15,7 @@ export function WorldMap() {
   const { projection, setProjection, setSelectedCountry } = useMapStore();
   const { data: countries = [] } = useMapCountries();
   const { data: cities = [] } = useMapCities();
+  const { data: arcs = [] } = useMapArcs();
   const countriesRef = useRef(countries);
 
   useEffect(() => { countriesRef.current = countries; }, [countries]);
@@ -95,6 +96,49 @@ export function WorldMap() {
       });
     }
   }, [cities]);
+
+  // Flight arc layer
+  useEffect(() => {
+    if (!map.current || !map.current.isStyleLoaded() || arcs.length === 0) return;
+
+    const geojson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: arcs.map((a) => ({
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: [
+            [a.origin_lng, a.origin_lat],
+            [a.dest_lng, a.dest_lat],
+          ],
+        },
+        properties: {
+          flight_number: a.flight_number,
+          trip_id: a.trip_id,
+        },
+      })),
+    };
+
+    const src = map.current.getSource("flight-arcs") as maplibregl.GeoJSONSource | undefined;
+    if (src) {
+      src.setData(geojson);
+    } else {
+      map.current.addSource("flight-arcs", { type: "geojson", data: geojson });
+      map.current.addLayer(
+        {
+          id: "flight-arcs",
+          type: "line",
+          source: "flight-arcs",
+          paint: {
+            "line-color": "#4a90d9",
+            "line-width": 1,
+            "line-opacity": 0.5,
+          },
+        },
+        map.current.getLayer("city-markers") ? "city-markers" : undefined,
+      );
+    }
+  }, [arcs]);
 
   const handleToggleProjection = useCallback(() => {
     const next = projection === "globe" ? "mercator" : "globe";

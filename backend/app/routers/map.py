@@ -147,6 +147,7 @@ async def get_map_planned(
             FROM destinations d
             JOIN trips t ON t.id = d.trip_id
             WHERE d.user_id = :user_id
+              AND t.user_id = :user_id
               AND t.status IN ('planned', 'dream')
               AND d.location IS NOT NULL
             ORDER BY d.city, d.country_code, d.arrival_date NULLS LAST

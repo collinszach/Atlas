@@ -96,6 +96,11 @@ async def test_map_planned_user_isolation(client, seed_test_users):
               "latitude": 37.5665, "longitude": 126.978},
     )
 
+    # Flush TEST_USER cache so the GET hits the DB fresh
+    r2 = aioredis.from_url(settings.redis_url, decode_responses=True)
+    await r2.delete(f"map:planned:{TEST_USER_ID}")
+    await r2.aclose()
+
     app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
     try:
         resp = await client.get("/api/v1/map/planned")

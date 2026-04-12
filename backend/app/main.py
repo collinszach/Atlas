@@ -8,6 +8,7 @@ from app.routers import users, trips, destinations, map as map_router
 from app.routers.photos import router as photos_router
 from app.routers.transport import router as transport_router
 from app.routers.accommodations import router as accommodations_router
+from app.routers.bucket_list import router as bucket_list_router
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ app.include_router(map_router.router, prefix="/api/v1")
 app.include_router(photos_router, prefix="/api/v1")
 app.include_router(transport_router, prefix="/api/v1")
 app.include_router(accommodations_router, prefix="/api/v1")
+app.include_router(bucket_list_router, prefix="/api/v1")
 
 
 @app.get("/health")

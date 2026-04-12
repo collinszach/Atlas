@@ -96,6 +96,20 @@ async def test_bucket_list_user_isolation(authed_client):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
+async def test_bucket_list_user_isolation_delete(authed_client):
+    from app.main import app
+    from app.auth import get_current_user_id
+    item_id = await _create_item(authed_client)
+    app.dependency_overrides[get_current_user_id] = lambda: OTHER_USER_ID
+    try:
+        resp = await authed_client.delete(f"/api/v1/bucket-list/{item_id}")
+    finally:
+        app.dependency_overrides.pop(get_current_user_id, None)
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_invalid_priority_rejected(authed_client):
     resp = await authed_client.post(
         "/api/v1/bucket-list",

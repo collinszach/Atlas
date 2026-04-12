@@ -18,7 +18,7 @@ class BucketList(Base):
     country_code: Mapped[str | None] = mapped_column(String(2), nullable=True)
     country_name: Mapped[str | None] = mapped_column(String, nullable=True)
     city: Mapped[str | None] = mapped_column(String, nullable=True)
-    priority: Mapped[int] = mapped_column(SmallInteger, server_default="3")
+    priority: Mapped[int] = mapped_column(SmallInteger, nullable=False, server_default="3")
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     ideal_season: Mapped[str | None] = mapped_column(String, nullable=True)
     estimated_cost: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)

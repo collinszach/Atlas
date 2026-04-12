@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column("country_code", sa.String(2), nullable=True),
         sa.Column("country_name", sa.String, nullable=True),
         sa.Column("city", sa.String, nullable=True),
-        sa.Column("priority", sa.SmallInteger, server_default="3"),
+        sa.Column("priority", sa.SmallInteger, nullable=False, server_default="3"),
         sa.Column("reason", sa.Text, nullable=True),
         sa.Column("ideal_season", sa.String, nullable=True),
         sa.Column("estimated_cost", sa.Numeric(10, 2), nullable=True),

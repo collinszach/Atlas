@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Plus, MapPin } from "lucide-react";
+import { Plus, MapPin, Camera } from "lucide-react";
 import { useTrip } from "@/hooks/useTrips";
 import { useDestinations } from "@/hooks/useDestinations";
 import { formatDateRange, nightsLabel } from "@/lib/utils";
@@ -23,13 +23,24 @@ export default function TripDetailPage() {
           <Link href="/trips" className="text-xs text-atlas-muted hover:text-atlas-text mb-3 inline-block">
             ← All trips
           </Link>
-          <h1 className="font-display text-3xl font-semibold text-atlas-text">{trip.title}</h1>
-          {trip.description && (
-            <p className="text-atlas-muted mt-2 text-sm">{trip.description}</p>
-          )}
-          <p className="text-xs font-mono text-atlas-muted mt-2">
-            {formatDateRange(trip.start_date, trip.end_date)}
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="font-display text-3xl font-semibold text-atlas-text">{trip.title}</h1>
+              {trip.description && (
+                <p className="text-atlas-muted mt-2 text-sm">{trip.description}</p>
+              )}
+              <p className="text-xs font-mono text-atlas-muted mt-2">
+                {formatDateRange(trip.start_date, trip.end_date)}
+              </p>
+            </div>
+            <Link
+              href={`/trips/${id}/photos`}
+              className="flex items-center gap-1.5 text-xs text-atlas-accent hover:text-atlas-accent/80 transition-colors shrink-0 ml-4 mt-1"
+            >
+              <Camera size={12} />
+              Photos
+            </Link>
+          </div>
         </div>
 
         {/* Destinations */}

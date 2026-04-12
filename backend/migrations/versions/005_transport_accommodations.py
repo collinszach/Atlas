@@ -64,6 +64,7 @@ def upgrade() -> None:
     op.add_column("accommodations", sa.Column("currency", sa.String(3), nullable=False, server_default="USD"))
     op.add_column("accommodations", sa.Column("rating", sa.SmallInteger, nullable=True))
     op.add_column("accommodations", sa.Column("notes", sa.Text, nullable=True))
+    op.execute("CREATE INDEX accommodations_location_idx ON accommodations USING GIST (location)")
     op.create_index("accommodations_user_id_idx", "accommodations", ["user_id"])
     op.create_index("accommodations_trip_id_idx", "accommodations", ["trip_id"])
 
@@ -71,6 +72,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index("accommodations_trip_id_idx", table_name="accommodations")
     op.drop_index("accommodations_user_id_idx", table_name="accommodations")
+    op.execute("DROP INDEX IF EXISTS accommodations_location_idx")
     for col in ["notes", "rating", "currency", "cost_per_night", "confirmation",
                 "check_out", "check_in", "location", "address", "type", "destination_id"]:
         op.drop_column("accommodations", col)

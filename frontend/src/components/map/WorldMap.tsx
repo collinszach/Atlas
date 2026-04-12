@@ -4,18 +4,20 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useMapStore } from "@/store/mapStore";
-import { useMapCountries, useMapCities, useMapArcs } from "@/hooks/useMapData";
+import { useMapCountries, useMapCities, useMapArcs, usePlannedCities } from "@/hooks/useMapData";
 import { buildChoroplethExpression, ATLAS_DARK_STYLE } from "@/lib/maplibre";
 import { MapControls } from "./MapControls";
 import { CountryPanel } from "./CountryPanel";
+import { MapFilterBar } from "./MapFilterBar";
 
 export function WorldMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const { projection, setProjection, setSelectedCountry } = useMapStore();
+  const { projection, setProjection, setSelectedCountry, filterStatus } = useMapStore();
   const { data: countries = [] } = useMapCountries();
   const { data: cities = [] } = useMapCities();
   const { data: arcs = [] } = useMapArcs();
+  const { data: plannedCities = [] } = usePlannedCities();
   const [mapLoaded, setMapLoaded] = useState(false);
   const countriesRef = useRef(countries);
 
@@ -143,6 +145,44 @@ export function WorldMap() {
     }
   }, [arcs, mapLoaded]);
 
+  // Planned destination ghost markers
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const visiblePlanned =
+      filterStatus === "all" || filterStatus === "planned" || filterStatus === "dream"
+        ? plannedCities
+        : [];
+
+    const geojson: GeoJSON.FeatureCollection = {
+      type: "FeatureCollection",
+      features: visiblePlanned.map((p) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [p.longitude, p.latitude] },
+        properties: { city: p.city, trip_title: p.trip_title },
+      })),
+    };
+
+    const src = map.current.getSource("planned-cities") as maplibregl.GeoJSONSource | undefined;
+    if (src) {
+      src.setData(geojson);
+    } else {
+      map.current.addSource("planned-cities", { type: "geojson", data: geojson });
+      map.current.addLayer({
+        id: "planned-markers",
+        type: "circle",
+        source: "planned-cities",
+        paint: {
+          "circle-radius": 5,
+          "circle-color": "transparent",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#c9a84c",
+          "circle-opacity": 0.8,
+        },
+      });
+    }
+  }, [plannedCities, mapLoaded, filterStatus]);
+
   const handleToggleProjection = useCallback(() => {
     const next = projection === "globe" ? "mercator" : "globe";
     setProjection(next);
@@ -155,6 +195,7 @@ export function WorldMap() {
   return (
     <div className="relative h-full w-full">
       <div ref={mapContainer} id="map-container" className="h-full w-full" />
+      <MapFilterBar />
       <MapControls onToggleProjection={handleToggleProjection} />
       <CountryPanel />
     </div>

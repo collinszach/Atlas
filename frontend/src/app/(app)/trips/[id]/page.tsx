@@ -3,13 +3,31 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints,
+  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useAuth } from "@clerk/nextjs";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTrip } from "@/hooks/useTrips";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useTransport } from "@/hooks/useTransport";
 import { formatDateRange, nightsLabel } from "@/lib/utils";
-import type { TransportLeg } from "@/types";
+import { apiPatch } from "@/lib/api";
+import type { TransportLeg, Destination } from "@/types";
 
 const TRANSPORT_ICONS: Record<TransportLeg["type"], React.ReactNode> = {
   flight: <Plane size={14} />,
@@ -31,11 +49,70 @@ function transportLabel(leg: TransportLeg): string {
   return leg.flight_number ?? leg.type;
 }
 
+function SortableDestination({ dest }: { dest: Destination }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: dest.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform) ?? undefined,
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-3 flex items-center gap-4"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="text-atlas-muted hover:text-atlas-text cursor-grab active:cursor-grabbing shrink-0"
+        aria-label="Drag to reorder"
+      >
+        <GripVertical size={14} />
+      </button>
+      <div className="flex h-8 w-8 items-center justify-center rounded bg-atlas-accent/10 text-atlas-accent shrink-0">
+        <MapPin size={14} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-atlas-text">{dest.city}</p>
+        <p className="text-xs text-atlas-muted">{dest.country_name}</p>
+      </div>
+      <div className="text-right shrink-0">
+        <p className="text-xs font-mono text-atlas-muted">{dest.arrival_date ?? "—"}</p>
+        <p className="text-xs text-atlas-muted">{nightsLabel(dest.nights)}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function TripDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { getToken } = useAuth();
+  const qc = useQueryClient();
   const { data: trip, isLoading: tripLoading } = useTrip(id);
   const { data: destinations = [], isLoading: destLoading } = useDestinations(id);
   const { data: transport = [], isLoading: transportLoading } = useTransport(id);
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = destinations.findIndex((d) => d.id === String(active.id));
+    const newIndex = destinations.findIndex((d) => d.id === String(over.id));
+    const reordered = arrayMove(destinations, oldIndex, newIndex);
+    const token = await getToken();
+    if (!token) return;
+    await apiPatch(
+      `/trips/${id}/destinations/reorder`,
+      token,
+      reordered.map((d, i) => ({ id: d.id, order_index: i }))
+    );
+    qc.invalidateQueries({ queryKey: ["destinations", id] });
+  }
 
   if (tripLoading) return <div className="p-6 text-atlas-muted text-sm">Loading...</div>;
   if (!trip) return <div className="p-6 text-red-400 text-sm">Trip not found.</div>;
@@ -80,28 +157,18 @@ export default function TripDetailPage() {
             </p>
           )}
 
-          <div className="flex flex-col gap-2">
-            {destinations.map((dest) => (
-              <div
-                key={dest.id}
-                className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-3 flex items-center gap-4"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-atlas-accent/10 text-atlas-accent shrink-0">
-                  <MapPin size={14} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-atlas-text">{dest.city}</p>
-                  <p className="text-xs text-atlas-muted">{dest.country_name}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs font-mono text-atlas-muted">
-                    {dest.arrival_date ?? "—"}
-                  </p>
-                  <p className="text-xs text-atlas-muted">{nightsLabel(dest.nights)}</p>
-                </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={destinations.map((d) => d.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="flex flex-col gap-2">
+                {destinations.map((dest) => (
+                  <SortableDestination key={dest.id} dest={dest} />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
 
         {/* Transport */}

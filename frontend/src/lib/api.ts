@@ -32,3 +32,6 @@ export const apiPut = <T>(path: string, token: string, body: unknown): Promise<T
 
 export const apiDelete = (path: string, token: string): Promise<void> =>
   request<void>(path, token, { method: "DELETE" });
+
+export const apiPatch = <T>(path: string, token: string, body: unknown): Promise<T> =>
+  request<T>(path, token, { method: "PATCH", body: JSON.stringify(body) });

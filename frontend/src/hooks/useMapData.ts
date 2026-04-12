@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { apiGet } from "@/lib/api";
-import type { MapCountry, MapCity, MapArc } from "@/types";
+import type { MapCountry, MapCity, MapArc, PlannedCity } from "@/types";
 
 export function useMapCountries() {
   const { getToken } = useAuth();
@@ -37,6 +37,19 @@ export function useMapArcs() {
       const token = await getToken();
       if (!token) throw new Error("Not authenticated");
       return apiGet<MapArc[]>("/map/arcs", token);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function usePlannedCities() {
+  const { getToken } = useAuth();
+  return useQuery<PlannedCity[]>({
+    queryKey: ["map", "planned"],
+    queryFn: async () => {
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+      return apiGet<PlannedCity[]>("/map/planned", token);
     },
     staleTime: 5 * 60 * 1000,
   });

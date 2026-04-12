@@ -3,13 +3,13 @@ import pytest_asyncio
 from unittest.mock import AsyncMock, patch
 from httpx import AsyncClient
 
-from tests.conftest import TEST_USER_ID
+from tests.conftest import TEST_USER_ID, OTHER_USER_ID
 
 ENRICH_SUMMARY = "Tokyo is a dazzling collision of ancient temples and neon-lit skyscrapers. The city rewards explorers with world-class ramen, bullet trains, and a culture of extraordinary craftsmanship."
 
 
 @pytest.mark.asyncio
-async def test_enrich_requires_auth(client: AsyncClient, db_session):
+async def test_enrich_requires_auth(client: AsyncClient, db_session, seed_test_users):
     from app.models.bucket_list import BucketList
     item = BucketList(
         user_id=TEST_USER_ID,
@@ -53,7 +53,7 @@ async def test_enrich_sets_ai_summary(auth_client: AsyncClient, db_session):
 async def test_enrich_wrong_user_returns_404(auth_client: AsyncClient, db_session):
     from app.models.bucket_list import BucketList
     item = BucketList(
-        user_id="other_user_id",
+        user_id=OTHER_USER_ID,
         country_name="Brazil",
         country_code="BR",
         priority=2,

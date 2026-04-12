@@ -150,3 +150,42 @@ export interface MapArc {
   dest_lat: number;
   dest_lng: number;
 }
+
+export interface BucketListItem {
+  id: string;
+  user_id: string;
+  country_code: string | null;
+  country_name: string | null;
+  city: string | null;
+  priority: number;
+  reason: string | null;
+  ideal_season: string | null;
+  estimated_cost: number | null;
+  trip_id: string | null;
+  created_at: string;
+}
+
+export interface PlannedCity {
+  id: string;
+  city: string;
+  country_code: string;
+  country_name: string;
+  latitude: number;
+  longitude: number;
+  trip_id: string;
+  trip_title: string;
+}
+
+export interface MonthlyClimate {
+  month: number;
+  avg_max_temp_c: number;
+  avg_precipitation_mm: number;
+}
+
+export interface BestTimeResponse {
+  location: string;
+  latitude: number;
+  longitude: number;
+  monthly: MonthlyClimate[];
+  best_months: number[];
+}

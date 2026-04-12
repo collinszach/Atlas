@@ -107,3 +107,14 @@ async def test_accommodation_user_isolation(authed_client):
     finally:
         app.dependency_overrides.pop(get_current_user_id, None)
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_invalid_accommodation_type_rejected(authed_client):
+    trip_id = await _create_trip(authed_client)
+    resp = await authed_client.post(
+        f"/api/v1/trips/{trip_id}/accommodations",
+        json={"name": "Mystery Stay", "type": "mansion"},
+    )
+    assert resp.status_code == 422

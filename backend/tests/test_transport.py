@@ -108,7 +108,7 @@ async def test_transport_user_isolation(authed_client):
     try:
         resp = await authed_client.get(f"/api/v1/trips/{trip_id}/transport")
     finally:
-        app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
+        app.dependency_overrides.pop(get_current_user_id, None)
     assert resp.status_code == 404
 
 

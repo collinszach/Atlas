@@ -2,7 +2,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+
+
+_VALID_TYPES = {"hotel", "airbnb", "hostel", "house", "camping", "other"}
 
 
 class AccommodationCreate(BaseModel):
@@ -20,6 +23,12 @@ class AccommodationCreate(BaseModel):
     rating: int | None = None
     notes: str | None = None
 
+    @model_validator(mode="after")
+    def validate_type(self) -> "AccommodationCreate":
+        if self.type is not None and self.type not in _VALID_TYPES:
+            raise ValueError(f"type must be one of {sorted(_VALID_TYPES)}")
+        return self
+
 
 class AccommodationUpdate(BaseModel):
     destination_id: uuid.UUID | None = None
@@ -35,6 +44,12 @@ class AccommodationUpdate(BaseModel):
     currency: str | None = None
     rating: int | None = None
     notes: str | None = None
+
+    @model_validator(mode="after")
+    def validate_type(self) -> "AccommodationUpdate":
+        if self.type is not None and self.type not in _VALID_TYPES:
+            raise ValueError(f"type must be one of {sorted(_VALID_TYPES)}")
+        return self
 
 
 class AccommodationRead(BaseModel):

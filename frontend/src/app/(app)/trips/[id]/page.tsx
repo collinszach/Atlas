@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -98,25 +98,37 @@ export default function TripDetailPage() {
   const { data: transport = [], isLoading: transportLoading } = useTransport(id);
 
   const [orderedDests, setOrderedDests] = useState<Destination[]>(destinations);
-  useEffect(() => { setOrderedDests(destinations); }, [destinations]);
+  const isDraggingRef = useRef(false);
+  useEffect(() => {
+    if (!isDraggingRef.current) setOrderedDests(destinations);
+  }, [destinations]);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
+  function handleDragStart() {
+    isDraggingRef.current = true;
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
+    isDraggingRef.current = false;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = orderedDests.findIndex((d) => d.id === String(active.id));
     const newIndex = orderedDests.findIndex((d) => d.id === String(over.id));
     const reordered = arrayMove(orderedDests, oldIndex, newIndex);
-    setOrderedDests(reordered);
+    setOrderedDests(reordered);  // optimistic
     const token = await getToken();
     if (!token) return;
-    await apiPatch(
-      `/trips/${id}/destinations/reorder`,
-      token,
-      reordered.map((d, i) => ({ id: d.id, order_index: i }))
-    );
-    qc.invalidateQueries({ queryKey: ["destinations", id] });
+    try {
+      await apiPatch(
+        `/trips/${id}/destinations/reorder`,
+        token,
+        reordered.map((d, i) => ({ id: d.id, order_index: i }))
+      );
+      qc.invalidateQueries({ queryKey: ["destinations", id] });
+    } catch {
+      setOrderedDests(orderedDests);  // roll back on failure
+    }
   }
 
   if (tripLoading) return <div className="p-6 text-atlas-muted text-sm">Loading...</div>;
@@ -162,7 +174,7 @@ export default function TripDetailPage() {
             </p>
           )}
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <SortableContext
               items={orderedDests.map((d) => d.id)}
               strategy={verticalListSortingStrategy}

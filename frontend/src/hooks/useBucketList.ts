@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
-import type { BucketListItem } from "@/types";
+import type { BucketListItem, BucketListCreate, BucketListUpdate } from "@/types";
 
 export function useBucketList() {
   const { getToken } = useAuth();
@@ -19,7 +19,7 @@ export function useAddBucketListItem() {
   const { getToken } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: Partial<BucketListItem>) => {
+    mutationFn: async (body: BucketListCreate) => {
       const token = await getToken();
       if (!token) throw new Error("Not authenticated");
       return apiPost<BucketListItem>("/bucket-list", token, body);
@@ -32,7 +32,7 @@ export function useUpdateBucketListItem() {
   const { getToken } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Partial<BucketListItem> & { id: string }) => {
+    mutationFn: async ({ id, ...body }: BucketListUpdate & { id: string }) => {
       const token = await getToken();
       if (!token) throw new Error("Not authenticated");
       return apiPut<BucketListItem>(`/bucket-list/${id}`, token, body);

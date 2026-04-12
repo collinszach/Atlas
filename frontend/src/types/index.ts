@@ -162,8 +162,22 @@ export interface BucketListItem {
   ideal_season: string | null;
   estimated_cost: number | null;
   trip_id: string | null;
+  ai_summary: string | null;
   created_at: string;
 }
+
+export interface BucketListCreate {
+  country_code?: string | null;
+  country_name?: string | null;
+  city?: string | null;
+  priority?: number;
+  reason?: string | null;
+  ideal_season?: string | null;
+  estimated_cost?: number | null;
+  trip_id?: string | null;
+}
+
+export type BucketListUpdate = BucketListCreate;
 
 export interface PlannedCity {
   id: string;

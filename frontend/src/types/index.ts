@@ -59,3 +59,30 @@ export interface MapCity {
   departure_date: string | null;
   trip_id: string;
 }
+
+export interface Photo {
+  id: string;
+  user_id: string;
+  trip_id: string;
+  destination_id: string | null;
+  storage_key: string;
+  thumbnail_key: string | null;
+  original_filename: string | null;
+  caption: string | null;
+  taken_at: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  width: number | null;
+  height: number | null;
+  size_bytes: number | null;
+  is_cover: boolean;
+  order_index: number | null;
+  created_at: string;
+  url: string;
+  thumbnail_url: string | null;
+}
+
+export interface PhotoListResponse {
+  items: Photo[];
+  total: number;
+}

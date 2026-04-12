@@ -18,7 +18,25 @@ SAMPLE_RECOMMENDATIONS = [
         "best_time": "April–June",
         "rough_cost": "moderate",
         "getting_there": "Direct flights from most US hubs",
-    }
+    },
+    {
+        "country": "Colombia",
+        "country_code": "CO",
+        "city": "Medellín",
+        "why_youll_love_it": "Warm climate year-round, thriving food scene, and rich history",
+        "best_time": "December–March",
+        "rough_cost": "budget",
+        "getting_there": "Connecting flights via Miami or Bogotá",
+    },
+    {
+        "country": "Georgia",
+        "country_code": "GE",
+        "city": "Tbilisi",
+        "why_youll_love_it": "Ancient culture, stunning Caucasus landscapes, and exceptional wine",
+        "best_time": "May–June",
+        "rough_cost": "budget",
+        "getting_there": "Connecting flights via Istanbul or Frankfurt",
+    },
 ]
 
 SAMPLE_BRIEF = {
@@ -77,6 +95,7 @@ async def test_recommend_returns_list(auth_client: AsyncClient):
     assert res.status_code == 200
     data = res.json()
     assert isinstance(data, list)
+    assert len(data) == 3
     assert data[0]["country"] == "Portugal"
 
 

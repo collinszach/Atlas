@@ -55,7 +55,10 @@ async def get_recommendations(
         messages=[{"role": "user", "content": prompt}],
     )
     raw = message.content[0].text
-    return json.loads(_strip_fences(raw))
+    try:
+        return json.loads(_strip_fences(raw))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"AI returned non-JSON response: {raw!r}") from exc
 
 
 async def get_destination_brief(country: str, country_code: str | None, city: str | None) -> dict[str, Any]:
@@ -77,7 +80,10 @@ async def get_destination_brief(country: str, country_code: str | None, city: st
         messages=[{"role": "user", "content": prompt}],
     )
     raw = message.content[0].text
-    return json.loads(_strip_fences(raw))
+    try:
+        return json.loads(_strip_fences(raw))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"AI returned non-JSON response: {raw!r}") from exc
 
 
 async def enrich_bucket_list_item(

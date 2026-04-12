@@ -56,6 +56,7 @@ class BucketListRead(BaseModel):
     ideal_season: str | None
     estimated_cost: Decimal | None
     trip_id: uuid.UUID | None
+    ai_summary: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}

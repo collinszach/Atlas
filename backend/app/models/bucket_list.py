@@ -25,4 +25,5 @@ class BucketList(Base):
     trip_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True),
                                                        ForeignKey("trips.id", ondelete="SET NULL"),
                                                        nullable=True)
+    ai_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

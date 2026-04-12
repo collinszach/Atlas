@@ -57,7 +57,7 @@ export function useDeleteBucketListItem() {
 export function useEnrichBucketListItem() {
   const { getToken } = useAuth();
   const qc = useQueryClient();
-  return useMutation({
+  return useMutation<BucketListItem, Error, string>({
     mutationFn: async (id: string) => {
       const token = await getToken();
       if (!token) throw new Error("Not authenticated");

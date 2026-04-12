@@ -67,6 +67,12 @@ class TransportUpdate(BaseModel):
     dest_lat: float | None = None
     dest_lng: float | None = None
 
+    @model_validator(mode="after")
+    def validate_type(self) -> "TransportUpdate":
+        if self.type is not None and self.type not in _VALID_TYPES:
+            raise ValueError(f"type must be one of {sorted(_VALID_TYPES)}")
+        return self
+
 
 class TransportRead(BaseModel):
     id: uuid.UUID

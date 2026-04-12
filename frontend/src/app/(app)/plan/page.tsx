@@ -29,7 +29,7 @@ function PriorityStars({ priority }: { priority: number }) {
         <Star
           key={n}
           size={10}
-          className={n <= priority ? PRIORITY_COLORS[priority] : "text-atlas-border"}
+          className={n <= priority ? (PRIORITY_COLORS[priority] ?? "text-atlas-muted") : "text-atlas-border"}
           fill={n <= priority ? "currentColor" : "none"}
         />
       ))}

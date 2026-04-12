@@ -1,12 +1,20 @@
 import pytest
 
 TEST_USER_ID = "user_test_atlas_001"
+OTHER_USER_ID = "user_test_other_002"
 
 
 @pytest.fixture
 async def authed_client(client, seed_test_users):
     from app.main import app
     from app.auth import get_current_user_id
+    import redis.asyncio as aioredis
+    from app.config import settings
+    # Fresh connection per fixture invocation to avoid singleton event-loop issues
+    fresh_redis = aioredis.from_url(settings.redis_url, decode_responses=True)
+    await fresh_redis.delete(f"map:arcs:{TEST_USER_ID}")
+    await fresh_redis.delete(f"map:arcs:{OTHER_USER_ID}")
+    await fresh_redis.aclose()
     app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
     yield client
     app.dependency_overrides.pop(get_current_user_id, None)
@@ -78,3 +86,39 @@ async def test_map_arcs_excludes_non_flight_legs(authed_client):
     arcs = resp.json()
     paris_arcs = [a for a in arcs if a.get("origin_city") == "Paris"]
     assert len(paris_arcs) == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_map_arcs_user_isolation(client, seed_test_users):
+    """User B's flights do not appear in User A's arc response."""
+    from app.main import app
+    from app.auth import get_current_user_id
+
+    # User B seeds a flight
+    app.dependency_overrides[get_current_user_id] = lambda: OTHER_USER_ID
+    trip_resp = await client.post("/api/v1/trips", json={"title": "Other User Trip"})
+    trip_id = trip_resp.json()["id"]
+    await client.post(
+        f"/api/v1/trips/{trip_id}/transport",
+        json={
+            "type": "flight",
+            "flight_number": "XY999",
+            "origin_city": "Berlin",
+            "dest_city": "Rome",
+            "origin_lat": 52.3667,
+            "origin_lng": 13.5033,
+            "dest_lat": 41.8003,
+            "dest_lng": 12.2389,
+        },
+    )
+
+    # User A sees no arcs
+    app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
+    try:
+        resp = await client.get("/api/v1/map/arcs")
+        arcs = resp.json()
+        berlin_arcs = [a for a in arcs if a.get("origin_city") == "Berlin"]
+        assert len(berlin_arcs) == 0
+    finally:
+        app.dependency_overrides.pop(get_current_user_id, None)

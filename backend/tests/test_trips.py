@@ -67,3 +67,15 @@ async def test_cannot_read_another_users_trip(authed_client):
     finally:
         app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_invalid_status_rejected(client, seed_test_users):
+    from app.main import app
+    from app.auth import get_current_user_id
+    app.dependency_overrides[get_current_user_id] = lambda: "user_test_atlas_001"
+    try:
+        resp = await client.post("/api/v1/trips", json={"title": "T", "status": "canceled"})
+    finally:
+        app.dependency_overrides.pop(get_current_user_id, None)
+    assert resp.status_code == 422

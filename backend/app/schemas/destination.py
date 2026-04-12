@@ -70,3 +70,8 @@ class DestinationRead(BaseModel):
         data["latitude"] = lat
         data["longitude"] = lng
         return cls(**data)
+
+
+class DestinationReorderItem(BaseModel):
+    id: uuid.UUID
+    order_index: int

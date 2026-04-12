@@ -37,3 +37,14 @@ class FlightArcResponse(BaseModel):
     origin_lng: float
     dest_lat: float
     dest_lng: float
+
+
+class PlannedCityResponse(BaseModel):
+    id: str
+    city: str
+    country_code: str
+    country_name: str
+    latitude: float
+    longitude: float
+    trip_id: str
+    trip_title: str

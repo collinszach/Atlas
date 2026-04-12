@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import CurrentUser
 from app.database import get_db
-from app.schemas.map import CityPointResponse, CountryVisitResponse, FlightArcResponse
+from app.schemas.map import CityPointResponse, CountryVisitResponse, FlightArcResponse, PlannedCityResponse
 from app.services.map_cache import get_cached, set_cached
 
 logger = logging.getLogger(__name__)
@@ -118,5 +118,42 @@ async def get_map_arcs(
     )
     rows = result.mappings().all()
     data = [FlightArcResponse(**r) for r in rows]
+    await set_cached(cache_key, [r.model_dump() for r in data])
+    return data
+
+
+@router.get("/planned", response_model=list[PlannedCityResponse])
+async def get_map_planned(
+    user_id: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+) -> list[PlannedCityResponse]:
+    """Ghost markers for destinations in planned/dream trips. Cached 5 min per user."""
+    cache_key = f"map:planned:{user_id}"
+    cached = await get_cached(cache_key)
+    if cached is not None:
+        return [PlannedCityResponse(**r) for r in cached]
+
+    result = await db.execute(
+        text("""
+            SELECT DISTINCT ON (d.city, d.country_code)
+                d.id::text,
+                d.city,
+                d.country_code,
+                d.country_name,
+                ST_Y(d.location::geometry) AS latitude,
+                ST_X(d.location::geometry) AS longitude,
+                t.id::text AS trip_id,
+                t.title AS trip_title
+            FROM destinations d
+            JOIN trips t ON t.id = d.trip_id
+            WHERE d.user_id = :user_id
+              AND t.status IN ('planned', 'dream')
+              AND d.location IS NOT NULL
+            ORDER BY d.city, d.country_code, d.arrival_date NULLS LAST
+        """),
+        {"user_id": user_id},
+    )
+    rows = result.mappings().all()
+    data = [PlannedCityResponse(**r) for r in rows]
     await set_cached(cache_key, [r.model_dump() for r in data])
     return data

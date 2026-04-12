@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime, date
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+
+_VALID_STATUSES = {"past", "active", "planned", "dream"}
 
 
 class TripCreate(BaseModel):
@@ -12,6 +14,12 @@ class TripCreate(BaseModel):
     tags: list[str] = []
     visibility: str = "private"
 
+    @model_validator(mode="after")
+    def validate_status(self) -> "TripCreate":
+        if self.status not in _VALID_STATUSES:
+            raise ValueError(f"status must be one of {sorted(_VALID_STATUSES)}")
+        return self
+
 
 class TripUpdate(BaseModel):
     title: str | None = None
@@ -21,6 +29,12 @@ class TripUpdate(BaseModel):
     end_date: date | None = None
     tags: list[str] | None = None
     visibility: str | None = None
+
+    @model_validator(mode="after")
+    def validate_status(self) -> "TripUpdate":
+        if self.status is not None and self.status not in _VALID_STATUSES:
+            raise ValueError(f"status must be one of {sorted(_VALID_STATUSES)}")
+        return self
 
 
 class TripRead(BaseModel):

@@ -1,7 +1,7 @@
 import logging
 import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
@@ -10,7 +10,7 @@ from app.auth import CurrentUser
 from app.database import get_db
 from app.models.destination import Destination
 from app.models.trip import Trip
-from app.schemas.destination import DestinationCreate, DestinationRead, DestinationUpdate
+from app.schemas.destination import DestinationCreate, DestinationRead, DestinationUpdate, DestinationReorderItem
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["destinations"])
@@ -141,3 +141,31 @@ async def delete_destination(
     await db.delete(dest)
     await db.flush()
     background_tasks.add_task(_refresh_country_visits, user_id)
+
+
+@router.patch("/trips/{trip_id}/destinations/reorder", response_model=list[DestinationRead])
+async def reorder_destinations(
+    trip_id: uuid.UUID,
+    body: list[DestinationReorderItem],
+    user_id: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+) -> list[DestinationRead]:
+    await _get_trip_or_404(trip_id, user_id, db)
+    for item in body:
+        await db.execute(
+            update(Destination)
+            .where(
+                Destination.id == item.id,
+                Destination.trip_id == trip_id,
+                Destination.user_id == user_id,
+            )
+            .values(order_index=item.order_index)
+        )
+    await db.flush()
+    result = await db.execute(
+        select(Destination)
+        .where(Destination.trip_id == trip_id, Destination.user_id == user_id)
+        .order_by(Destination.order_index, Destination.arrival_date)
+    )
+    dests = result.scalars().all()
+    return [DestinationRead.from_orm_with_geo(d) for d in dests]

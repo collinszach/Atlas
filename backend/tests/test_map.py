@@ -28,6 +28,12 @@ async def test_map_cities_requires_auth(client):
 
 
 @pytest.mark.asyncio
+async def test_map_arcs_requires_auth(client):
+    response = await client.get("/api/v1/map/arcs")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
 @pytest.mark.integration
 async def test_map_countries_returns_list(authed_client):
     response = await authed_client.get("/api/v1/map/countries")
@@ -43,3 +49,9 @@ async def test_map_cities_returns_list(authed_client):
     assert response.status_code == 200
     body = response.json()
     assert isinstance(body, list)
+
+
+@pytest.mark.asyncio
+async def test_map_planned_requires_auth(client):
+    response = await client.get("/api/v1/map/planned")
+    assert response.status_code == 401

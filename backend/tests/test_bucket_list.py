@@ -45,11 +45,13 @@ async def test_create_bucket_list_item(authed_client):
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_list_bucket_list(authed_client):
+    before_resp = await authed_client.get("/api/v1/bucket-list")
+    before_count = len(before_resp.json())
     await _create_item(authed_client, city="Tokyo")
     await _create_item(authed_client, city="Osaka")
     resp = await authed_client.get("/api/v1/bucket-list")
     assert resp.status_code == 200
-    assert len(resp.json()) >= 2
+    assert len(resp.json()) == before_count + 2
 
 
 @pytest.mark.asyncio
@@ -106,6 +108,31 @@ async def test_bucket_list_user_isolation_delete(authed_client):
     finally:
         app.dependency_overrides.pop(get_current_user_id, None)
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_bucket_list_get_user_isolation(client, seed_test_users):
+    from app.main import app
+    from app.auth import get_current_user_id
+
+    # Create item as TEST_USER_ID
+    app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
+    create_resp = await client.post(
+        "/api/v1/bucket-list",
+        json={"country_code": "NO", "country_name": "Norway", "city": "Oslo"},
+    )
+    assert create_resp.status_code == 201
+    item_id = create_resp.json()["id"]
+
+    # Verify OTHER_USER_ID cannot see it
+    app.dependency_overrides[get_current_user_id] = lambda: OTHER_USER_ID
+    try:
+        list_resp = await client.get("/api/v1/bucket-list")
+        ids = [i["id"] for i in list_resp.json()]
+        assert item_id not in ids
+    finally:
+        app.dependency_overrides.pop(get_current_user_id, None)
 
 
 @pytest.mark.asyncio

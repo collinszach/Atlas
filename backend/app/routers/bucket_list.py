@@ -50,7 +50,7 @@ async def update_bucket_list_item(
     item = result.scalar_one_or_none()
     if item is None:
         raise HTTPException(status_code=404, detail="Bucket list item not found")
-    for k, v in body.model_dump(exclude_none=True).items():
+    for k, v in body.model_dump(exclude_unset=True).items():
         setattr(item, k, v)
     await db.flush()
     await db.refresh(item)

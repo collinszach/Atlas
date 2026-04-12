@@ -53,3 +53,16 @@ export function useDeleteBucketListItem() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["bucket-list"] }),
   });
 }
+
+export function useEnrichBucketListItem() {
+  const { getToken } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+      return apiPost<BucketListItem>(`/bucket-list/${id}/enrich`, token, {});
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bucket-list"] }),
+  });
+}

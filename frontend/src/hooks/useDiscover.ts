@@ -1,7 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
-import { apiGet } from "@/lib/api";
-import type { BestTimeResponse } from "@/types";
+import { apiGet, apiPost } from "@/lib/api";
+import type {
+  BestTimeResponse,
+  RecommendationRequest,
+  Recommendation,
+  DestinationBriefRequest,
+  DestinationBriefResponse,
+} from "@/types";
 
 export function useBestTime(countryCode: string, city?: string) {
   const { getToken } = useAuth();
@@ -14,6 +20,28 @@ export function useBestTime(countryCode: string, city?: string) {
       return apiGet<BestTimeResponse>(`/discover/best-time/${countryCode}${params}`, token);
     },
     enabled: !!countryCode,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours — matches backend cache
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+}
+
+export function useRecommendations() {
+  const { getToken } = useAuth();
+  return useMutation<Recommendation[], Error, RecommendationRequest>({
+    mutationFn: async (body) => {
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+      return apiPost<Recommendation[]>("/discover/recommend", token, body);
+    },
+  });
+}
+
+export function useDestinationBrief() {
+  const { getToken } = useAuth();
+  return useMutation<DestinationBriefResponse, Error, DestinationBriefRequest>({
+    mutationFn: async (body) => {
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+      return apiPost<DestinationBriefResponse>("/discover/destination-brief", token, body);
+    },
   });
 }

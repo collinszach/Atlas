@@ -203,3 +203,45 @@ export interface BestTimeResponse {
   monthly: MonthlyClimate[];
   best_months: number[];
 }
+
+export interface RecommendationPreferences {
+  climate?: string;
+  duration_days?: number;
+  budget?: string;
+  interests?: string[];
+  avoid_crowds?: boolean;
+  departure_region?: string;
+  travel_month?: string;
+}
+
+export interface RecommendationRequest {
+  preferences: RecommendationPreferences;
+  already_visited: string[];
+}
+
+export interface Recommendation {
+  country: string;
+  country_code: string | null;
+  city: string | null;
+  why_youll_love_it: string;
+  best_time: string;
+  rough_cost: string;
+  getting_there: string;
+}
+
+export interface DestinationBriefRequest {
+  country: string;
+  country_code?: string | null;
+  city?: string | null;
+}
+
+export interface DestinationBriefResponse {
+  destination: string;
+  overview: string;
+  best_months: number[];
+  visa_notes: string;
+  rough_costs: string;
+  must_do: string[];
+  food_highlights: string[];
+  transport_within: string;
+}

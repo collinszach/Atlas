@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -96,14 +97,18 @@ export default function TripDetailPage() {
   const { data: destinations = [], isLoading: destLoading } = useDestinations(id);
   const { data: transport = [], isLoading: transportLoading } = useTransport(id);
 
+  const [orderedDests, setOrderedDests] = useState<Destination[]>(destinations);
+  useEffect(() => { setOrderedDests(destinations); }, [destinations]);
+
   const sensors = useSensors(useSensor(PointerSensor));
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = destinations.findIndex((d) => d.id === String(active.id));
-    const newIndex = destinations.findIndex((d) => d.id === String(over.id));
-    const reordered = arrayMove(destinations, oldIndex, newIndex);
+    const oldIndex = orderedDests.findIndex((d) => d.id === String(active.id));
+    const newIndex = orderedDests.findIndex((d) => d.id === String(over.id));
+    const reordered = arrayMove(orderedDests, oldIndex, newIndex);
+    setOrderedDests(reordered);
     const token = await getToken();
     if (!token) return;
     await apiPatch(
@@ -159,11 +164,11 @@ export default function TripDetailPage() {
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext
-              items={destinations.map((d) => d.id)}
+              items={orderedDests.map((d) => d.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="flex flex-col gap-2">
-                {destinations.map((dest) => (
+                {orderedDests.map((dest) => (
                   <SortableDestination key={dest.id} dest={dest} />
                 ))}
               </div>

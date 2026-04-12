@@ -174,7 +174,7 @@ export function WorldMap() {
         source: "planned-cities",
         paint: {
           "circle-radius": 5,
-          "circle-color": "transparent",
+          "circle-color": "rgba(0,0,0,0)",
           "circle-stroke-width": 2,
           "circle-stroke-color": "#c9a84c",
           "circle-opacity": 0.8,

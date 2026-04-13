@@ -13,7 +13,7 @@ struct StatsView: View {
                     LoadingView()
                 } else {
                     ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 24) {
+                        VStack(alignment: .leading, spacing: 24) {
                             if let err = vm.error {
                                 ErrorBanner(message: err) {
                                     Task { await vm.load(api: auth.api) }

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Trips
 
-struct Trip: Codable, Identifiable {
+struct Trip: Codable, Identifiable, Hashable {
     let id: String
     let userId: String
     let title: String

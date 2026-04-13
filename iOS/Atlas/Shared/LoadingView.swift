@@ -30,6 +30,5 @@ struct SkeletonRow: View {
             }
         }
         .padding(.vertical, 4)
-        .redacted(reason: .placeholder)
     }
 }

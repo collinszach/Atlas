@@ -24,5 +24,10 @@
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Atlas uses your location to show nearby destinations on the map.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

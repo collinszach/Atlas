@@ -5,7 +5,7 @@ import Foundation
 final class TripDetailViewModel {
     var destinations: [Destination] = []
     var transport: [TransportLeg] = []
-    var isLoading = false
+    var isLoading = true
     var error: String? = nil
 
     func load(tripId: String, api: APIClient) async {

@@ -18,20 +18,18 @@ final class TripListViewModel {
     }
 
     func load(api: APIClient, reset: Bool = false) async {
-        guard !isLoading else { return }
         if reset {
             trips = []
             currentPage = 1
             hasMore = true
         }
-        guard hasMore else { return }
+        guard !isLoading, hasMore else { return }
         isLoading = true
         error = nil
         defer { isLoading = false }
         do {
             let response = try await api.trips(page: currentPage, status: selectedStatus)
-            if reset { trips = response.items }
-            else { trips.append(contentsOf: response.items) }
+            trips.append(contentsOf: response.items)
             hasMore = trips.count < response.total
             currentPage += 1
         } catch {

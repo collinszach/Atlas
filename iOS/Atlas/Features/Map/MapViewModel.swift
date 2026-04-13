@@ -1,6 +1,7 @@
 import Foundation
 import MapKit
 
+@MainActor
 @Observable
 final class MapViewModel {
     var countries: [MapCountry] = []
@@ -37,5 +38,14 @@ extension MapArc {
     }
     var destCoordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: destLat, longitude: destLng)
+    }
+    var arcCoordinates: [CLLocationCoordinate2D] {
+        let steps = 60
+        return (0...steps).map { i in
+            let t = Double(i) / Double(steps)
+            let lat = originLat + (destLat - originLat) * t
+            let lng = originLng + (destLng - originLng) * t
+            return CLLocationCoordinate2D(latitude: lat, longitude: lng)
+        }
     }
 }

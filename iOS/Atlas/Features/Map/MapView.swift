@@ -30,11 +30,7 @@ struct MapView: View {
 
                 // Flight arcs as polylines
                 ForEach(vm.arcs) { arc in
-                    let coords = greatCircleCoords(
-                        from: arc.originCoordinate,
-                        to: arc.destCoordinate
-                    )
-                    MapPolyline(coordinates: coords)
+                    MapPolyline(coordinates: arc.arcCoordinates)
                         .stroke(Color.atlasAccent.opacity(0.5), lineWidth: 1.5)
                 }
             }
@@ -82,20 +78,6 @@ struct MapView: View {
         }
         .task {
             await vm.load(api: auth.api)
-        }
-    }
-
-    /// Generate intermediate coordinates for a great-circle arc.
-    private func greatCircleCoords(
-        from: CLLocationCoordinate2D,
-        to: CLLocationCoordinate2D,
-        steps: Int = 60
-    ) -> [CLLocationCoordinate2D] {
-        (0...steps).map { i in
-            let t = Double(i) / Double(steps)
-            let lat = from.latitude + (to.latitude - from.latitude) * t
-            let lng = from.longitude + (to.longitude - from.longitude) * t
-            return CLLocationCoordinate2D(latitude: lat, longitude: lng)
         }
     }
 }

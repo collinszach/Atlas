@@ -1,6 +1,7 @@
 import Foundation
 import ClerkSDK
 
+@MainActor
 @Observable
 final class AuthManager {
     var isSignedIn: Bool = false
@@ -23,7 +24,11 @@ final class AuthManager {
         isLoading = true
         defer { isLoading = false }
         do {
-            let signIn = try await Clerk.shared.client.signIn.create(
+            guard let client = Clerk.shared.client else {
+                error = "Authentication service not ready. Please restart the app."
+                return
+            }
+            let signIn = try await client.signIn.create(
                 strategy: .password(identifier: email, password: password)
             )
             guard signIn.status == .complete,
@@ -47,10 +52,10 @@ final class AuthManager {
     }
 
     func signOut() {
+        api.persistToken(nil)
+        isSignedIn = false
         Task {
             try? await Clerk.shared.signOut()
         }
-        api.persistToken(nil)
-        isSignedIn = false
     }
 }

@@ -35,7 +35,8 @@ final class APIClient {
 
     init(token: String? = nil) {
         self.base = Config.apiBase
-        self.token = token ?? KeychainSwift().get("atlas_jwt")
+        let keychain = KeychainSwift()
+        self.token = token ?? keychain.get("atlas_jwt")
     }
 
     func persistToken(_ token: String?) {
@@ -115,7 +116,8 @@ final class APIClient {
     // MARK: - Private
 
     private func makeRequest(_ method: String, path: String) -> URLRequest {
-        var req = URLRequest(url: base.appendingPathComponent(path))
+        let url = URL(string: path, relativeTo: base)?.absoluteURL ?? base
+        var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token {

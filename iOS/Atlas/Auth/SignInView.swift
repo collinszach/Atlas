@@ -93,7 +93,7 @@ struct SignInView: View {
         .background(Color.atlasBackground.ignoresSafeArea())
         .onSubmit {
             if focused == .email { focused = .password }
-            else if !email.isEmpty && !password.isEmpty {
+            else if !email.isEmpty && !password.isEmpty && !auth.isLoading {
                 Task { await auth.signIn(email: email, password: password) }
             }
         }

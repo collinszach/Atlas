@@ -29,19 +29,27 @@ struct TripDetailView: View {
                             HStack {
                                 SectionHeader(title: "Photos", count: photosVM.photos.count)
                                 Spacer()
-                                PhotosPicker(
-                                    selection: $filmstripPickerItems,
-                                    maxSelectionCount: 10,
-                                    matching: .images
-                                ) {
-                                    Image(systemName: "plus.circle")
-                                        .font(.system(size: 18))
-                                        .foregroundStyle(Color.atlasAccent)
+                                if photosVM.isUploading {
+                                    ProgressView()
+                                        .tint(Color.atlasAccent)
+                                        .frame(width: 18, height: 18)
+                                } else {
+                                    PhotosPicker(
+                                        selection: $filmstripPickerItems,
+                                        maxSelectionCount: 10,
+                                        matching: .images
+                                    ) {
+                                        Image(systemName: "plus.circle")
+                                            .font(.system(size: 18))
+                                            .foregroundStyle(Color.atlasAccent)
+                                    }
                                 }
                             }
                             .padding(.horizontal, 16)
 
-                            if photosVM.photos.isEmpty {
+                            if photosVM.isLoading {
+                                // photos still loading — show nothing to avoid flash
+                            } else if photosVM.photos.isEmpty {
                                 Text("No photos yet. Tap + to add from your library.")
                                     .font(AtlasFont.body(13))
                                     .foregroundStyle(Color.atlasMuted)

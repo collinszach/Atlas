@@ -30,6 +30,7 @@ final class PhotosViewModel {
         isUploading = true
         uploadProgress = 0
         defer { isUploading = false; uploadProgress = 0 }
+        var failures = 0
         for (index, item) in uploads.enumerated() {
             do {
                 let photo = try await api.uploadPhoto(
@@ -40,9 +41,12 @@ final class PhotosViewModel {
                 )
                 photos.append(photo)
             } catch {
-                self.error = "Upload failed: \(error.localizedDescription)"
+                failures += 1
             }
             uploadProgress = Double(index + 1) / Double(uploads.count)
+        }
+        if failures > 0 {
+            self.error = "\(failures) photo\(failures == 1 ? "" : "s") failed to upload"
         }
     }
 

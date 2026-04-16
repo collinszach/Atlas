@@ -203,7 +203,9 @@ final class APIClient {
         } catch {
             throw APIError.networkError(error)
         }
-        guard let http = response as? HTTPURLResponse else { return }
+        guard let http = response as? HTTPURLResponse else {
+            throw APIError.httpError(0, "No HTTP response")
+        }
         if http.statusCode == 401 { throw APIError.notAuthenticated }
         if !(200..<300).contains(http.statusCode) {
             let body = String(data: data, encoding: .utf8) ?? ""

@@ -1,26 +1,10 @@
 import SwiftUI
 import PhotosUI
-import UniformTypeIdentifiers
 
 // Shared token for fullScreenCover(item:) — used by both PhotoGridView and TripDetailView
 struct PhotoViewerToken: Identifiable {
     let id = UUID()
-    let index: Int
-}
-
-// Free function shared by PhotoGridView and TripDetailView
-func loadPickerItems(
-    _ items: [PhotosPickerItem]
-) async -> [(data: Data, filename: String, mimeType: String)] {
-    var results: [(data: Data, filename: String, mimeType: String)] = []
-    for item in items {
-        guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
-        let contentType = item.supportedContentTypes.first ?? UTType.jpeg
-        let mimeType = contentType.preferredMIMEType ?? "image/jpeg"
-        let ext = contentType.preferredFilenameExtension ?? "jpg"
-        results.append((data: data, filename: "\(UUID().uuidString).\(ext)", mimeType: mimeType))
-    }
-    return results
+    let photoId: String
 }
 
 struct PhotoGridView: View {
@@ -65,7 +49,7 @@ struct PhotoGridView: View {
                                 ForEach(Array(vm.photos.enumerated()), id: \.element.id) { index, photo in
                                     PhotoCell(photo: photo)
                                         .onTapGesture {
-                                            viewerToken = PhotoViewerToken(index: index)
+                                            viewerToken = PhotoViewerToken(photoId: photo.id)
                                         }
                                         .contextMenu {
                                             Button {
@@ -112,7 +96,8 @@ struct PhotoGridView: View {
             }
         }
         .fullScreenCover(item: $viewerToken) { token in
-            PhotoViewer(photos: vm.photos, startIndex: token.index)
+            let startIndex = vm.photos.firstIndex(where: { $0.id == token.photoId }) ?? 0
+            PhotoViewer(photos: vm.photos, startIndex: startIndex)
         }
         .alert("Delete Photo", isPresented: $showDeleteAlert, presenting: deleteTarget) { photo in
             Button("Delete", role: .destructive) {

@@ -229,3 +229,40 @@ struct TransportLeg: Codable, Identifiable {
         case seatClass = "seat_class"
     }
 }
+
+// MARK: - Photos
+
+struct Photo: Codable, Identifiable {
+    let id: String
+    let tripId: String
+    let destinationId: String?
+    let originalFilename: String?
+    let caption: String?
+    let takenAt: String?
+    let latitude: Double?
+    let longitude: Double?
+    let width: Int?
+    let height: Int?
+    let sizeBytes: Int?
+    let isCover: Bool
+    let orderIndex: Int?
+    let url: String
+    let thumbnailUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, caption, latitude, longitude, width, height, url
+        case tripId = "trip_id"
+        case destinationId = "destination_id"
+        case originalFilename = "original_filename"
+        case takenAt = "taken_at"
+        case sizeBytes = "size_bytes"
+        case isCover = "is_cover"
+        case orderIndex = "order_index"
+        case thumbnailUrl = "thumbnail_url"
+    }
+}
+
+struct PhotoListResponse: Codable {
+    let items: [Photo]
+    let total: Int
+}

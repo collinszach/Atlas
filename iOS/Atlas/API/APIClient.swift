@@ -113,6 +113,47 @@ final class APIClient {
         try await get("/api/v1/stats/timeline")
     }
 
+    func listPhotos(tripId: String) async throws -> [Photo] {
+        let response: PhotoListResponse = try await get("/api/v1/trips/\(tripId)/photos")
+        return response.items
+    }
+
+    func uploadPhoto(
+        tripId: String,
+        data: Data,
+        filename: String,
+        mimeType: String,
+        caption: String? = nil
+    ) async throws -> Photo {
+        let boundary = UUID().uuidString
+        var req = makeRequest("POST", path: "/api/v1/trips/\(tripId)/photos/upload")
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = 120
+        var body = Data()
+        body.appendString("--\(boundary)\r\n")
+        body.appendString("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
+        body.appendString("Content-Type: \(mimeType)\r\n\r\n")
+        body.append(data)
+        body.appendString("\r\n")
+        if let caption {
+            body.appendString("--\(boundary)\r\n")
+            body.appendString("Content-Disposition: form-data; name=\"caption\"\r\n\r\n")
+            body.appendString(caption)
+            body.appendString("\r\n")
+        }
+        body.appendString("--\(boundary)--\r\n")
+        req.httpBody = body
+        return try await perform(req)
+    }
+
+    func deletePhoto(photoId: String) async throws {
+        try await delete("/api/v1/photos/\(photoId)")
+    }
+
+    func setCoverPhoto(photoId: String) async throws {
+        try await postVoid("/api/v1/photos/\(photoId)/set-cover")
+    }
+
     // MARK: - Private
 
     private func makeRequest(_ method: String, path: String) -> URLRequest {
@@ -150,5 +191,29 @@ final class APIClient {
         } catch {
             throw APIError.decodingError(error)
         }
+    }
+
+    private func postVoid(_ path: String) async throws {
+        var req = makeRequest("POST", path: path)
+        req.httpBody = "{}".data(using: .utf8)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: req)
+        } catch {
+            throw APIError.networkError(error)
+        }
+        guard let http = response as? HTTPURLResponse else { return }
+        if http.statusCode == 401 { throw APIError.notAuthenticated }
+        if !(200..<300).contains(http.statusCode) {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            throw APIError.httpError(http.statusCode, body)
+        }
+    }
+}
+
+private extension Data {
+    mutating func appendString(_ string: String) {
+        if let d = string.data(using: .utf8) { append(d) }
     }
 }

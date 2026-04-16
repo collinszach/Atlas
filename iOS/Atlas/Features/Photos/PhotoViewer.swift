@@ -6,9 +6,6 @@ struct PhotoViewer: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var currentIndex: Int
-    @State private var scale: CGFloat = 1.0
-    @State private var offset: CGSize = .zero
-    @GestureState private var magnifyBy: CGFloat = 1.0
 
     init(photos: [Photo], startIndex: Int) {
         self.photos = photos
@@ -22,42 +19,13 @@ struct PhotoViewer: View {
 
             TabView(selection: $currentIndex) {
                 ForEach(Array(photos.enumerated()), id: \.element.id) { index, photo in
-                    ZoomablePhotoPage(
-                        photo: photo,
-                        scale: index == currentIndex ? scale * magnifyBy : 1,
-                        offset: index == currentIndex ? offset : .zero
-                    )
-                    .tag(index)
+                    ZoomablePhotoPage(photo: photo)
+                        .tag(index)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .gesture(
-                SimultaneousGesture(
-                    MagnificationGesture()
-                        .updating($magnifyBy) { value, state, _ in state = value }
-                        .onEnded { value in
-                            scale = min(max(scale * value, 1.0), 5.0)
-                            if scale <= 1.0 { offset = .zero }
-                        },
-                    DragGesture()
-                        .onChanged { value in
-                            guard scale > 1 else { return }
-                            offset = value.translation
-                        }
-                )
-            )
-            .onTapGesture(count: 2) {
-                withAnimation(.spring()) {
-                    if scale > 1 { scale = 1; offset = .zero }
-                    else { scale = 2.5 }
-                }
-            }
 
             overlays
-        }
-        .onChange(of: currentIndex) { _, _ in
-            scale = 1
-            offset = .zero
         }
     }
 
@@ -114,18 +82,30 @@ struct PhotoViewer: View {
         }
     }
 
+    private static let isoFull: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let isoBasic: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private static let displayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d, yyyy"
+        return f
+    }()
+
     private func formatDate(_ iso: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        for options: ISO8601DateFormatter.Options in [
-            [.withInternetDateTime, .withFractionalSeconds],
-            [.withInternetDateTime]
-        ] {
-            formatter.formatOptions = options
-            if let date = formatter.date(from: iso) {
-                let display = DateFormatter()
-                display.dateFormat = "MMM d, yyyy"
-                return display.string(from: date)
-            }
+        if let date = Self.isoFull.date(from: iso) {
+            return Self.displayFormatter.string(from: date)
+        }
+        if let date = Self.isoBasic.date(from: iso) {
+            return Self.displayFormatter.string(from: date)
         }
         return String(iso.prefix(10))
     }
@@ -133,15 +113,17 @@ struct PhotoViewer: View {
 
 private struct ZoomablePhotoPage: View {
     let photo: Photo
-    let scale: CGFloat
-    let offset: CGSize
+
+    @State private var scale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @GestureState private var magnifyBy: CGFloat = 1.0
 
     var body: some View {
         AsyncImage(url: URL(string: photo.url)) { phase in
             switch phase {
             case .success(let image):
                 image.resizable().scaledToFit()
-                    .scaleEffect(scale)
+                    .scaleEffect(scale * magnifyBy)
                     .offset(offset)
             case .failure:
                 Image(systemName: "exclamationmark.triangle")
@@ -151,10 +133,31 @@ private struct ZoomablePhotoPage: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .gesture(
+            SimultaneousGesture(
+                MagnificationGesture()
+                    .updating($magnifyBy) { value, state, _ in state = value }
+                    .onEnded { value in
+                        scale = min(max(scale * value, 1.0), 5.0)
+                        if scale <= 1.0 { offset = .zero }
+                    },
+                DragGesture()
+                    .onChanged { value in
+                        guard scale > 1 else { return }
+                        offset = value.translation
+                    }
+            )
+        )
+        .onTapGesture(count: 2) {
+            withAnimation(.spring()) {
+                if scale > 1 { scale = 1; offset = .zero }
+                else { scale = 2.5 }
+            }
+        }
     }
 }
 
-extension Array {
+fileprivate extension Array {
     subscript(safe index: Int) -> Element? {
         indices.contains(index) ? self[index] : nil
     }

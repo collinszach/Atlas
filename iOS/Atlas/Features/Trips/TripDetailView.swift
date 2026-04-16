@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 struct TripDetailView: View {
     let tripId: String
@@ -6,6 +7,9 @@ struct TripDetailView: View {
 
     @Environment(AuthManager.self) private var auth
     @State private var vm = TripDetailViewModel()
+    @State private var photosVM = PhotosViewModel()
+    @State private var filmstripViewerToken: PhotoViewerToken? = nil
+    @State private var filmstripPickerItems: [PhotosPickerItem] = []
 
     var body: some View {
         ZStack {
@@ -20,6 +24,62 @@ struct TripDetailView: View {
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 20) {
+                        // Photos
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                SectionHeader(title: "Photos", count: photosVM.photos.count)
+                                Spacer()
+                                PhotosPicker(
+                                    selection: $filmstripPickerItems,
+                                    maxSelectionCount: 10,
+                                    matching: .images
+                                ) {
+                                    Image(systemName: "plus.circle")
+                                        .font(.system(size: 18))
+                                        .foregroundStyle(Color.atlasAccent)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+
+                            if photosVM.photos.isEmpty {
+                                Text("No photos yet. Tap + to add from your library.")
+                                    .font(AtlasFont.body(13))
+                                    .foregroundStyle(Color.atlasMuted)
+                                    .padding(.horizontal, 16)
+                            } else {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(Array(photosVM.photos.prefix(6).enumerated()), id: \.element.id) { index, photo in
+                                            FilmstripCell(photo: photo)
+                                                .onTapGesture {
+                                                    filmstripViewerToken = PhotoViewerToken(photoId: photo.id)
+                                                }
+                                        }
+                                        NavigationLink {
+                                            PhotoGridView(tripId: tripId, tripTitle: tripTitle, vm: photosVM)
+                                        } label: {
+                                            VStack(spacing: 4) {
+                                                Image(systemName: "chevron.right")
+                                                    .font(.system(size: 16, weight: .medium))
+                                                    .foregroundStyle(Color.atlasAccent)
+                                                Text("All")
+                                                    .font(AtlasFont.mono(10))
+                                                    .foregroundStyle(Color.atlasMuted)
+                                            }
+                                            .frame(width: 60, height: 60)
+                                            .background(Color.atlasSurface)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(Color.atlasBorder, lineWidth: 0.5)
+                                            )
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                }
+                            }
+                        }
+
                         // Destinations
                         if !vm.destinations.isEmpty {
                             SectionHeader(title: "Destinations", count: vm.destinations.count)
@@ -62,7 +122,23 @@ struct TripDetailView: View {
         }
         .navigationTitle(tripTitle)
         .navigationBarTitleDisplayMode(.large)
-        .task { await vm.load(tripId: tripId, api: auth.api) }
+        .task {
+            async let tripLoad: Void = vm.load(tripId: tripId, api: auth.api)
+            async let photoLoad: Void = photosVM.load(tripId: tripId, api: auth.api)
+            _ = await (tripLoad, photoLoad)
+        }
+        .onChange(of: filmstripPickerItems) { _, items in
+            guard !items.isEmpty else { return }
+            Task {
+                let uploads = await loadPickerItems(items)
+                filmstripPickerItems = []
+                await photosVM.upload(tripId: tripId, uploads: uploads, api: auth.api)
+            }
+        }
+        .fullScreenCover(item: $filmstripViewerToken) { token in
+            let startIndex = photosVM.photos.firstIndex(where: { $0.id == token.photoId }) ?? 0
+            PhotoViewer(photos: photosVM.photos, startIndex: startIndex)
+        }
     }
 }
 
@@ -171,5 +247,30 @@ struct SectionHeader: View {
                 .font(AtlasFont.mono(11))
                 .foregroundStyle(Color.atlasMuted)
         }
+    }
+}
+
+struct FilmstripCell: View {
+    let photo: Photo
+
+    var body: some View {
+        AsyncImage(url: URL(string: photo.thumbnailUrl ?? photo.url)) { phase in
+            switch phase {
+            case .success(let image):
+                image.resizable().scaledToFill()
+            case .failure:
+                Color.atlasSurface
+                    .overlay(Image(systemName: "photo").foregroundStyle(Color.atlasMuted))
+            default:
+                Color.atlasSurface
+                    .overlay(ProgressView().tint(Color.atlasMuted).scaleEffect(0.7))
+            }
+        }
+        .frame(width: 60, height: 60)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.atlasBorder, lineWidth: 0.5)
+        )
     }
 }

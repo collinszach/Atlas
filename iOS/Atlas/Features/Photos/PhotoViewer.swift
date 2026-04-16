@@ -116,6 +116,7 @@ private struct ZoomablePhotoPage: View {
 
     @State private var scale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
+    @State private var baseOffset: CGSize = .zero
     @GestureState private var magnifyBy: CGFloat = 1.0
 
     var body: some View {
@@ -139,18 +140,28 @@ private struct ZoomablePhotoPage: View {
                     .updating($magnifyBy) { value, state, _ in state = value }
                     .onEnded { value in
                         scale = min(max(scale * value, 1.0), 5.0)
-                        if scale <= 1.0 { offset = .zero }
+                        if scale <= 1.0 { offset = .zero; baseOffset = .zero }
                     },
                 DragGesture()
                     .onChanged { value in
                         guard scale > 1 else { return }
-                        offset = value.translation
+                        offset = CGSize(
+                            width: baseOffset.width + value.translation.width,
+                            height: baseOffset.height + value.translation.height
+                        )
+                    }
+                    .onEnded { value in
+                        guard scale > 1 else { return }
+                        baseOffset = CGSize(
+                            width: baseOffset.width + value.translation.width,
+                            height: baseOffset.height + value.translation.height
+                        )
                     }
             )
         )
         .onTapGesture(count: 2) {
             withAnimation(.spring()) {
-                if scale > 1 { scale = 1; offset = .zero }
+                if scale > 1 { scale = 1; offset = .zero; baseOffset = .zero }
                 else { scale = 2.5 }
             }
         }

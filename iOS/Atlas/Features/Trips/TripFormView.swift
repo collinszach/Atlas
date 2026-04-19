@@ -23,7 +23,7 @@ struct TripFormView: View {
 
                         Picker("Status", selection: $status) {
                             ForEach(TripStatus.allCases, id: \.self) { s in
-                                Label(s.label, systemImage: s.systemImage).tag(s)
+                                Text(s.label).tag(s)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -32,10 +32,13 @@ struct TripFormView: View {
                 .scrollContentBackground(.hidden)
 
                 if vm.isLoading {
-                    Color.black.opacity(0.3).ignoresSafeArea()
-                    ProgressView()
-                        .tint(Color.atlasAccent)
-                        .scaleEffect(1.4)
+                    ZStack {
+                        Color.black.opacity(0.3)
+                        ProgressView()
+                            .tint(Color.atlasAccent)
+                            .scaleEffect(1.4)
+                    }
+                    .ignoresSafeArea()
                 }
             }
             .navigationTitle("New Trip")

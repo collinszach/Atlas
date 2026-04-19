@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # AI
     anthropic_api_key: str = ""
 
+    # Flight enrichment (optional)
+    aviationstack_api_key: str = ""
+
     # App
     app_env: str = "development"
 

@@ -121,3 +121,24 @@ async def test_invalid_transport_type_rejected(authed_client):
         json={"type": "teleporter", "origin_city": "A", "dest_city": "B"},
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_enrich_flight_no_key_returns_503(authed_client):
+    resp = await authed_client.post(
+        "/api/v1/transport/enrich-flight",
+        json={"flight_number": "AA123", "date": "2026-04-19"},
+    )
+    assert resp.status_code == 503
+    assert "not configured" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_enrich_flight_requires_auth(client):
+    resp = await client.post(
+        "/api/v1/transport/enrich-flight",
+        json={"flight_number": "AA123", "date": "2026-04-19"},
+    )
+    assert resp.status_code == 401

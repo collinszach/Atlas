@@ -69,6 +69,12 @@ final class APIClient {
         }
     }
 
+    func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
+        var req = makeRequest("PUT", path: path)
+        req.httpBody = try JSONEncoder().encode(body)
+        return try await perform(req)
+    }
+
     // MARK: - Convenience API wrappers
 
     func trips(page: Int = 1, status: TripStatus? = nil) async throws -> TripListResponse {
@@ -152,6 +158,30 @@ final class APIClient {
 
     func setCoverPhoto(photoId: String) async throws {
         try await postVoid("/api/v1/photos/\(photoId)/set-cover")
+    }
+
+    // MARK: - Trip write operations
+
+    func createTrip(body: TripCreate) async throws -> Trip {
+        try await post("/api/v1/trips", body: body)
+    }
+
+    func updateTrip(id: String, body: TripUpdate) async throws -> Trip {
+        try await put("/api/v1/trips/\(id)", body: body)
+    }
+
+    func deleteTrip(id: String) async throws {
+        try await delete("/api/v1/trips/\(id)")
+    }
+
+    // MARK: - Destination write operations
+
+    func addDestination(tripId: String, body: DestinationCreate) async throws -> Destination {
+        try await post("/api/v1/trips/\(tripId)/destinations", body: body)
+    }
+
+    func deleteDestination(id: String) async throws {
+        try await delete("/api/v1/destinations/\(id)")
     }
 
     // MARK: - Private

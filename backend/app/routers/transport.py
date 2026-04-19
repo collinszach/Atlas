@@ -1,5 +1,6 @@
 import logging
 import uuid
+from datetime import datetime as dt
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import CurrentUser
+from app.config import settings
 from app.database import get_db
 from app.models.transport import TransportLeg
 from app.models.trip import Trip
@@ -140,8 +142,6 @@ async def enrich_flight(
     body: EnrichFlightRequest,
     user_id: CurrentUser,
 ) -> EnrichFlightResponse:
-    from app.config import settings
-
     if not settings.aviationstack_api_key:
         raise HTTPException(status_code=503, detail="Flight enrichment not configured")
 
@@ -152,11 +152,12 @@ async def enrich_flight(
                 params={
                     "access_key": settings.aviationstack_api_key,
                     "flight_iata": body.flight_number.upper(),
-                    "flight_date": body.date,
+                    "flight_date": str(body.date),
                 },
             )
         except httpx.HTTPError as exc:
-            raise HTTPException(status_code=502, detail=f"Flight lookup failed: {exc}")
+            logger.warning("AviationStack request failed: %s", exc)
+            raise HTTPException(status_code=502, detail="Flight lookup failed")
 
     if resp.status_code != 200:
         raise HTTPException(status_code=502, detail="Flight data unavailable")
@@ -175,7 +176,6 @@ async def enrich_flight(
     arr_sched = arr.get("scheduled")
     if dep_sched and arr_sched:
         try:
-            from datetime import datetime as dt
             d_dep = dt.fromisoformat(dep_sched.replace("Z", "+00:00"))
             d_arr = dt.fromisoformat(arr_sched.replace("Z", "+00:00"))
             delta = int((d_arr - d_dep).total_seconds() / 60)

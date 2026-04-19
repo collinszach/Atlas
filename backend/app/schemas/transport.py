@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pydantic import BaseModel, model_validator
 
@@ -123,7 +123,7 @@ class TransportRead(BaseModel):
 
 class EnrichFlightRequest(BaseModel):
     flight_number: str
-    date: str  # "YYYY-MM-DD"
+    date: date
 
 
 class EnrichFlightResponse(BaseModel):

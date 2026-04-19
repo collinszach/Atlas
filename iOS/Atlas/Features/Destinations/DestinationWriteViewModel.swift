@@ -29,7 +29,7 @@ final class DestinationWriteViewModel {
         defer { isSearching = false }
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
-        request.resultTypes = .pointOfInterest
+        request.resultTypes = [.address, .pointOfInterest]
         do {
             let search = MKLocalSearch(request: request)
             let response = try await search.start()

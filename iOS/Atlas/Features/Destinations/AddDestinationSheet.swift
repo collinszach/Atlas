@@ -33,11 +33,12 @@ struct AddDestinationSheet: View {
             .navigationTitle(selectedPlace == nil ? "Find City" : "Add Destination")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.atlasMuted)
-                }
-                if selectedPlace != nil {
+                if selectedPlace == nil {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
+                            .foregroundStyle(Color.atlasMuted)
+                    }
+                } else {
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
                             selectedPlace = nil
@@ -54,6 +55,10 @@ struct AddDestinationSheet: View {
                             }
                             .foregroundStyle(Color.atlasAccent)
                         }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Cancel") { dismiss() }
+                            .foregroundStyle(Color.atlasMuted)
                     }
                 }
             }

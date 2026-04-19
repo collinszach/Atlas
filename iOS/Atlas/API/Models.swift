@@ -81,10 +81,11 @@ struct DestinationCreate: Encodable {
     let arrivalDate: String?
     let departureDate: String?
     let rating: Int?
+    let notes: String?
     let orderIndex: Int
 
     enum CodingKeys: String, CodingKey {
-        case city, region, latitude, longitude, rating
+        case city, region, latitude, longitude, rating, notes
         case countryCode = "country_code"
         case countryName = "country_name"
         case arrivalDate = "arrival_date"

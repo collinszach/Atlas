@@ -29,6 +29,9 @@ final class TransportWriteViewModel {
     }
 
     func deleteTransportLeg(id: String, api: APIClient) async throws {
+        isSubmitting = true
+        error = nil
+        defer { isSubmitting = false }
         try await api.deleteTransportLeg(id: id)
     }
 }

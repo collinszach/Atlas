@@ -131,6 +131,7 @@ struct AddTransportSheet: View {
                         DatePicker(
                             "Date",
                             selection: $arrivalDate,
+                            in: departureDate...,
                             displayedComponents: includeArrivalTime ? [.date, .hourAndMinute] : .date
                         )
                         Toggle("Include time", isOn: $includeArrivalTime)
@@ -150,10 +151,16 @@ struct AddTransportSheet: View {
             }
             .navigationTitle("Add Transport")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: type) { _, newType in
+                if newType != .flight {
+                    enrichedDurationMin = nil
+                    enrichedDistanceKm = nil
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .foregroundStyle(Color.atlasAccent)
+                        .foregroundStyle(Color.atlasMuted)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     if vm.isSubmitting {

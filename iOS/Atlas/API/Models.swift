@@ -247,6 +247,69 @@ struct TimelineTrip: Codable, Identifiable {
     }
 }
 
+// MARK: - Transport write
+
+struct FlightEnrichRequest: Encodable {
+    let flightNumber: String
+    let date: String
+
+    enum CodingKeys: String, CodingKey {
+        case flightNumber = "flight_number"
+        case date
+    }
+}
+
+struct FlightEnrichResponse: Decodable {
+    let flightNumber: String?
+    let airline: String?
+    let originIata: String?
+    let destIata: String?
+    let originCity: String?
+    let destCity: String?
+    let durationMin: Int?
+    let distanceKm: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case airline
+        case flightNumber = "flight_number"
+        case originIata = "origin_iata"
+        case destIata = "dest_iata"
+        case originCity = "origin_city"
+        case destCity = "dest_city"
+        case durationMin = "duration_min"
+        case distanceKm = "distance_km"
+    }
+}
+
+struct TransportCreate: Encodable {
+    let type: String
+    let flightNumber: String?
+    let airline: String?
+    let originIata: String?
+    let destIata: String?
+    let originCity: String?
+    let destCity: String?
+    let departureAt: String?   // "yyyy-MM-dd" or "yyyy-MM-dd'T'HH:mm:ss"
+    let arrivalAt: String?
+    let durationMin: Int?
+    let distanceKm: Double?
+    let seatClass: String?
+
+    enum CodingKeys: String, CodingKey {
+        case type, airline
+        case flightNumber = "flight_number"
+        case originIata = "origin_iata"
+        case destIata = "dest_iata"
+        case originCity = "origin_city"
+        case destCity = "dest_city"
+        case departureAt = "departure_at"
+        case arrivalAt = "arrival_at"
+        case durationMin = "duration_min"
+        case distanceKm = "distance_km"
+        case seatClass = "seat_class"
+    }
+}
+
 // MARK: - Transport
 
 struct TransportLeg: Codable, Identifiable {

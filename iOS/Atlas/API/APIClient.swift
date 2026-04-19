@@ -184,6 +184,23 @@ final class APIClient {
         try await delete("/api/v1/destinations/\(id)")
     }
 
+    // MARK: - Transport write operations
+
+    func createTransportLeg(tripId: String, body: TransportCreate) async throws -> TransportLeg {
+        try await post("/api/v1/trips/\(tripId)/transport", body: body)
+    }
+
+    func deleteTransportLeg(id: String) async throws {
+        try await delete("/api/v1/transport/\(id)")
+    }
+
+    func enrichFlight(flightNumber: String, date: String) async throws -> FlightEnrichResponse {
+        try await post(
+            "/api/v1/transport/enrich-flight",
+            body: FlightEnrichRequest(flightNumber: flightNumber, date: date)
+        )
+    }
+
     // MARK: - Private
 
     private func makeRequest(_ method: String, path: String) -> URLRequest {

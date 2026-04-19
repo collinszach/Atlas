@@ -29,6 +29,7 @@ __pycache__/
 
 # Superpowers dev tooling
 .superpowers/
+docs/superpowers/
 
 # Git worktrees
 .worktrees/

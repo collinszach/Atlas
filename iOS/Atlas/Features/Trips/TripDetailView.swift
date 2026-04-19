@@ -13,6 +13,9 @@ struct TripDetailView: View {
     @State private var showEditSheet = false
     @State private var showAddDestSheet = false
     @State private var destToDelete: Destination? = nil
+    @State private var showAddTransportSheet = false
+    @State private var legToDelete: TransportLeg? = nil
+    @State private var transportWriteVM = TransportWriteViewModel()
 
     init(trip: Trip) {
         _trip = State(initialValue: trip)
@@ -129,25 +132,36 @@ struct TripDetailView: View {
                         }
 
                         // Transport
-                        if !vm.transport.isEmpty {
-                            SectionHeader(title: "Transport", count: vm.transport.count)
-                                .padding(.horizontal, 16)
-
-                            VStack(spacing: 1) {
-                                ForEach(vm.transport) { leg in
-                                    TransportRow(leg: leg)
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                SectionHeader(title: "Transport", count: vm.transport.count)
+                                Spacer()
+                                Button {
+                                    showAddTransportSheet = true
+                                } label: {
+                                    Image(systemName: "plus.circle")
+                                        .font(.system(size: 18))
+                                        .foregroundStyle(Color.atlasAccent)
                                 }
                             }
-                            .atlasCard()
                             .padding(.horizontal, 16)
-                        }
 
-                        if vm.transport.isEmpty && vm.destinations.isEmpty {
-                            Text("No transport logged yet.")
-                                .font(AtlasFont.body(14))
-                                .foregroundStyle(Color.atlasMuted)
-                                .padding(24)
-                                .frame(maxWidth: .infinity)
+                            if !vm.transport.isEmpty {
+                                VStack(spacing: 1) {
+                                    ForEach(vm.transport) { leg in
+                                        TransportRow(leg: leg)
+                                            .contextMenu {
+                                                Button(role: .destructive) {
+                                                    legToDelete = leg
+                                                } label: {
+                                                    Label("Delete Leg", systemImage: "trash")
+                                                }
+                                            }
+                                    }
+                                }
+                                .atlasCard()
+                                .padding(.horizontal, 16)
+                            }
                         }
                     }
                     .padding(.vertical, 16)
@@ -227,6 +241,38 @@ struct TripDetailView: View {
             Button("Cancel", role: .cancel) { destToDelete = nil }
         } message: {
             Text("This will permanently remove the destination from the trip.")
+        }
+        .sheet(isPresented: $showAddTransportSheet) {
+            AddTransportSheet(
+                tripId: trip.id,
+                api: auth.api
+            ) { newLeg in
+                vm.transport.append(newLeg)
+            }
+        }
+        .alert(
+            "Delete transport leg?",
+            isPresented: Binding(
+                get: { legToDelete != nil },
+                set: { if !$0 { legToDelete = nil } }
+            )
+        ) {
+            Button("Delete", role: .destructive) {
+                guard let leg = legToDelete else { return }
+                legToDelete = nil
+                vm.transport.removeAll { $0.id == leg.id }
+                let api = auth.api
+                Task {
+                    do {
+                        try await transportWriteVM.deleteTransportLeg(id: leg.id, api: api)
+                    } catch {
+                        await vm.load(tripId: trip.id, api: api)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) { legToDelete = nil }
+        } message: {
+            Text("This will permanently remove the transport leg from the trip.")
         }
     }
 }

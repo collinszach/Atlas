@@ -34,9 +34,8 @@ struct TripListView: View {
                             }
                         }
                         .onDelete { indexSet in
-                            if let idx = indexSet.first {
-                                tripToDelete = vm.filtered[idx]
-                            }
+                            guard tripToDelete == nil, let idx = indexSet.first else { return }
+                            tripToDelete = vm.filtered[idx]
                         }
                     }
                     .listStyle(.insetGrouped)
@@ -83,11 +82,12 @@ struct TripListView: View {
                 guard let trip = tripToDelete else { return }
                 tripToDelete = nil
                 vm.trips.removeAll { $0.id == trip.id }
+                let api = auth.api
                 Task {
                     do {
-                        try await auth.api.deleteTrip(id: trip.id)
+                        try await api.deleteTrip(id: trip.id)
                     } catch {
-                        await vm.load(api: auth.api, reset: true)
+                        await vm.load(api: api, reset: true)
                     }
                 }
             }

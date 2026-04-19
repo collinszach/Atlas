@@ -7,7 +7,6 @@ struct TripDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var vm = TripDetailViewModel()
     @State private var photosVM = PhotosViewModel()
-    @State private var writeVM = TripWriteViewModel()
     @State private var destWriteVM = DestinationWriteViewModel()
     @State private var filmstripViewerToken: PhotoViewerToken? = nil
     @State private var filmstripPickerItems: [PhotosPickerItem] = []
@@ -115,11 +114,11 @@ struct TripDetailView: View {
                                 VStack(spacing: 1) {
                                     ForEach(vm.destinations) { dest in
                                         DestinationRow(destination: dest)
-                                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                            .contextMenu {
                                                 Button(role: .destructive) {
                                                     destToDelete = dest
                                                 } label: {
-                                                    Label("Delete", systemImage: "trash")
+                                                    Label("Delete Destination", systemImage: "trash")
                                                 }
                                             }
                                     }

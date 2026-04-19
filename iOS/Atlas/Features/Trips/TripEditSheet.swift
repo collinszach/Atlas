@@ -13,7 +13,7 @@ struct TripEditSheet: View {
     @State private var startDate: Date
     @State private var hasEndDate: Bool
     @State private var endDate: Date
-    @State private var description: String
+    @State private var tripDescription: String
     @State private var tagsText: String
     @State private var vm = TripWriteViewModel()
     @State private var showDeleteAlert = false
@@ -25,6 +25,7 @@ struct TripEditSheet: View {
         self.onDeleted = onDeleted
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
         let sd = trip.startDate.flatMap { f.date(from: $0) }
         let ed = trip.endDate.flatMap { f.date(from: $0) }
         _title = State(initialValue: trip.title)
@@ -33,7 +34,7 @@ struct TripEditSheet: View {
         _startDate = State(initialValue: sd ?? Date())
         _hasEndDate = State(initialValue: ed != nil)
         _endDate = State(initialValue: ed ?? Date())
-        _description = State(initialValue: trip.description ?? "")
+        _tripDescription = State(initialValue: trip.description ?? "")
         _tagsText = State(initialValue: trip.tags.joined(separator: ", "))
     }
 
@@ -74,7 +75,7 @@ struct TripEditSheet: View {
                     }
 
                     Section("Description") {
-                        TextEditor(text: $description)
+                        TextEditor(text: $tripDescription)
                             .font(AtlasFont.body(14))
                             .frame(minHeight: 80)
                     }
@@ -142,8 +143,10 @@ struct TripEditSheet: View {
     }
 
     private func save() {
+        guard !vm.isLoading else { return }
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
         let start = hasStartDate ? f.string(from: startDate) : nil
         let end = hasEndDate ? f.string(from: endDate) : nil
         let tags = tagsText
@@ -159,7 +162,7 @@ struct TripEditSheet: View {
                     status: status,
                     startDate: start,
                     endDate: end,
-                    description: description,
+                    description: tripDescription,
                     tags: tags,
                     api: api
                 )

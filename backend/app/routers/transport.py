@@ -88,55 +88,6 @@ async def add_transport(
     return TransportRead.from_orm_with_geo(leg)
 
 
-@router.put("/transport/{leg_id}", response_model=TransportRead)
-async def update_transport(
-    leg_id: uuid.UUID,
-    body: TransportUpdate,
-    user_id: CurrentUser,
-    db: AsyncSession = Depends(get_db),
-) -> TransportRead:
-    result = await db.execute(
-        select(TransportLeg).where(TransportLeg.id == leg_id, TransportLeg.user_id == user_id)
-    )
-    leg = result.scalar_one_or_none()
-    if leg is None:
-        raise HTTPException(status_code=404, detail="Transport leg not found")
-
-    update_data = body.model_dump(exclude_none=True)
-    origin_lat = update_data.pop("origin_lat", None)
-    origin_lng = update_data.pop("origin_lng", None)
-    dest_lat = update_data.pop("dest_lat", None)
-    dest_lng = update_data.pop("dest_lng", None)
-
-    if origin_lat is not None and origin_lng is not None:
-        leg.origin_geo = from_shape(Point(origin_lng, origin_lat), srid=4326)
-    if dest_lat is not None and dest_lng is not None:
-        leg.dest_geo = from_shape(Point(dest_lng, dest_lat), srid=4326)
-
-    for k, v in update_data.items():
-        setattr(leg, k, v)
-
-    await db.flush()
-    await db.refresh(leg)
-    return TransportRead.from_orm_with_geo(leg)
-
-
-@router.delete("/transport/{leg_id}", status_code=204)
-async def delete_transport(
-    leg_id: uuid.UUID,
-    user_id: CurrentUser,
-    db: AsyncSession = Depends(get_db),
-) -> None:
-    result = await db.execute(
-        select(TransportLeg).where(TransportLeg.id == leg_id, TransportLeg.user_id == user_id)
-    )
-    leg = result.scalar_one_or_none()
-    if leg is None:
-        raise HTTPException(status_code=404, detail="Transport leg not found")
-    await db.delete(leg)
-    await db.flush()
-
-
 @router.post("/transport/enrich-flight", response_model=EnrichFlightResponse)
 async def enrich_flight(
     body: EnrichFlightRequest,
@@ -194,3 +145,52 @@ async def enrich_flight(
         duration_min=duration_min,
         distance_km=None,  # AviationStack free tier omits distance
     )
+
+
+@router.put("/transport/{leg_id}", response_model=TransportRead)
+async def update_transport(
+    leg_id: uuid.UUID,
+    body: TransportUpdate,
+    user_id: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+) -> TransportRead:
+    result = await db.execute(
+        select(TransportLeg).where(TransportLeg.id == leg_id, TransportLeg.user_id == user_id)
+    )
+    leg = result.scalar_one_or_none()
+    if leg is None:
+        raise HTTPException(status_code=404, detail="Transport leg not found")
+
+    update_data = body.model_dump(exclude_none=True)
+    origin_lat = update_data.pop("origin_lat", None)
+    origin_lng = update_data.pop("origin_lng", None)
+    dest_lat = update_data.pop("dest_lat", None)
+    dest_lng = update_data.pop("dest_lng", None)
+
+    if origin_lat is not None and origin_lng is not None:
+        leg.origin_geo = from_shape(Point(origin_lng, origin_lat), srid=4326)
+    if dest_lat is not None and dest_lng is not None:
+        leg.dest_geo = from_shape(Point(dest_lng, dest_lat), srid=4326)
+
+    for k, v in update_data.items():
+        setattr(leg, k, v)
+
+    await db.flush()
+    await db.refresh(leg)
+    return TransportRead.from_orm_with_geo(leg)
+
+
+@router.delete("/transport/{leg_id}", status_code=204)
+async def delete_transport(
+    leg_id: uuid.UUID,
+    user_id: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    result = await db.execute(
+        select(TransportLeg).where(TransportLeg.id == leg_id, TransportLeg.user_id == user_id)
+    )
+    leg = result.scalar_one_or_none()
+    if leg is None:
+        raise HTTPException(status_code=404, detail="Transport leg not found")
+    await db.delete(leg)
+    await db.flush()

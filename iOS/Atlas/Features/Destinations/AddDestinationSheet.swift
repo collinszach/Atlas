@@ -44,6 +44,8 @@ struct AddDestinationSheet: View {
                             rating = nil
                             hasArrival = false
                             hasDeparture = false
+                            arrivalDate = Date()
+                            departureDate = Date()
                         } label: {
                             HStack(spacing: 4) {
                                 Image(systemName: "chevron.left")
@@ -143,6 +145,7 @@ struct AddDestinationSheet: View {
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
+                Spacer(minLength: 0)
             }
         }
     }

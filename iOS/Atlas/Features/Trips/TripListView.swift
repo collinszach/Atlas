@@ -3,6 +3,8 @@ import SwiftUI
 struct TripListView: View {
     @Environment(AuthManager.self) private var auth
     @State private var vm = TripListViewModel()
+    @State private var showCreateSheet = false
+    @State private var tripToDelete: Trip? = nil
 
     var body: some View {
         NavigationStack {
@@ -31,6 +33,10 @@ struct TripListView: View {
                                 }
                             }
                         }
+                        .onDelete { indexSet in
+                            guard tripToDelete == nil, let idx = indexSet.first else { return }
+                            tripToDelete = vm.filtered[idx]
+                        }
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
@@ -41,6 +47,14 @@ struct TripListView: View {
             .navigationTitle("Trips")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showCreateSheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundStyle(Color.atlasAccent)
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     StatusFilterMenu(selected: vm.selectedStatus) { status in
                         Task { await vm.changeFilter(to: status, api: auth.api) }
@@ -48,10 +62,39 @@ struct TripListView: View {
                 }
             }
             .navigationDestination(for: Trip.self) { trip in
-                TripDetailView(tripId: trip.id, tripTitle: trip.title)
+                TripDetailView(trip: trip)
             }
         }
         .task { await vm.load(api: auth.api, reset: true) }
+        .sheet(isPresented: $showCreateSheet) {
+            TripFormView(api: auth.api) { newTrip in
+                vm.trips.insert(newTrip, at: 0)
+            }
+        }
+        .alert(
+            "Delete \"\(tripToDelete?.title ?? "")\"?",
+            isPresented: Binding(
+                get: { tripToDelete != nil },
+                set: { if !$0 { tripToDelete = nil } }
+            )
+        ) {
+            Button("Delete", role: .destructive) {
+                guard let trip = tripToDelete else { return }
+                tripToDelete = nil
+                vm.trips.removeAll { $0.id == trip.id }
+                let api = auth.api
+                Task {
+                    do {
+                        try await api.deleteTrip(id: trip.id)
+                    } catch {
+                        await vm.load(api: api, reset: true)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) { tripToDelete = nil }
+        } message: {
+            Text("This will permanently delete the trip and all its data.")
+        }
     }
 }
 

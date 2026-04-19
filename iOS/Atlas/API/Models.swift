@@ -45,6 +45,55 @@ struct TripListResponse: Codable {
     let limit: Int
 }
 
+// MARK: - Write request bodies
+
+struct TripCreate: Encodable {
+    let title: String
+    let status: TripStatus
+
+    enum CodingKeys: String, CodingKey {
+        case title, status
+    }
+}
+
+struct TripUpdate: Encodable {
+    var title: String?
+    var status: TripStatus?
+    var startDate: String?
+    var endDate: String?
+    var description: String?
+    var tags: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case title, status, description, tags
+        case startDate = "start_date"
+        case endDate = "end_date"
+    }
+}
+
+struct DestinationCreate: Encodable {
+    let city: String
+    let countryCode: String
+    let countryName: String
+    let region: String?
+    let latitude: Double?
+    let longitude: Double?
+    let arrivalDate: String?
+    let departureDate: String?
+    let rating: Int?
+    let notes: String?
+    let orderIndex: Int
+
+    enum CodingKeys: String, CodingKey {
+        case city, region, latitude, longitude, rating, notes
+        case countryCode = "country_code"
+        case countryName = "country_name"
+        case arrivalDate = "arrival_date"
+        case departureDate = "departure_date"
+        case orderIndex = "order_index"
+    }
+}
+
 // MARK: - Destinations
 
 struct Destination: Codable, Identifiable {

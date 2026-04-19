@@ -62,7 +62,7 @@ struct TripListView: View {
                 }
             }
             .navigationDestination(for: Trip.self) { trip in
-                TripDetailView(tripId: trip.id, tripTitle: trip.title)
+                TripDetailView(trip: trip)
             }
         }
         .task { await vm.load(api: auth.api, reset: true) }

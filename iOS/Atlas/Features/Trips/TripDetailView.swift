@@ -2,14 +2,22 @@ import SwiftUI
 import PhotosUI
 
 struct TripDetailView: View {
-    let tripId: String
-    let tripTitle: String
-
+    @State private var trip: Trip
     @Environment(AuthManager.self) private var auth
+    @Environment(\.dismiss) private var dismiss
     @State private var vm = TripDetailViewModel()
     @State private var photosVM = PhotosViewModel()
+    @State private var writeVM = TripWriteViewModel()
+    @State private var destWriteVM = DestinationWriteViewModel()
     @State private var filmstripViewerToken: PhotoViewerToken? = nil
     @State private var filmstripPickerItems: [PhotosPickerItem] = []
+    @State private var showEditSheet = false
+    @State private var showAddDestSheet = false
+    @State private var destToDelete: Destination? = nil
+
+    init(trip: Trip) {
+        _trip = State(initialValue: trip)
+    }
 
     var body: some View {
         ZStack {
@@ -19,7 +27,7 @@ struct TripDetailView: View {
                 LoadingView()
             } else if let err = vm.error {
                 ErrorBanner(message: err) {
-                    Task { await vm.load(tripId: tripId, api: auth.api) }
+                    Task { await vm.load(tripId: trip.id, api: auth.api) }
                 }
             } else {
                 ScrollView {
@@ -64,7 +72,7 @@ struct TripDetailView: View {
                                                 }
                                         }
                                         NavigationLink {
-                                            PhotoGridView(tripId: tripId, tripTitle: tripTitle, vm: photosVM)
+                                            PhotoGridView(tripId: trip.id, tripTitle: trip.title, vm: photosVM)
                                         } label: {
                                             VStack(spacing: 4) {
                                                 Image(systemName: "chevron.right")
@@ -89,17 +97,36 @@ struct TripDetailView: View {
                         }
 
                         // Destinations
-                        if !vm.destinations.isEmpty {
-                            SectionHeader(title: "Destinations", count: vm.destinations.count)
-                                .padding(.horizontal, 16)
-
-                            VStack(spacing: 1) {
-                                ForEach(vm.destinations) { dest in
-                                    DestinationRow(destination: dest)
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                SectionHeader(title: "Destinations", count: vm.destinations.count)
+                                Spacer()
+                                Button {
+                                    showAddDestSheet = true
+                                } label: {
+                                    Image(systemName: "plus.circle")
+                                        .font(.system(size: 18))
+                                        .foregroundStyle(Color.atlasAccent)
                                 }
                             }
-                            .atlasCard()
                             .padding(.horizontal, 16)
+
+                            if !vm.destinations.isEmpty {
+                                VStack(spacing: 1) {
+                                    ForEach(vm.destinations) { dest in
+                                        DestinationRow(destination: dest)
+                                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                                Button(role: .destructive) {
+                                                    destToDelete = dest
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
+                                            }
+                                    }
+                                }
+                                .atlasCard()
+                                .padding(.horizontal, 16)
+                            }
                         }
 
                         // Transport
@@ -116,8 +143,8 @@ struct TripDetailView: View {
                             .padding(.horizontal, 16)
                         }
 
-                        if vm.destinations.isEmpty && vm.transport.isEmpty {
-                            Text("No destinations or transport logged yet.")
+                        if vm.transport.isEmpty && vm.destinations.isEmpty {
+                            Text("No transport logged yet.")
                                 .font(AtlasFont.body(14))
                                 .foregroundStyle(Color.atlasMuted)
                                 .padding(24)
@@ -128,11 +155,21 @@ struct TripDetailView: View {
                 }
             }
         }
-        .navigationTitle(tripTitle)
+        .navigationTitle(trip.title)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showEditSheet = true
+                } label: {
+                    Image(systemName: "square.and.pencil")
+                        .foregroundStyle(Color.atlasAccent)
+                }
+            }
+        }
         .task {
-            async let tripLoad: Void = vm.load(tripId: tripId, api: auth.api)
-            async let photoLoad: Void = photosVM.load(tripId: tripId, api: auth.api)
+            async let tripLoad: Void = vm.load(tripId: trip.id, api: auth.api)
+            async let photoLoad: Void = photosVM.load(tripId: trip.id, api: auth.api)
             _ = await (tripLoad, photoLoad)
         }
         .onChange(of: filmstripPickerItems) { _, items in
@@ -140,12 +177,57 @@ struct TripDetailView: View {
             Task {
                 let uploads = await loadPickerItems(items)
                 filmstripPickerItems = []
-                await photosVM.upload(tripId: tripId, uploads: uploads, api: auth.api)
+                await photosVM.upload(tripId: trip.id, uploads: uploads, api: auth.api)
             }
         }
         .fullScreenCover(item: $filmstripViewerToken) { token in
             let startIndex = photosVM.photos.firstIndex(where: { $0.id == token.photoId }) ?? 0
             PhotoViewer(photos: photosVM.photos, startIndex: startIndex)
+        }
+        .sheet(isPresented: $showEditSheet) {
+            TripEditSheet(
+                trip: trip,
+                api: auth.api,
+                onUpdated: { updated in
+                    trip = updated
+                },
+                onDeleted: {
+                    dismiss()
+                }
+            )
+        }
+        .sheet(isPresented: $showAddDestSheet) {
+            AddDestinationSheet(
+                tripId: trip.id,
+                destinationCount: vm.destinations.count,
+                api: auth.api
+            ) { newDest in
+                vm.destinations.append(newDest)
+            }
+        }
+        .alert(
+            "Delete \"\(destToDelete?.city ?? "")\"?",
+            isPresented: Binding(
+                get: { destToDelete != nil },
+                set: { if !$0 { destToDelete = nil } }
+            )
+        ) {
+            Button("Delete", role: .destructive) {
+                guard let dest = destToDelete else { return }
+                destToDelete = nil
+                vm.destinations.removeAll { $0.id == dest.id }
+                let api = auth.api
+                Task {
+                    do {
+                        try await destWriteVM.deleteDestination(id: dest.id, api: api)
+                    } catch {
+                        await vm.load(tripId: trip.id, api: api)
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) { destToDelete = nil }
+        } message: {
+            Text("This will permanently remove the destination from the trip.")
         }
     }
 }

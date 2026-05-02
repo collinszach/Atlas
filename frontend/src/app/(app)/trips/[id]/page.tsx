@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical, Pencil, BedDouble,
+  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical, Pencil, BedDouble, Trash2,
 } from "lucide-react";
 import { TripForm } from "@/components/trips/TripForm";
 import {
@@ -25,9 +25,9 @@ import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTrip } from "@/hooks/useTrips";
-import { useDestinations } from "@/hooks/useDestinations";
-import { useTransport } from "@/hooks/useTransport";
-import { useAccommodations } from "@/hooks/useAccommodations";
+import { useDestinations, useDeleteDestination } from "@/hooks/useDestinations";
+import { useTransport, useDeleteTransport } from "@/hooks/useTransport";
+import { useAccommodations, useDeleteAccommodation } from "@/hooks/useAccommodations";
 import { formatDateRange, nightsLabel } from "@/lib/utils";
 import { apiPatch } from "@/lib/api";
 import type { TransportLeg, Destination, Accommodation } from "@/types";
@@ -52,7 +52,7 @@ function transportLabel(leg: TransportLeg): string {
   return leg.flight_number ?? leg.type;
 }
 
-function SortableDestination({ dest }: { dest: Destination }) {
+function SortableDestination({ dest, onDelete }: { dest: Destination; onDelete: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: dest.id });
 
@@ -87,6 +87,13 @@ function SortableDestination({ dest }: { dest: Destination }) {
         <p className="text-xs font-mono text-atlas-muted">{dest.arrival_date ?? "—"}</p>
         <p className="text-xs text-atlas-muted">{nightsLabel(dest.nights)}</p>
       </div>
+      <button
+        onClick={onDelete}
+        className="text-atlas-muted hover:text-red-400 transition-colors shrink-0"
+        aria-label="Delete destination"
+      >
+        <Trash2 size={14} />
+      </button>
     </div>
   );
 }
@@ -99,6 +106,9 @@ export default function TripDetailPage() {
   const { data: destinations = [], isLoading: destLoading } = useDestinations(id);
   const { data: transport = [], isLoading: transportLoading } = useTransport(id);
   const { data: accommodations = [], isLoading: accLoading } = useAccommodations(id);
+  const { mutate: deleteDestination } = useDeleteDestination(id);
+  const { mutate: deleteTransport } = useDeleteTransport(id);
+  const { mutate: deleteAccommodation } = useDeleteAccommodation(id);
 
   const [isEditing, setIsEditing] = useState(false);
   const [orderedDests, setOrderedDests] = useState<Destination[]>(destinations);
@@ -155,6 +165,14 @@ export default function TripDetailPage() {
               <p className="text-xs font-mono text-atlas-muted mt-2">
                 {formatDateRange(trip.start_date, trip.end_date)}
               </p>
+              <div className="flex gap-4 mt-3">
+                <Link
+                  href={`/trips/${id}/photos`}
+                  className="text-xs text-atlas-muted hover:text-atlas-accent transition-colors"
+                >
+                  Photos
+                </Link>
+              </div>
             </div>
             <button
               onClick={() => setIsEditing(true)}
@@ -196,7 +214,11 @@ export default function TripDetailPage() {
             >
               <div className="flex flex-col gap-2">
                 {orderedDests.map((dest) => (
-                  <SortableDestination key={dest.id} dest={dest} />
+                  <SortableDestination
+                    key={dest.id}
+                    dest={dest}
+                    onDelete={() => deleteDestination(dest.id)}
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -254,6 +276,13 @@ export default function TripDetailPage() {
                     </p>
                   )}
                 </div>
+                <button
+                  onClick={() => deleteAccommodation(acc.id)}
+                  className="text-atlas-muted hover:text-red-400 transition-colors shrink-0"
+                  aria-label="Delete accommodation"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             ))}
           </div>
@@ -311,6 +340,13 @@ export default function TripDetailPage() {
                     </p>
                   )}
                 </div>
+                <button
+                  onClick={() => deleteTransport(leg.id)}
+                  className="text-atlas-muted hover:text-red-400 transition-colors shrink-0"
+                  aria-label="Delete transport leg"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             ))}
           </div>

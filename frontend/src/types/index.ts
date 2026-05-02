@@ -262,13 +262,15 @@ export interface DestinationBriefResponse {
 export interface UserStats {
   countries_visited: number;
   cities_visited: number;
-  total_nights: number;
+  trips_count: number;
+  nights_away: number;
   total_distance_km: number;
-  longest_trip_nights: number | null;
+  longest_trip_days: number | null;
   longest_trip_title: string | null;
   most_visited_country: string | null;
+  most_visited_country_code: string | null;
   most_visited_country_count: number | null;
-  co2_estimate_kg: number;
+  co2_kg_estimate: number;
 }
 
 export interface HeatmapEntry {

@@ -65,9 +65,9 @@ export default function StatsPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               <StatCard label="Countries" value={fmt(stats.countries_visited)} unit="visited" />
               <StatCard label="Cities" value={fmt(stats.cities_visited)} unit="visited" />
-              <StatCard label="Nights away" value={fmt(stats.total_nights)} unit="nights" />
+              <StatCard label="Nights away" value={fmt(stats.nights_away)} unit="nights" />
               <StatCard label="Distance" value={fmt(stats.total_distance_km)} unit="km flown" />
-              <StatCard label="CO₂" value={fmt(stats.co2_estimate_kg)} unit="kg estimated" />
+              <StatCard label="CO₂" value={fmt(stats.co2_kg_estimate)} unit="kg estimated" />
             </div>
 
             {/* Notable stats */}
@@ -77,7 +77,7 @@ export default function StatsPage() {
                   <div className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-3">
                     <p className="text-xs text-atlas-muted uppercase tracking-widest mb-1">Longest trip</p>
                     <p className="text-sm font-medium text-atlas-text">{stats.longest_trip_title}</p>
-                    <p className="text-xs font-mono text-atlas-muted">{stats.longest_trip_nights} nights</p>
+                    <p className="text-xs font-mono text-atlas-muted">{stats.longest_trip_days} nights</p>
                   </div>
                 )}
                 {stats.most_visited_country && (

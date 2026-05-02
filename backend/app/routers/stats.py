@@ -21,13 +21,15 @@ CO2_KG_PER_KM = 0.115
 class UserStats(BaseModel):
     countries_visited: int
     cities_visited: int
-    total_nights: int
+    trips_count: int
+    nights_away: int
     total_distance_km: float
-    longest_trip_nights: int | None
+    longest_trip_days: int | None
     longest_trip_title: str | None
     most_visited_country: str | None
+    most_visited_country_code: str | None
     most_visited_country_count: int | None
-    co2_estimate_kg: float
+    co2_kg_estimate: float
 
 
 class HeatmapEntry(BaseModel):
@@ -64,6 +66,13 @@ async def get_stats(
     )
     dest_row = dest_result.one()
 
+    # Total trips count
+    trips_result = await db.execute(
+        text("SELECT COUNT(*) FROM trips WHERE user_id = :uid"),
+        {"uid": user_id},
+    )
+    trips_count = int(trips_result.scalar_one() or 0)
+
     # Total distance flown
     dist_result = await db.execute(
         select(func.coalesce(func.sum(TransportLeg.distance_km), Decimal("0"))).where(
@@ -92,7 +101,7 @@ async def get_stats(
     # Most visited country (by visit count from materialized view)
     mv_result = await db.execute(
         text("""
-            SELECT country_name, visit_count
+            SELECT country_code, country_name, visit_count
             FROM country_visits
             WHERE user_id = :uid
             ORDER BY visit_count DESC
@@ -105,13 +114,15 @@ async def get_stats(
     return UserStats(
         countries_visited=dest_row.countries,
         cities_visited=dest_row.cities,
-        total_nights=dest_row.total_nights,
+        trips_count=trips_count,
+        nights_away=dest_row.total_nights,
         total_distance_km=total_distance_km,
-        longest_trip_nights=longest_trip_nights,
+        longest_trip_days=longest_trip_nights,
         longest_trip_title=longest_trip_title,
         most_visited_country=mv_row.country_name if mv_row else None,
+        most_visited_country_code=mv_row.country_code if mv_row else None,
         most_visited_country_count=mv_row.visit_count if mv_row else None,
-        co2_estimate_kg=round(total_distance_km * CO2_KG_PER_KM, 2),
+        co2_kg_estimate=round(total_distance_km * CO2_KG_PER_KM, 2),
     )
 
 

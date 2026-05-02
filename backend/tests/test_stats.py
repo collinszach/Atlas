@@ -21,10 +21,10 @@ async def test_stats_empty_user(auth_stats_client):
     body = resp.json()
     assert body["countries_visited"] == 0
     assert body["cities_visited"] == 0
-    assert body["total_nights"] == 0
+    assert body["nights_away"] == 0
     assert body["total_distance_km"] == 0.0
-    assert body["co2_estimate_kg"] == 0.0
-    assert body["longest_trip_nights"] is None
+    assert body["co2_kg_estimate"] == 0.0
+    assert body["longest_trip_days"] is None
     assert body["most_visited_country"] is None
 
 
@@ -68,9 +68,9 @@ async def test_stats_with_data(auth_stats_client):
     body = resp.json()
     assert body["countries_visited"] == 1
     assert body["cities_visited"] == 1
-    assert body["total_nights"] == 7
+    assert body["nights_away"] == 7
     assert body["total_distance_km"] == 5560.0
-    assert abs(body["co2_estimate_kg"] - 5560.0 * 0.115) < 0.01
+    assert abs(body["co2_kg_estimate"] - 5560.0 * 0.115) < 0.01
     assert body["most_visited_country"] == "Japan"
 
 

@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical,
+  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical, Pencil,
 } from "lucide-react";
+import { TripForm } from "@/components/trips/TripForm";
 import {
   DndContext,
   closestCenter,
@@ -97,6 +98,7 @@ export default function TripDetailPage() {
   const { data: destinations = [], isLoading: destLoading } = useDestinations(id);
   const { data: transport = [], isLoading: transportLoading } = useTransport(id);
 
+  const [isEditing, setIsEditing] = useState(false);
   const [orderedDests, setOrderedDests] = useState<Destination[]>(destinations);
   const isDraggingRef = useRef(false);
   useEffect(() => {
@@ -142,13 +144,24 @@ export default function TripDetailPage() {
           <Link href="/trips" className="text-xs text-atlas-muted hover:text-atlas-text mb-3 inline-block">
             ← All trips
           </Link>
-          <h1 className="font-display text-3xl font-semibold text-atlas-text">{trip.title}</h1>
-          {trip.description && (
-            <p className="text-atlas-muted mt-2 text-sm">{trip.description}</p>
-          )}
-          <p className="text-xs font-mono text-atlas-muted mt-2">
-            {formatDateRange(trip.start_date, trip.end_date)}
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="font-display text-3xl font-semibold text-atlas-text">{trip.title}</h1>
+              {trip.description && (
+                <p className="text-atlas-muted mt-2 text-sm">{trip.description}</p>
+              )}
+              <p className="text-xs font-mono text-atlas-muted mt-2">
+                {formatDateRange(trip.start_date, trip.end_date)}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-atlas-muted hover:text-atlas-text transition-colors shrink-0 mt-1"
+              aria-label="Edit trip"
+            >
+              <Pencil size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Destinations */}
@@ -245,6 +258,18 @@ export default function TripDetailPage() {
           </div>
         </div>
       </div>
+
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-atlas-bg/80 pt-20 px-4">
+          <div className="w-full max-w-lg rounded-xl border border-atlas-border bg-atlas-surface p-6 shadow-2xl">
+            <h2 className="font-display text-xl font-semibold text-atlas-text mb-5">Edit trip</h2>
+            <TripForm
+              initialValues={trip}
+              onSuccess={() => setIsEditing(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

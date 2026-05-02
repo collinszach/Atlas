@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
-import { useCreateTrip } from "@/hooks/useTrips";
+import { useCreateTrip, useUpdateTrip } from "@/hooks/useTrips";
+import type { Trip } from "@/types";
 
 const schema = z.object({
   title: z.string().min(1, "Title is required").max(120),
@@ -33,9 +34,20 @@ const VISIBILITY_OPTIONS = [
   { value: "public", label: "Public" },
 ];
 
-export function TripForm() {
+interface TripFormProps {
+  /** When provided, form runs in edit mode against this trip. */
+  initialValues?: Partial<Trip>;
+  /** Called after a successful save. If omitted, navigates to the new trip. */
+  onSuccess?: () => void;
+}
+
+export function TripForm({ initialValues, onSuccess }: TripFormProps = {}) {
   const router = useRouter();
-  const { mutateAsync: createTrip, isPending } = useCreateTrip();
+  const isEdit = !!initialValues?.id;
+
+  const { mutateAsync: createTrip, isPending: creating } = useCreateTrip();
+  const { mutateAsync: updateTrip, isPending: updating } = useUpdateTrip(initialValues?.id ?? "");
+  const isPending = creating || updating;
 
   const {
     register,
@@ -43,12 +55,24 @@ export function TripForm() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { status: "past", visibility: "private" },
+    defaultValues: {
+      title: initialValues?.title ?? "",
+      description: initialValues?.description ?? "",
+      status: (initialValues?.status as FormValues["status"]) ?? "past",
+      start_date: initialValues?.start_date ?? "",
+      end_date: initialValues?.end_date ?? "",
+      visibility: (initialValues?.visibility as FormValues["visibility"]) ?? "private",
+    },
   });
 
   const onSubmit = async (data: FormValues) => {
-    const trip = await createTrip(data);
-    router.push(`/trips/${trip.id}`);
+    if (isEdit) {
+      await updateTrip(data);
+      onSuccess?.();
+    } else {
+      const trip = await createTrip(data);
+      router.push(`/trips/${trip.id}`);
+    }
   };
 
   return (
@@ -72,8 +96,10 @@ export function TripForm() {
       <Select label="Status" options={STATUS_OPTIONS} {...register("status")} />
       <Select label="Visibility" options={VISIBILITY_OPTIONS} {...register("visibility")} />
       <div className="flex gap-3 pt-2">
-        <Button type="submit" loading={isPending}>Save trip</Button>
-        <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
+        <Button type="submit" loading={isPending}>{isEdit ? "Save changes" : "Save trip"}</Button>
+        <Button type="button" variant="ghost" onClick={() => onSuccess ? onSuccess() : router.back()}>
+          Cancel
+        </Button>
       </div>
     </form>
   );

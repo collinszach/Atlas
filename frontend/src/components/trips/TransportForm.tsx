@@ -34,8 +34,8 @@ const schema = z.object({
   type: z.enum(["flight", "car", "train", "ferry", "bus", "walk", "other"]),
   flight_number: z.string().optional(),
   airline: z.string().optional(),
-  origin_iata: z.string().max(3).optional(),
-  dest_iata: z.string().max(3).optional(),
+  origin_iata: z.string().length(3).toUpperCase().optional().or(z.literal("")),
+  dest_iata: z.string().length(3).toUpperCase().optional().or(z.literal("")),
   seat_class: z.string().optional(),
   origin_city: z.string().optional(),
   dest_city: z.string().optional(),
@@ -89,6 +89,8 @@ export function TransportForm({ tripId, onSuccess }: { tripId: string; onSuccess
       if (result.airline) setValue("airline", result.airline);
       if (result.origin_iata) setValue("origin_iata", result.origin_iata);
       if (result.dest_iata) setValue("dest_iata", result.dest_iata);
+      // Populate city fields even though they're hidden in flight mode — the
+      // API stores them on transport_legs and they may be visible in future views.
       if (result.origin_city) setValue("origin_city", result.origin_city);
       if (result.dest_city) setValue("dest_city", result.dest_city);
     } catch {

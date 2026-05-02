@@ -15,7 +15,7 @@ export default function NewTransportPage() {
       <div className="max-w-4xl mx-auto">
         <Link
           href={`/trips/${id}`}
-          className="text-xs text-atlas-text-muted hover:text-atlas-text mb-3 inline-block"
+          className="text-xs text-atlas-muted hover:text-atlas-text mb-3 inline-block"
         >
           ← {trip?.title ?? "Trip"}
         </Link>

@@ -260,7 +260,10 @@ export default function TripDetailPage() {
       </div>
 
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-atlas-bg/80 pt-20 px-4">
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-atlas-bg/80 pt-20 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsEditing(false); }}
+        >
           <div className="w-full max-w-lg rounded-xl border border-atlas-border bg-atlas-surface p-6 shadow-2xl">
             <h2 className="font-display text-xl font-semibold text-atlas-text mb-5">Edit trip</h2>
             <TripForm

@@ -55,6 +55,14 @@ async def test_stats_with_data(auth_stats_client):
         json={"type": "flight", "distance_km": "5560"},
     )
 
+    # Refresh materialized view so most_visited_country is current
+    from app.database import get_db
+    from sqlalchemy import text
+    async for db in get_db():
+        await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY country_visits"))
+        await db.commit()
+        break
+
     resp = await auth_stats_client.get("/api/v1/stats")
     assert resp.status_code == 200
     body = resp.json()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -34,13 +35,13 @@ class HeatmapEntry(BaseModel):
     country_code: str
     country_name: str
     visit_count: int
-    total_nights: int
+    total_nights: int = 0
 
 
 class TimelineTrip(BaseModel):
     id: str
     title: str
-    status: str
+    status: Literal["past", "active", "planned", "dream"]
     start_date: str | None
     end_date: str | None
     destination_count: int
@@ -77,7 +78,7 @@ async def get_stats(
         text("""
             SELECT t.title, COALESCE(SUM(d.nights), 0) AS trip_nights
             FROM trips t
-            LEFT JOIN destinations d ON d.trip_id = t.id
+            LEFT JOIN destinations d ON d.trip_id = t.id AND d.user_id = :uid
             WHERE t.user_id = :uid
             GROUP BY t.id, t.title
             ORDER BY trip_nights DESC

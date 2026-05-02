@@ -12,7 +12,6 @@ from app.auth import CurrentUser
 from app.database import get_db
 from app.models.destination import Destination
 from app.models.transport import TransportLeg
-from app.models.trip import Trip
 
 router = APIRouter(tags=["stats"])
 
@@ -87,8 +86,8 @@ async def get_stats(
         {"uid": user_id},
     )
     longest_row = longest_result.fetchone()
-    longest_trip_nights = int(longest_row.trip_nights) if longest_row and longest_row.trip_nights else None
-    longest_trip_title = longest_row.title if longest_row and longest_row.trip_nights else None
+    longest_trip_nights = int(longest_row.trip_nights) if longest_row and longest_row.trip_nights is not None else None
+    longest_trip_title = longest_row.title if longest_row and longest_row.trip_nights is not None else None
 
     # Most visited country (by visit count from materialized view)
     mv_result = await db.execute(

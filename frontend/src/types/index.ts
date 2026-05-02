@@ -196,6 +196,19 @@ export interface MonthlyClimate {
   avg_precipitation_mm: number;
 }
 
+export interface EnrichFlightResponse {
+  flight_number?: string;
+  airline?: string;
+  origin_iata?: string;
+  dest_iata?: string;
+  origin_city?: string;
+  dest_city?: string;
+  departure_at?: string;
+  arrival_at?: string;
+  duration_min?: number;
+  distance_km?: number;
+}
+
 export interface BestTimeResponse {
   location: string;
   latitude: number;

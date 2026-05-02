@@ -15,7 +15,7 @@ function fmt(n: number, decimals = 0): string {
 
 function statusDot(status: TimelineTrip["status"]) {
   const colors: Record<TimelineTrip["status"], string> = {
-    past:    "bg-atlas-text-muted",
+    past:    "bg-atlas-muted",
     active:  "bg-green-400",
     planned: "bg-atlas-accent",
     dream:   "bg-atlas-accent/40",

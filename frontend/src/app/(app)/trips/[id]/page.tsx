@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical, Pencil,
+  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical, Pencil, BedDouble,
 } from "lucide-react";
 import { TripForm } from "@/components/trips/TripForm";
 import {
@@ -27,9 +27,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTrip } from "@/hooks/useTrips";
 import { useDestinations } from "@/hooks/useDestinations";
 import { useTransport } from "@/hooks/useTransport";
+import { useAccommodations } from "@/hooks/useAccommodations";
 import { formatDateRange, nightsLabel } from "@/lib/utils";
 import { apiPatch } from "@/lib/api";
-import type { TransportLeg, Destination } from "@/types";
+import type { TransportLeg, Destination, Accommodation } from "@/types";
 
 const TRANSPORT_ICONS: Record<TransportLeg["type"], React.ReactNode> = {
   flight: <Plane size={14} />,
@@ -97,6 +98,7 @@ export default function TripDetailPage() {
   const { data: trip, isLoading: tripLoading } = useTrip(id);
   const { data: destinations = [], isLoading: destLoading } = useDestinations(id);
   const { data: transport = [], isLoading: transportLoading } = useTransport(id);
+  const { data: accommodations = [], isLoading: accLoading } = useAccommodations(id);
 
   const [isEditing, setIsEditing] = useState(false);
   const [orderedDests, setOrderedDests] = useState<Destination[]>(destinations);
@@ -199,6 +201,62 @@ export default function TripDetailPage() {
               </div>
             </SortableContext>
           </DndContext>
+        </div>
+
+        {/* Accommodations */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-atlas-text uppercase tracking-widest">
+              Accommodations
+            </h2>
+            <Link
+              href={`/trips/${id}/accommodations/new`}
+              className="flex items-center gap-1.5 text-xs text-atlas-accent hover:text-atlas-accent/80 transition-colors"
+            >
+              <Plus size={12} />
+              Add accommodation
+            </Link>
+          </div>
+
+          {accLoading && <p className="text-atlas-muted text-sm">Loading...</p>}
+
+          {!accLoading && accommodations.length === 0 && (
+            <p className="text-atlas-muted text-sm py-6 text-center border border-dashed border-atlas-border rounded-lg">
+              No accommodations logged yet.
+            </p>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {accommodations.map((acc: Accommodation) => (
+              <div
+                key={acc.id}
+                className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-3 flex items-center gap-4"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded bg-atlas-accent/10 text-atlas-accent shrink-0">
+                  <BedDouble size={14} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-atlas-text">{acc.name}</p>
+                  <p className="text-xs text-atlas-muted capitalize">
+                    {acc.type ?? "accommodation"}
+                    {acc.address ? ` · ${acc.address}` : ""}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  {acc.check_in && (
+                    <p className="text-xs font-mono text-atlas-muted">
+                      {acc.check_in.slice(0, 10)}
+                    </p>
+                  )}
+                  {acc.cost_per_night != null && (
+                    <p className="text-xs text-atlas-muted">
+                      {acc.currency} {Number(acc.cost_per_night).toLocaleString()}/night
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Transport */}

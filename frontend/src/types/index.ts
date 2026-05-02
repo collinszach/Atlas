@@ -258,3 +258,32 @@ export interface DestinationBriefResponse {
   food_highlights: string[];
   transport_within: string;
 }
+
+export interface UserStats {
+  countries_visited: number;
+  cities_visited: number;
+  total_nights: number;
+  total_distance_km: number;
+  longest_trip_nights: number | null;
+  longest_trip_title: string | null;
+  most_visited_country: string | null;
+  most_visited_country_count: number | null;
+  co2_estimate_kg: number;
+}
+
+export interface HeatmapEntry {
+  country_code: string;
+  country_name: string;
+  visit_count: number;
+  total_nights: number;
+}
+
+export interface TimelineTrip {
+  id: string;
+  title: string;
+  status: "past" | "active" | "planned" | "dream";
+  start_date: string | null;
+  end_date: string | null;
+  destination_count: number;
+  transport_count: number;
+}

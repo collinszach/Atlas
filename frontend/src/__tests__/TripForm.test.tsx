@@ -21,12 +21,8 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@clerk/nextjs", () => ({ useAuth: () => ({ getToken: vi.fn().mockResolvedValue("tok") }) }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
-}));
-
 const editTrip: Partial<Trip> = {
+  id: "trip-edit-001",
   title: "Pre-filled Title",
   status: "planned",
   visibility: "private",
@@ -54,5 +50,6 @@ describe("TripForm", () => {
     render(<TripForm initialValues={editTrip} onSuccess={vi.fn()} />);
     const input = screen.getByDisplayValue("Pre-filled Title");
     expect(input).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeInTheDocument();
   });
 });

@@ -46,7 +46,7 @@ export function TripForm({ initialValues, onSuccess }: TripFormProps = {}) {
   const isEdit = !!initialValues?.id;
 
   const { mutateAsync: createTrip, isPending: creating } = useCreateTrip();
-  const { mutateAsync: updateTrip, isPending: updating } = useUpdateTrip(initialValues?.id ?? "");
+  const { mutateAsync: updateTrip, isPending: updating } = useUpdateTrip(initialValues?.id ?? "NO_ID");
   const isPending = creating || updating;
 
   const {
@@ -58,10 +58,10 @@ export function TripForm({ initialValues, onSuccess }: TripFormProps = {}) {
     defaultValues: {
       title: initialValues?.title ?? "",
       description: initialValues?.description ?? "",
-      status: (initialValues?.status as FormValues["status"]) ?? "past",
+      status: initialValues?.status ?? "past",
       start_date: initialValues?.start_date ?? "",
       end_date: initialValues?.end_date ?? "",
-      visibility: (initialValues?.visibility as FormValues["visibility"]) ?? "private",
+      visibility: initialValues?.visibility ?? "private",
     },
   });
 

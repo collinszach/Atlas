@@ -1,6 +1,7 @@
 from __future__ import annotations
 import logging
 import time
+from pathlib import Path
 
 import httpx
 from jose import jwt
@@ -37,12 +38,30 @@ class ApnsClient:
     ) -> None:
         self._key_id = key_id if key_id is not None else settings.apns_key_id
         self._team_id = team_id if team_id is not None else settings.apns_team_id
-        self._auth_key = auth_key if auth_key is not None else settings.apns_auth_key
+        raw_auth_key = auth_key if auth_key is not None else settings.apns_auth_key
+        self._auth_key = self._resolve_auth_key(raw_auth_key)
         self._bundle_id = bundle_id
         self._host = APNS_SANDBOX_HOST if sandbox else APNS_PRODUCTION_HOST
 
         self._cached_token: str | None = None
         self._cached_token_issued_at: float = 0.0
+
+    @staticmethod
+    def _resolve_auth_key(value: str) -> str:
+        """Accept either the .p8 PEM contents or a filesystem path to it.
+
+        A path lets the key live in a gitignored secrets dir instead of inline
+        in env. If the value points to a readable file, return its contents;
+        otherwise treat the value itself as the PEM.
+        """
+        if not value:
+            return ""
+        if "BEGIN PRIVATE KEY" in value:
+            return value
+        candidate = Path(value)
+        if candidate.is_file():
+            return candidate.read_text()
+        return value
 
     @property
     def is_configured(self) -> bool:

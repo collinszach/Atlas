@@ -60,6 +60,12 @@ final class APIClient {
         return try await perform(req)
     }
 
+    func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
+        var req = makeRequest("PUT", path: path)
+        req.httpBody = try JSONEncoder().encode(body)
+        return try await perform(req)
+    }
+
     func delete(_ path: String) async throws {
         let req = makeRequest("DELETE", path: path)
         let (_, response) = try await URLSession.shared.data(for: req)
@@ -111,6 +117,25 @@ final class APIClient {
 
     func statsTimeline() async throws -> [TimelineTrip] {
         try await get("/api/v1/stats/timeline")
+    }
+
+    // MARK: - Skywatch
+
+    func fetchOverhead(lat: Double, lon: Double, radiusKm: Double? = nil) async throws -> [OverheadAircraft] {
+        var path = "/api/v1/skywatch/overhead?lat=\(lat)&lon=\(lon)"
+        if let radiusKm {
+            path += "&radius=\(radiusKm)"
+        }
+        let response: OverheadResponse = try await get(path)
+        return response.aircraft
+    }
+
+    func getSkywatchPreferences() async throws -> SkywatchPreference {
+        try await get("/api/v1/skywatch/preferences")
+    }
+
+    func updateSkywatchPreferences(_ update: SkywatchPreferenceUpdate) async throws -> SkywatchPreference {
+        try await put("/api/v1/skywatch/preferences", body: update)
     }
 
     // MARK: - Private

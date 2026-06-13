@@ -35,6 +35,11 @@ struct MainTabView: View {
                     Label("Trips", systemImage: "mappin.circle")
                 }
 
+            SkyView()
+                .tabItem {
+                    Label("Sky", systemImage: "airplane")
+                }
+
             PlanView()
                 .tabItem {
                     Label("Plan", systemImage: "calendar")

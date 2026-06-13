@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     # AI
     anthropic_api_key: str = ""
 
+    # Skywatch
+    airplanes_live_base: str = "https://api.airplanes.live/v2"
+    dump1090_url: str = ""
+    apns_key_id: str = ""
+    apns_team_id: str = ""
+    apns_auth_key: str = ""
+    skywatch_default_radius_km: float = 30.0
+
     # App
     app_env: str = "development"
 

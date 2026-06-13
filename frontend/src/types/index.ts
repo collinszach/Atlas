@@ -245,3 +245,24 @@ export interface DestinationBriefResponse {
   food_highlights: string[];
   transport_within: string;
 }
+
+export interface StatsResponse {
+  countries_visited: number;
+  trips_count: number;
+  nights_away: number;
+  total_distance_km: number;
+  co2_kg_estimate: number;
+  most_visited_country: string | null;
+  most_visited_country_code: string | null;
+  longest_trip_title: string | null;
+  longest_trip_days: number | null;
+}
+
+export interface TimelineTrip {
+  id: string;
+  title: string;
+  status: Trip["status"];
+  start_date: string | null;
+  end_date: string | null;
+  destination_count: number;
+}

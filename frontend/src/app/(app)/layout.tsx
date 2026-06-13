@@ -6,7 +6,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <TooltipProvider>
       <div className="flex h-screen w-screen overflow-hidden bg-atlas-bg">
         <Sidebar />
-        <main className="relative flex-1 overflow-hidden">{children}</main>
+        <main className="bg-deep-field relative flex-1 overflow-hidden">{children}</main>
       </div>
     </TooltipProvider>
   );

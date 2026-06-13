@@ -1,9 +1,16 @@
+import { PageHeader } from "@/components/ui/PageHeader";
+import { StatsClient } from "./StatsClient";
+
 export default function StatsPage() {
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-center">
-        <h1 className="font-display text-2xl font-semibold text-atlas-text mb-2">Stats</h1>
-        <p className="text-atlas-muted text-sm">Travel analytics dashboard — coming in Phase 6</p>
+    <div className="h-full overflow-y-auto px-6 py-7 sm:px-8">
+      <div className="mx-auto max-w-5xl">
+        <PageHeader
+          eyebrow="The Logbook"
+          title="Statistics"
+          description="The shape of your travels, measured. Distances, nights, and the countries that drew you back."
+        />
+        <StatsClient />
       </div>
     </div>
   );

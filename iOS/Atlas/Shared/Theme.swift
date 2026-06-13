@@ -3,11 +3,17 @@ import SwiftUI
 extension Color {
     // Atlas brand palette
     static let atlasBackground    = Color(hex: "#0A0E1A")
+    static let atlasBackgroundDeep = Color(hex: "#070A13")
     static let atlasSurface       = Color(hex: "#111827")
+    static let atlasSurface2      = Color(hex: "#16203A")
     static let atlasBorder        = Color(hex: "#1E2D45")
+    static let atlasBorderStrong  = Color(hex: "#2A3C5C")
     static let atlasAccent        = Color(hex: "#C9A84C")  // antique gold
+    static let atlasAccentHi      = Color(hex: "#E3C673")
     static let atlasAccentCool    = Color(hex: "#4A90D9")  // ocean blue
-    static let atlasText          = Color(hex: "#E2E8F0")
+    static let atlasText          = Color(hex: "#E8EEF7")
+    static let atlasInk2          = Color(hex: "#AEBBD0")  // readable secondary
+    static let atlasInkFaint      = Color(hex: "#6B7A94")
     static let atlasMuted         = Color(hex: "#64748B")
     static let atlasVisited       = Color(hex: "#4A90D9")
     static let atlasPlanned       = Color(hex: "#C9A84C")

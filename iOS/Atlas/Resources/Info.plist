@@ -26,6 +26,13 @@
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Atlas uses your location to show nearby destinations on the map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Atlas uses your location in the background to alert you when interesting aircraft pass overhead.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

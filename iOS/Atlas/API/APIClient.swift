@@ -138,6 +138,27 @@ final class APIClient {
         try await put("/api/v1/skywatch/preferences", body: update)
     }
 
+    /// Registers this device's APNs token with the backend and persists the returned device id.
+    @discardableResult
+    func registerDevice(apnsToken: String) async throws -> SkywatchDevice {
+        let body = DeviceCreate(apnsToken: apnsToken, platform: "ios")
+        let device: SkywatchDevice = try await post("/api/v1/skywatch/devices", body: body)
+        UserDefaults.standard.set(device.id, forKey: Self.deviceIdKey)
+        return device
+    }
+
+    /// Posts a significant-location-change update, associating it with the persisted device id if available.
+    @discardableResult
+    func updateLocation(lat: Double, lng: Double, deviceId: String? = nil) async throws -> SkywatchDevice {
+        let resolvedDeviceId = deviceId ?? UserDefaults.standard.string(forKey: Self.deviceIdKey)
+        let body = LocationUpdate(lat: lat, lng: lng, deviceId: resolvedDeviceId)
+        let device: SkywatchDevice = try await post("/api/v1/skywatch/location", body: body)
+        UserDefaults.standard.set(device.id, forKey: Self.deviceIdKey)
+        return device
+    }
+
+    static let deviceIdKey = "atlas_skywatch_device_id"
+
     // MARK: - Private
 
     private func makeRequest(_ method: String, path: String) -> URLRequest {

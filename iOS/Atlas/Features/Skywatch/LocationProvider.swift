@@ -8,6 +8,9 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
     var authorizationStatus: CLAuthorizationStatus = .notDetermined
     var error: String? = nil
 
+    /// Set so background significant-change updates can be posted to the backend.
+    var api: APIClient?
+
     private let manager = CLLocationManager()
 
     override init() {
@@ -19,6 +22,11 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
 
     func requestAuthorization() {
         manager.requestWhenInUseAuthorization()
+    }
+
+    /// Requests Always authorization so significant-location-change monitoring keeps working in the background.
+    func requestAlwaysAuthorization() {
+        manager.requestAlwaysAuthorization()
     }
 
     func start() {
@@ -36,6 +44,24 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
     }
 
+    /// Starts background significant-location-change monitoring for Skywatch.
+    /// Requires Always authorization; posts each change to `/skywatch/location`.
+    func startBackgroundMonitoring() {
+        guard CLLocationManager.significantLocationChangeMonitoringAvailable() else { return }
+        switch manager.authorizationStatus {
+        case .authorizedAlways:
+            manager.startMonitoringSignificantLocationChanges()
+        case .notDetermined, .authorizedWhenInUse:
+            requestAlwaysAuthorization()
+        default:
+            error = "Location access denied — enable Always access in Settings for background sky alerts."
+        }
+    }
+
+    func stopBackgroundMonitoring() {
+        manager.stopMonitoringSignificantLocationChanges()
+    }
+
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
         Task { @MainActor in
@@ -44,6 +70,9 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
             case .authorizedWhenInUse, .authorizedAlways:
                 self.error = nil
                 manager.startUpdatingLocation()
+                if status == .authorizedAlways, CLLocationManager.significantLocationChangeMonitoringAvailable() {
+                    manager.startMonitoringSignificantLocationChanges()
+                }
             case .denied, .restricted:
                 self.error = "Location access denied — enable it in Settings to see aircraft near you."
             default:
@@ -57,6 +86,7 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         let coord = loc.coordinate
         Task { @MainActor in
             self.coordinate = coord
+            await self.postLocationUpdate(coord)
         }
     }
 
@@ -64,6 +94,15 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         let message = error.localizedDescription
         Task { @MainActor in
             self.error = message
+        }
+    }
+
+    private func postLocationUpdate(_ coordinate: CLLocationCoordinate2D) async {
+        guard let api else { return }
+        do {
+            try await api.updateLocation(lat: coordinate.latitude, lng: coordinate.longitude)
+        } catch {
+            self.error = error.localizedDescription
         }
     }
 }

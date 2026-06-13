@@ -50,7 +50,9 @@ struct SkyView: View {
                 .presentationBackground(Color.atlasBackground)
         }
         .task {
+            location.api = auth.api
             location.start()
+            location.startBackgroundMonitoring()
             await vm.loadPreferenceRadius(api: auth.api)
             await refresh()
             startAutoRefresh()

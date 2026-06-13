@@ -41,6 +41,41 @@ struct OverheadResponse: Codable {
     let source: String
 }
 
+// MARK: - Devices
+
+struct SkywatchDevice: Codable {
+    let id: String
+    let apnsToken: String?
+    let platform: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case apnsToken = "apns_token"
+        case platform
+    }
+}
+
+struct DeviceCreate: Codable {
+    let apnsToken: String
+    let platform: String
+
+    enum CodingKeys: String, CodingKey {
+        case apnsToken = "apns_token"
+        case platform
+    }
+}
+
+struct LocationUpdate: Codable {
+    let lat: Double
+    let lng: Double
+    let deviceId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case lat, lng
+        case deviceId = "device_id"
+    }
+}
+
 // MARK: - Preferences
 
 struct SkywatchPreference: Codable {

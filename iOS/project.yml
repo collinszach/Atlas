@@ -27,6 +27,7 @@ targets:
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
         DEVELOPMENT_TEAM: ""
         INFOPLIST_FILE: Atlas/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Atlas/Resources/Atlas.entitlements
         ALWAYS_SEARCH_USER_PATHS: NO
     dependencies:
       - package: ClerkSDK

@@ -9,7 +9,7 @@ options:
 packages:
   ClerkSDK:
     url: https://github.com/clerk/clerk-ios
-    from: "2.0.0"
+    from: "1.2.3"
   KeychainSwift:
     url: https://github.com/evgenyneu/keychain-swift
     from: "20.0.0"
@@ -30,7 +30,7 @@ targets:
         ALWAYS_SEARCH_USER_PATHS: NO
     dependencies:
       - package: ClerkSDK
-        product: ClerkSDK
+        product: ClerkKit
       - package: KeychainSwift
         product: KeychainSwift
 
@@ -39,5 +39,9 @@ targets:
     platform: iOS
     sources:
       - AtlasTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.atlas.app.tests
     dependencies:
       - target: Atlas

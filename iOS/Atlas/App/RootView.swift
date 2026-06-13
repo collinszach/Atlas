@@ -1,5 +1,4 @@
 import SwiftUI
-import ClerkSDK
 
 struct RootView: View {
     @State private var authManager = AuthManager()

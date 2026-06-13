@@ -20,6 +20,13 @@ __pycache__/
 .env.*
 !.env.example
 
+# Secrets — never commit auth keys / certs
+secrets/
+*.p8
+*.p12
+*.pem
+*.key
+
 # Editor / OS
 .DS_Store
 *.swp

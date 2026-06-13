@@ -23,6 +23,10 @@ class DataSourceResolver:
         self._network = network_client or AirplanesLiveClient()
         self._local = local_client or LocalDump1090Client()
 
+    @property
+    def has_local_source(self) -> bool:
+        return self._local.is_configured
+
     async def get_aircraft(self, lat: float, lon: float, radius_km: float) -> list[Aircraft]:
         """Return aircraft within `radius_km` of (lat, lon), merged and deduped by hex.
 

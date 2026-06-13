@@ -25,7 +25,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.atlas.app
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: "K28M38H7Y5"
         INFOPLIST_FILE: Atlas/Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Atlas/Resources/Atlas.entitlements
         ALWAYS_SEARCH_USER_PATHS: NO

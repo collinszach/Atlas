@@ -24,7 +24,20 @@ async def lifespan(app: FastAPI):
         await storage.ensure_bucket_exists()
     except Exception as exc:
         logger.warning("MinIO bucket init failed (continuing without photo storage): %s", exc)
+
+    try:
+        from app.tasks.scheduler import start_scheduler
+        start_scheduler()
+    except Exception as exc:
+        logger.warning("Skywatch scheduler failed to start: %s", exc)
+
     yield
+
+    try:
+        from app.tasks.scheduler import shutdown_scheduler
+        shutdown_scheduler()
+    except Exception:
+        logger.exception("Skywatch scheduler shutdown failed")
     logger.info("Atlas backend shutting down")
 
 

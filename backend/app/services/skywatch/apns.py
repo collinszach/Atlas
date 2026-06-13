@@ -34,8 +34,10 @@ class ApnsClient:
         team_id: str | None = None,
         auth_key: str | None = None,
         bundle_id: str = "com.atlas.app",
-        sandbox: bool = False,
+        sandbox: bool | None = None,
     ) -> None:
+        if sandbox is None:
+            sandbox = settings.apns_use_sandbox
         self._key_id = key_id if key_id is not None else settings.apns_key_id
         self._team_id = team_id if team_id is not None else settings.apns_team_id
         raw_auth_key = auth_key if auth_key is not None else settings.apns_auth_key

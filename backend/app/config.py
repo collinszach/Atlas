@@ -32,7 +32,10 @@ class Settings(BaseSettings):
     apns_key_id: str = ""
     apns_team_id: str = ""
     apns_auth_key: str = ""
+    apns_use_sandbox: bool = True  # dev-signed apps must use the sandbox APNs host
     skywatch_default_radius_km: float = 30.0
+    skywatch_poll_seconds: int = 20
+    skywatch_location_freshness_minutes: int = 15
 
     # App
     app_env: str = "development"

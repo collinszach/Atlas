@@ -133,7 +133,6 @@ def upgrade() -> None:
 
         # Germany Luftwaffe
         {"prefix": "GAF", "description": "German Air Force (Luftwaffe)"},
-        {"prefix": "MEDEVAC", "description": "German Military Evacuation"},
 
         # France ALAT/Air Force
         {"prefix": "FAF", "description": "French Air Force (Armée de l'Air)"},
@@ -176,12 +175,8 @@ def upgrade() -> None:
         # South Korea
         {"prefix": "ROKAF", "description": "Republic of Korea Air Force"},
 
-        # India
-        {"prefix": "IAF", "description": "Indian Air Force"},
-
         # Russian
         {"prefix": "MOSCOW", "description": "Russian Air Force"},
-        {"prefix": "AEROFLOT-VIP", "description": "Russian Government transport"},
 
         # Chinese
         {"prefix": "PLAAF", "description": "People's Liberation Army Air Force"},

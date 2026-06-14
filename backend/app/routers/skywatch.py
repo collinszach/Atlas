@@ -21,10 +21,13 @@ from app.schemas.skywatch import (
     LocationUpdate,
     OverheadAircraft,
     OverheadResponse,
+    PreferencesFromText,
     SkywatchPreferenceRead,
     SkywatchPreferenceUpdate,
 )
 from app.services.adsb import AdsbServiceError, DataSourceResolver
+from app.services.llm import LocalLLMError
+from app.services.skywatch.nl_prefs import compile_preferences
 from app.services.skywatch.rules import evaluate_aircraft
 
 logger = logging.getLogger(__name__)
@@ -157,6 +160,28 @@ async def update_preferences(
     preference = await _get_or_create_preference(db, user_id)
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(preference, k, v)
+    await db.flush()
+    await db.refresh(preference)
+    return preference
+
+
+@router.post("/preferences/from-text", response_model=SkywatchPreferenceRead)
+async def update_preferences_from_text(
+    body: PreferencesFromText,
+    user_id: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+) -> SkywatchPreference:
+    preference = await _get_or_create_preference(db, user_id)
+
+    try:
+        updates = await compile_preferences(body.text, preference)
+    except LocalLLMError as exc:
+        raise HTTPException(status_code=503, detail=f"Local LLM unavailable: {exc}") from exc
+
+    for k, v in updates.items():
+        setattr(preference, k, v)
+    preference.nl_prompt = body.text
+
     await db.flush()
     await db.refresh(preference)
     return preference

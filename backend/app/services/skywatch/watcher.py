@@ -18,7 +18,9 @@ from app.models.skywatch import (
     SkywatchPreference,
 )
 from app.services.adsb import AdsbServiceError, DataSourceResolver
+from app.services.llm import LocalLLMError, is_enabled
 from app.services.skywatch.apns import ApnsClient
+from app.services.skywatch.copy import alert_copy
 from app.services.skywatch.rules import Match, evaluate_aircraft
 
 logger = logging.getLogger(__name__)
@@ -81,19 +83,35 @@ async def _recent_alert_hexes(
     return {row[0] for row in result.all()}
 
 
-def _build_payload(aircraft, match: Match) -> dict[str, Any]:
+def _template_alert_copy(aircraft, match: Match) -> tuple[str, str]:
     trigger_titles = {
         "notable_type": "Rare aircraft overhead",
         "military": "Military aircraft overhead",
         "emergency": "Emergency squawk overhead",
         "watchlist": "Watchlist aircraft overhead",
     }
-    title = trigger_titles.get(match.trigger, "Aircraft overhead")
+    return trigger_titles.get(match.trigger, "Aircraft overhead"), match.message
+
+
+async def _build_payload(aircraft, match: Match) -> dict[str, Any]:
+    title, body = _template_alert_copy(aircraft, match)
+
+    if is_enabled():
+        try:
+            llm_copy = await alert_copy(aircraft, match)
+        except LocalLLMError:
+            llm_copy = None
+        except Exception:
+            logger.exception("alert_copy raised unexpectedly, using template")
+            llm_copy = None
+        if llm_copy is not None:
+            title, body = llm_copy
+
     return {
         "aps": {
             "alert": {
                 "title": title,
-                "body": match.message,
+                "body": body,
             },
             "sound": "default",
         },
@@ -162,7 +180,7 @@ async def _process_device(
         await session.flush()
 
         if device.apns_token:
-            payload = _build_payload(aircraft, match)
+            payload = await _build_payload(aircraft, match)
             try:
                 await apns.send(device.apns_token, payload)
             except Exception as exc:

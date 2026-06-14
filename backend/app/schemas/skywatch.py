@@ -78,6 +78,18 @@ class SkywatchPreferenceUpdate(BaseModel):
         return self
 
 
+# --- Natural-language preference compilation ---
+
+class PreferencesFromText(BaseModel):
+    text: str
+
+    @model_validator(mode="after")
+    def validate_text(self) -> "PreferencesFromText":
+        if not self.text.strip():
+            raise ValueError("text must not be empty")
+        return self
+
+
 class SkywatchPreferenceRead(BaseModel):
     id: uuid.UUID
     user_id: str

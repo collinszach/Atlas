@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     # AI
     anthropic_api_key: str = ""
 
+    # Local LLM (Ollama, per-task — opt-in)
+    local_llm_base: str = ""
+    local_llm_model: str = "qwen2.5:7b"
+
     # Skywatch
     airplanes_live_base: str = "https://api.airplanes.live/v2"
     dump1090_url: str = ""

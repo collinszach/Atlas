@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     apns_key_id: str = ""
     apns_team_id: str = ""
     apns_auth_key: str = ""
+    apns_bundle_id: str = "com.zacharyjcollins.atlas"  # must match the app's bundle id (APNs topic)
     apns_use_sandbox: bool = True  # dev-signed apps must use the sandbox APNs host
     skywatch_default_radius_km: float = 30.0
     skywatch_poll_seconds: int = 20

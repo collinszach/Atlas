@@ -106,4 +106,4 @@ Runtime intelligence runs on the **local LLM**, so steady-state operation costs 
 - dump1090: the NUC's `aircraft.json` URL over Tailscale, and whether a receiver exists yet.
 
 **Live-time (before push actually sends, P3):**
-- Apple Developer **Team ID**, APNs **Key ID** + **.p8 auth key**. Bundle id is `com.atlas.app`.
+- Apple Developer **Team ID**, APNs **Key ID** + **.p8 auth key**. Bundle id is `com.zacharyjcollins.atlas`.

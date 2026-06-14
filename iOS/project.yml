@@ -22,7 +22,7 @@ targets:
       - Atlas
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.atlas.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.zacharyjcollins.atlas
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
         DEVELOPMENT_TEAM: "K28M38H7Y5"
@@ -43,6 +43,6 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.atlas.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.zacharyjcollins.atlas.tests
     dependencies:
       - target: Atlas

@@ -33,7 +33,7 @@ class ApnsClient:
         key_id: str | None = None,
         team_id: str | None = None,
         auth_key: str | None = None,
-        bundle_id: str = "com.atlas.app",
+        bundle_id: str | None = None,
         sandbox: bool | None = None,
     ) -> None:
         if sandbox is None:
@@ -42,7 +42,7 @@ class ApnsClient:
         self._team_id = team_id if team_id is not None else settings.apns_team_id
         raw_auth_key = auth_key if auth_key is not None else settings.apns_auth_key
         self._auth_key = self._resolve_auth_key(raw_auth_key)
-        self._bundle_id = bundle_id
+        self._bundle_id = bundle_id if bundle_id is not None else settings.apns_bundle_id
         self._host = APNS_SANDBOX_HOST if sandbox else APNS_PRODUCTION_HOST
 
         self._cached_token: str | None = None

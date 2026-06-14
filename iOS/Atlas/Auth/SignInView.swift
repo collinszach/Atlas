@@ -78,6 +78,17 @@ struct SignInView: View {
 
     private var form: some View {
         VStack(spacing: 14) {
+            appleButton
+
+            HStack(spacing: 12) {
+                Rectangle().fill(Color.atlasBorder).frame(height: 1)
+                Text("or")
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(Color.atlasInkFaint)
+                Rectangle().fill(Color.atlasBorder).frame(height: 1)
+            }
+            .padding(.vertical, 2)
+
             FieldRow(
                 icon: "envelope",
                 placeholder: "Email",
@@ -111,6 +122,27 @@ struct SignInView: View {
             signInButton
                 .padding(.top, 6)
         }
+    }
+
+    private var appleButton: some View {
+        Button {
+            Task { await auth.signInWithApple() }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "apple.logo")
+                    .font(.system(size: 17, weight: .medium))
+                Text("Sign in with Apple")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .foregroundStyle(.black)
+            .background(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(.white)
+            )
+        }
+        .disabled(auth.isLoading)
     }
 
     private var signInButton: some View {

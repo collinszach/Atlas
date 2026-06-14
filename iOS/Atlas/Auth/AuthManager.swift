@@ -40,6 +40,32 @@ final class AuthManager {
         }
     }
 
+    /// Sign in (or auto-register) with Apple — native, no manual account creation.
+    /// Clerk provisions a new user automatically on first use.
+    func signInWithApple() async {
+        error = nil
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            _ = try await Clerk.shared.auth.signInWithApple()
+            guard let token = try await Clerk.shared.session?.getToken() else {
+                error = "Apple sign-in incomplete — please try again."
+                return
+            }
+            api.persistToken(token)
+            isSignedIn = true
+        } catch is CancellationError {
+            // user dismissed the Apple sheet — stay quiet
+        } catch {
+            let ns = error as NSError
+            // ASAuthorizationError.canceled (code 1001) — don't surface as an error
+            if ns.domain == "com.apple.AuthenticationServices.AuthorizationError" && ns.code == 1001 {
+                return
+            }
+            self.error = error.localizedDescription
+        }
+    }
+
     /// Refresh the JWT from Clerk before API calls if needed.
     func refreshToken() async throws {
         guard let token = try await Clerk.shared.session?.getToken() else {

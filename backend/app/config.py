@@ -12,8 +12,9 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     # Clerk
-    clerk_secret_key: str
-    clerk_webhook_secret: str
+    clerk_secret_key: str = ""
+    clerk_webhook_secret: str = ""
+    clerk_jwks_url: str = ""  # public well-known JWKS; when set, no secret needed for JWT verify
 
     # MinIO
     minio_endpoint: str = "atlas-minio:9000"

@@ -79,6 +79,7 @@ struct SignInView: View {
     private var form: some View {
         VStack(spacing: 14) {
             appleButton
+            googleButton
 
             HStack(spacing: 12) {
                 Rectangle().fill(Color.atlasBorder).frame(height: 1)
@@ -140,6 +141,32 @@ struct SignInView: View {
             .background(
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
                     .fill(.white)
+            )
+        }
+        .disabled(auth.isLoading)
+    }
+
+    private var googleButton: some View {
+        Button {
+            Task { await auth.signInWithGoogle() }
+        } label: {
+            HStack(spacing: 9) {
+                Text("G")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.26, green: 0.52, blue: 0.96))
+                Text("Continue with Google")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.atlasInk2)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(Color.atlasSurface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .stroke(Color.atlasBorder, lineWidth: 1)
             )
         }
         .disabled(auth.isLoading)

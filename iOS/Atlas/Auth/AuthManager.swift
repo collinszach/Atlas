@@ -66,6 +66,31 @@ final class AuthManager {
         }
     }
 
+    /// Sign in (or auto-register) with Google via Clerk's OAuth web flow.
+    func signInWithGoogle() async {
+        error = nil
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            _ = try await Clerk.shared.auth.signInWithOAuth(provider: .google)
+            guard let token = try await Clerk.shared.session?.getToken() else {
+                error = "Google sign-in incomplete — please try again."
+                return
+            }
+            api.persistToken(token)
+            isSignedIn = true
+        } catch is CancellationError {
+            // user dismissed the web sheet — stay quiet
+        } catch {
+            let ns = error as NSError
+            // ASWebAuthenticationSessionError.canceledLogin (code 1) — don't surface
+            if ns.domain == "com.apple.AuthenticationServices.WebAuthenticationSession" && ns.code == 1 {
+                return
+            }
+            self.error = error.localizedDescription
+        }
+    }
+
     /// Refresh the JWT from Clerk before API calls if needed.
     func refreshToken() async throws {
         guard let token = try await Clerk.shared.session?.getToken() else {

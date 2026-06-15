@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from app.models.skywatch import MilCallsignPrefix, NotableType, SkywatchPreference
 from app.services.adsb.geo import haversine_km
 from app.services.adsb.models import Aircraft
+from app.services.skywatch.airlines import is_commercial_airline, resolve_airline
 
 EMERGENCY_SQUAWKS = {"7700": "general emergency", "7600": "radio failure", "7500": "hijack"}
 
@@ -58,6 +59,11 @@ def _check_military(
     aircraft: Aircraft,
     mil_prefixes: dict[str, MilCallsignPrefix],
 ) -> Match | None:
+    # A scheduled commercial flight (known airline callsign) is never military —
+    # guards against noisy dbFlags / prefix collisions on airline callsigns.
+    if is_commercial_airline(aircraft.flight):
+        return None
+
     if aircraft.is_military:
         return Match(
             trigger="military",

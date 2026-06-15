@@ -122,6 +122,7 @@ class OverheadAircraft(BaseModel):
     flight: str | None = None
     registration: str | None = None
     type: str | None = None
+    airline: str | None = None
     lat: float | None = None
     lon: float | None = None
     alt_baro: int | None = None

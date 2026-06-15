@@ -27,6 +27,7 @@ from app.schemas.skywatch import (
 )
 from app.services.adsb import AdsbServiceError, DataSourceResolver
 from app.services.llm import LocalLLMError
+from app.services.skywatch.airlines import resolve_airline
 from app.services.skywatch.nl_prefs import compile_preferences
 from app.services.skywatch.rules import evaluate_aircraft
 
@@ -127,6 +128,7 @@ async def get_overhead(
                 flight=ac.flight,
                 registration=ac.registration,
                 type=ac.type,
+                airline=resolve_airline(ac.flight),
                 lat=ac.lat,
                 lon=ac.lon,
                 alt_baro=ac.alt_baro,

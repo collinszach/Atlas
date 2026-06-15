@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct RootView: View {
     @State private var authManager = AuthManager()
@@ -28,37 +29,33 @@ struct MainTabView: View {
     @Environment(AuthManager.self) private var auth
     @Environment(AppState.self) private var appState
 
+    init() {
+        // Modern dark, translucent tab bar.
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundColor = UIColor(Color.atlasBackground.opacity(0.65))
+        appearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     var body: some View {
         @Bindable var appState = appState
         TabView(selection: $appState.selectedTab) {
             MapView()
-                .tabItem {
-                    Label("Map", systemImage: "globe")
-                }
+                .tabItem { Label("Map", systemImage: "globe.americas.fill") }
                 .tag(AppTab.map)
 
-            TripListView()
-                .tabItem {
-                    Label("Trips", systemImage: "mappin.circle")
-                }
-                .tag(AppTab.trips)
-
             SkyView()
-                .tabItem {
-                    Label("Sky", systemImage: "airplane")
-                }
+                .tabItem { Label("Sky", systemImage: "dot.radiowaves.up.forward") }
                 .tag(AppTab.sky)
 
-            PlanView()
-                .tabItem {
-                    Label("Plan", systemImage: "calendar")
-                }
-                .tag(AppTab.plan)
+            TripListView()
+                .tabItem { Label("Flights", systemImage: "airplane.departure") }
+                .tag(AppTab.trips)
 
             StatsView()
-                .tabItem {
-                    Label("Stats", systemImage: "chart.bar")
-                }
+                .tabItem { Label("Stats", systemImage: "chart.bar.fill") }
                 .tag(AppTab.stats)
         }
         .tint(.atlasAccent)

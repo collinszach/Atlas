@@ -34,24 +34,25 @@ struct MapView: View {
                         .stroke(Color.atlasAccent.opacity(0.5), lineWidth: 1.5)
                 }
             }
-            .mapStyle(.imagery(elevation: .realistic))
-            .mapControls {
-                MapCompass()
-                MapScaleView()
-            }
+            .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll, showsTraffic: false))
+            .preferredColorScheme(.dark)
+            .mapControls { MapCompass() }
             .ignoresSafeArea()
 
             // Header overlay
             VStack(spacing: 0) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 12) {
+                    Image(systemName: "globe.americas.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(AtlasGradient.accent)
+                    VStack(alignment: .leading, spacing: 1) {
                         Text("Atlas")
-                            .font(AtlasFont.display(22))
-                            .foregroundStyle(Color.atlasAccent)
+                            .font(AtlasFont.display(20, weight: .heavy))
+                            .foregroundStyle(Color.atlasText)
                         if !vm.isLoading {
                             Text("\(vm.countries.count) countries · \(vm.cities.count) cities")
-                                .font(AtlasFont.mono(12))
-                                .foregroundStyle(Color.atlasText.opacity(0.8))
+                                .font(AtlasFont.mono(11))
+                                .foregroundStyle(Color.atlasInk2)
                         }
                     }
                     Spacer()
@@ -59,9 +60,13 @@ struct MapView: View {
                         ProgressView().tint(.atlasAccent)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
                 .background(.ultraThinMaterial)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
+                .padding(.horizontal, 14)
+                .padding(.top, 6)
             }
 
             if let err = vm.error {

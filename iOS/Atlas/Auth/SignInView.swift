@@ -48,28 +48,25 @@ struct SignInView: View {
     private var hero: some View {
         VStack(spacing: 16) {
             ZStack {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.atlasAccent.opacity(0.10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.atlasAccent.opacity(0.35), lineWidth: 1)
-                    )
-                    .frame(width: 68, height: 68)
-                Text("A")
-                    .font(.system(size: 38, weight: .bold, design: .serif))
-                    .foregroundStyle(Color.atlasAccent)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(AtlasGradient.accent)
+                    .frame(width: 76, height: 76)
+                Image(systemName: "paperplane.fill")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundStyle(.white)
+                    .rotationEffect(.degrees(-12))
             }
-            .shadow(color: Color.atlasAccent.opacity(0.25), radius: 24, y: 8)
+            .shadow(color: Color.atlasAccent.opacity(0.45), radius: 28, y: 10)
 
-            VStack(spacing: 7) {
+            VStack(spacing: 8) {
                 Text("Atlas")
-                    .font(.system(size: 40, weight: .bold, design: .serif))
+                    .font(.system(size: 44, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color.atlasText)
 
-                Text("CHART EVERYWHERE YOU'VE BEEN")
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .tracking(2.5)
-                    .foregroundStyle(Color.atlasInkFaint)
+                Text("TRACK THE SKIES")
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .tracking(3)
+                    .foregroundStyle(Color.atlasInk2)
             }
         }
     }
@@ -188,16 +185,16 @@ struct SignInView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .foregroundStyle(canSubmit ? Color.atlasBackgroundDeep : Color.atlasInkFaint)
+            .foregroundStyle(canSubmit ? .white : Color.atlasInkFaint)
             .background(
-                RoundedRectangle(cornerRadius: 13, style: .continuous)
-                    .fill(canSubmit ? Color.atlasAccent : Color.atlasSurface2)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(canSubmit ? AnyShapeStyle(AtlasGradient.accent) : AnyShapeStyle(Color.atlasSurface2))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(canSubmit ? Color.clear : Color.atlasBorder, lineWidth: 1)
             )
-            .shadow(color: canSubmit ? Color.atlasAccent.opacity(0.3) : .clear, radius: 16, y: 6)
+            .shadow(color: canSubmit ? Color.atlasAccent.opacity(0.4) : .clear, radius: 20, y: 8)
         }
         .disabled(!canSubmit)
         .animation(.easeOut(duration: 0.2), value: canSubmit)

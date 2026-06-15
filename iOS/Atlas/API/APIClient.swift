@@ -25,6 +25,10 @@ enum APIError: LocalizedError {
 final class APIClient {
     var token: String?
 
+    /// Supplies a fresh, unexpired token per request (Clerk tokens live ~60s).
+    /// Set by AuthManager to call `Clerk.shared.session?.getToken()`.
+    @ObservationIgnored var tokenProvider: (() async -> String?)?
+
     private let base: URL
     private let keychain = KeychainSwift()
     private let keychainKey = "atlas_jwt"
@@ -51,23 +55,23 @@ final class APIClient {
     // MARK: - HTTP methods
 
     func get<T: Decodable>(_ path: String) async throws -> T {
-        try await perform(makeRequest("GET", path: path))
+        try await perform(await makeRequest("GET", path: path))
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        var req = makeRequest("POST", path: path)
+        var req = await makeRequest("POST", path: path)
         req.httpBody = try JSONEncoder().encode(body)
         return try await perform(req)
     }
 
     func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        var req = makeRequest("PUT", path: path)
+        var req = await makeRequest("PUT", path: path)
         req.httpBody = try JSONEncoder().encode(body)
         return try await perform(req)
     }
 
     func delete(_ path: String) async throws {
-        let req = makeRequest("DELETE", path: path)
+        let req = await makeRequest("DELETE", path: path)
         let (_, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse else { return }
         if !(200..<300).contains(http.statusCode) {
@@ -161,13 +165,22 @@ final class APIClient {
 
     // MARK: - Private
 
-    private func makeRequest(_ method: String, path: String) -> URLRequest {
+    /// Fetches a fresh token (refreshing via Clerk if needed) and caches it.
+    private func freshToken() async -> String? {
+        if let provider = tokenProvider, let t = await provider() {
+            persistToken(t)
+            return t
+        }
+        return token
+    }
+
+    private func makeRequest(_ method: String, path: String) async -> URLRequest {
         let url = URL(string: path, relativeTo: base)?.absoluteURL ?? base
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let token {
-            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if let t = await freshToken() {
+            req.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization")
         }
         req.timeoutInterval = 15
         return req

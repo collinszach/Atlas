@@ -10,12 +10,26 @@ final class AuthManager {
 
     private(set) var api: APIClient = APIClient()
 
-    /// Called at app launch to restore session from Keychain.
+    init() {
+        // Always hand the API client a fresh Clerk token; session tokens expire ~60s,
+        // and Clerk.getToken() returns a cached one or transparently refreshes.
+        api.tokenProvider = {
+            if let token = try? await Clerk.shared.session?.getToken() {
+                return token
+            }
+            return nil
+        }
+    }
+
+    /// Called at app launch to restore session from Keychain / Clerk.
     func checkSession() async {
         defer { isLoading = false }
-        // If we already have a stored token, treat as signed in.
-        // The backend will reject it if expired.
-        isSignedIn = api.token != nil
+        // Prefer a live Clerk session; fall back to a stored token.
+        if Clerk.shared.session != nil {
+            isSignedIn = true
+        } else {
+            isSignedIn = api.token != nil
+        }
     }
 
     /// Sign in via Clerk using email + password.

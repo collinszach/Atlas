@@ -44,7 +44,13 @@ extension OverheadAircraft {
     }
 
     var displayName: String {
-        callsign?.trimmingCharacters(in: .whitespaces).nilIfEmpty ?? registration?.nilIfEmpty ?? hex.uppercased()
+        let cs = callsign?.trimmingCharacters(in: .whitespaces).nilIfEmpty
+        if let airline {
+            // "JBU1354" + "JetBlue Airways" -> "JetBlue Airways 1354"
+            let number = cs.map { String($0.drop(while: \.isLetter)) } ?? ""
+            return number.isEmpty ? airline : "\(airline) \(number)"
+        }
+        return cs ?? registration?.nilIfEmpty ?? hex.uppercased()
     }
 
     var isEmergency: Bool {

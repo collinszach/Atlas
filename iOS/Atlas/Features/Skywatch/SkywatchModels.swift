@@ -13,6 +13,7 @@ struct OverheadAircraft: Codable, Identifiable, Hashable {
     let callsign: String?
     let registration: String?
     let type: String?
+    let airline: String?
     let lat: Double?
     let lon: Double?
     let altitude: Int?
@@ -26,7 +27,7 @@ struct OverheadAircraft: Codable, Identifiable, Hashable {
     var id: String { hex }
 
     enum CodingKeys: String, CodingKey {
-        case hex, lat, lon, type, squawk, matches, track
+        case hex, lat, lon, type, squawk, matches, track, airline
         case callsign = "flight"
         case registration
         case altitude = "alt_baro"

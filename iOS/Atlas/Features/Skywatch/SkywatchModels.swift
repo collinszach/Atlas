@@ -24,6 +24,17 @@ struct OverheadAircraft: Codable, Identifiable, Hashable {
     let distanceKm: Double?
     let matches: [SkywatchMatch]
 
+    // Backend enrichment fields — all optional, decode-safe (may be absent until backend lands)
+    let originIata: String?
+    let originName: String?
+    let destIata: String?
+    let destName: String?
+    let photoUrl: String?
+    let photoLink: String?
+    let photoCredit: String?
+    /// Trail breadcrumb: array of [lat, lon] pairs.
+    let trail: [[Double]]?
+
     var id: String { hex }
 
     enum CodingKeys: String, CodingKey {
@@ -34,6 +45,14 @@ struct OverheadAircraft: Codable, Identifiable, Hashable {
         case groundSpeed = "ground_speed"
         case isMilitary = "is_military"
         case distanceKm = "distance_km"
+        case originIata = "origin_iata"
+        case originName = "origin_name"
+        case destIata = "dest_iata"
+        case destName = "dest_name"
+        case photoUrl = "photo_url"
+        case photoLink = "photo_link"
+        case photoCredit = "photo_credit"
+        case trail
     }
 }
 

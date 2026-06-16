@@ -1,49 +1,129 @@
 import SwiftUI
-import MapKit
+import CoreLocation
+
+// MARK: - SkyView
 
 struct SkyView: View {
     @Environment(AuthManager.self) private var auth
     @State private var vm = SkyViewModel()
     @State private var location = LocationProvider()
-    @State private var position: MapCameraPosition = .automatic
     @State private var selectedAircraft: OverheadAircraft? = nil
     @State private var showPreferences = false
     @State private var refreshTask: Task<Void, Never>? = nil
-    @State private var hasCenteredMap = false
+    @State private var showFollowToast = false
+    @State private var followToastMessage = ""
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ZStack(alignment: .top) {
-            mapLayer
+        NavigationStack {
+            ZStack(alignment: .top) {
+                Color.atlasBackground.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                header
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 0) {
+                        // Radar — full-width centered block
+                        Group {
+                            if let coord = location.coordinate {
+                                RadarView(
+                                    aircraft: vm.aircraft,
+                                    userCoordinate: coord,
+                                    radiusKm: vm.radiusKm,
+                                    reduceMotion: reduceMotion,
+                                    onTap: { selectedAircraft = $0 }
+                                )
+                            } else {
+                                RadarPlaceholder()
+                            }
+                        }
+                        .padding(.top, 8)
 
-                if !vm.special.isEmpty {
-                    specialStrip
-                }
+                        // "Special right now" horizontal strip
+                        if !vm.special.isEmpty {
+                            specialStrip
+                        }
 
-                Spacer()
-
-                if let err = vm.error {
-                    ErrorBanner(message: err) {
-                        Task { await refresh() }
+                        // Nearby list
+                        if vm.isLoading && vm.aircraft.isEmpty {
+                            skeletonBlock
+                        } else if vm.aircraft.isEmpty && vm.error == nil && location.coordinate != nil {
+                            AtlasEmptyState(
+                                icon: "dot.radiowaves.up.forward",
+                                title: "Clear skies overhead",
+                                message: "No aircraft detected within \(Int(vm.radiusKm)) km."
+                            )
+                            .padding(.top, 24)
+                        } else if !vm.aircraft.isEmpty {
+                            nearbySection
+                        }
                     }
-                    .padding(.bottom, 8)
+                }
+                .refreshable { await refresh() }
+
+                // Error banner — floats at top
+                if let err = vm.error {
+                    VStack {
+                        ErrorBanner(message: err) {
+                            Task { await refresh() }
+                        }
+                        .padding(.top, 8)
+                        Spacer()
+                    }
+                    .ignoresSafeArea(edges: .top)
                 }
 
-                if !vm.isLoading && location.coordinate != nil && vm.aircraft.isEmpty && vm.error == nil {
-                    emptySkiesBanner
+                // Follow toast
+                if showFollowToast {
+                    VStack {
+                        Spacer()
+                        Text(followToastMessage)
+                            .font(AtlasFont.body(14, weight: .medium))
+                            .foregroundStyle(Color.atlasText)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(.ultraThinMaterial, in: Capsule())
+                            .padding(.bottom, 100)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
-
-                if let coordinate = location.coordinate {
-                    aircraftListSheet(near: coordinate)
+            }
+            .navigationTitle("Sky")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 12) {
+                        if vm.isLoading {
+                            ProgressView()
+                                .tint(.atlasCyan)
+                                .scaleEffect(0.8)
+                        }
+                        Button {
+                            showPreferences = true
+                        } label: {
+                            Image(systemName: "slider.horizontal.3")
+                                .foregroundStyle(Color.atlasAccent)
+                        }
+                    }
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    if location.coordinate != nil && !vm.isLoading {
+                        Text("\(vm.aircraft.count) in range")
+                            .font(AtlasFont.mono(11))
+                            .foregroundStyle(Color.atlasInkFaint)
+                    }
                 }
             }
         }
         .sheet(item: $selectedAircraft) { ac in
-            AircraftDetailSheet(aircraft: ac)
-                .presentationDetents([.medium])
-                .presentationBackground(Color.atlasSurface)
+            AircraftDetailSheet(
+                aircraft: ac,
+                userCoordinate: location.coordinate,
+                isFollowed: vm.isFollowed(ac.hex),
+                onFollow: { handleFollow(ac) }
+            )
+            .presentationDetents([.large])
+            .presentationBackground(Color.atlasBackground)
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showPreferences) {
             SkywatchPreferencesView()
@@ -65,116 +145,113 @@ struct SkyView: View {
 
     // MARK: - Subviews
 
-    private var mapLayer: some View {
-        Map(position: $position) {
-            UserAnnotation()
+    private var specialStrip: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            AtlasSectionHeader(title: "Special right now")
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
 
-            if let coordinate = location.coordinate {
-                MapCircle(center: coordinate, radius: vm.radiusKm * 1000)
-                    .stroke(Color.atlasAccentCool.opacity(0.5), lineWidth: 1.5)
-                    .foregroundStyle(Color.atlasAccentCool.opacity(0.05))
-            }
-
-            ForEach(vm.aircraft) { ac in
-                if let coordinate = ac.coordinate {
-                    Annotation(ac.displayName, coordinate: coordinate) {
-                        Button {
-                            selectedAircraft = ac
-                        } label: {
-                            AircraftMarker(aircraft: ac)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(vm.special) { ac in
+                        Button { selectedAircraft = ac } label: {
+                            SpecialCard(aircraft: ac)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 6)
             }
-        }
-        .mapStyle(.imagery(elevation: .realistic))
-        .mapControls {
-            MapCompass()
-            MapScaleView()
-        }
-        .ignoresSafeArea()
-        .onChange(of: location.coordinate?.latitude) { _, _ in
-            guard let newValue = location.coordinate, !hasCenteredMap else { return }
-            hasCenteredMap = true
-            position = .region(MKCoordinateRegion(center: newValue, latitudinalMeters: vm.radiusKm * 2200, longitudinalMeters: vm.radiusKm * 2200))
         }
     }
 
-    private var header: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Sky")
-                    .font(AtlasFont.display(22))
-                    .foregroundStyle(Color.atlasAccent)
-                if !vm.isLoading {
-                    Text("\(vm.aircraft.count) aircraft within \(Int(vm.radiusKm)) km")
-                        .font(AtlasFont.mono(12))
-                        .foregroundStyle(Color.atlasText.opacity(0.8))
-                }
-            }
-            Spacer()
-            if vm.isLoading {
-                ProgressView().tint(.atlasAccent)
-            }
-            Button {
-                showPreferences = true
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .foregroundStyle(Color.atlasAccent)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(.ultraThinMaterial)
-    }
+    private var nearbySection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            AtlasSectionHeader(title: "Nearby")
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 10)
 
-    private var specialStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(vm.special) { ac in
+            VStack(spacing: 0) {
+                ForEach(Array(vm.aircraft.enumerated()), id: \.element.id) { idx, ac in
                     Button {
                         selectedAircraft = ac
                     } label: {
-                        SpecialAircraftCard(aircraft: ac)
+                        FlightRow(
+                            badge: ac.badgeCode,
+                            tone: ac.tone,
+                            title: ac.displayName,
+                            subtitle: buildSubtitle(ac),
+                            trailing: ac.distanceKm.map { String(format: "%.0f km", $0) },
+                            pill: pillForAircraft(ac),
+                            chevron: true
+                        )
+                        .padding(.horizontal, 16)
+                    }
+                    .buttonStyle(.plain)
+
+                    if idx < vm.aircraft.count - 1 {
+                        Divider()
+                            .background(Color.atlasBorder)
+                            .padding(.horizontal, 16)
                     }
                 }
             }
+            .atlasCard(radius: 16)
             .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.bottom, 32)
         }
-        .background(.ultraThinMaterial)
     }
 
-    private var emptySkiesBanner: some View {
-        VStack(spacing: 6) {
-            Image(systemName: "cloud")
-                .font(.system(size: 28))
-                .foregroundStyle(Color.atlasMuted)
-            Text("Clear skies overhead")
-                .font(AtlasFont.body(13, weight: .medium))
-                .foregroundStyle(Color.atlasText)
-            Text("No aircraft detected within \(Int(vm.radiusKm)) km")
-                .font(AtlasFont.body(12))
-                .foregroundStyle(Color.atlasMuted)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial)
-        .padding(.bottom, 120)
-    }
-
-    private func aircraftListSheet(near coordinate: CLLocationCoordinate2D) -> some View {
-        AircraftListStrip(aircraft: vm.aircraft, onSelect: { selectedAircraft = $0 })
-            .refreshable {
-                await vm.load(api: auth.api, coordinate: coordinate)
+    private var skeletonBlock: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<6, id: \.self) { idx in
+                SkeletonRow()
+                    .padding(.horizontal, 16)
+                if idx < 5 {
+                    Divider().background(Color.atlasBorder).padding(.horizontal, 16)
+                }
             }
+        }
+        .atlasCard(radius: 16)
+        .padding(.horizontal, 16)
+        .padding(.top, 20)
     }
 
-    // MARK: - Refresh
+    // MARK: - Helpers
+
+    private func buildSubtitle(_ ac: OverheadAircraft) -> String {
+        var parts: [String] = []
+        if let t = ac.type { parts.append(t) }
+        if let fl = ac.flightLevelString { parts.append(fl) }
+        if let spd = ac.groundSpeed, spd > 0 { parts.append(String(format: "%.0f kt", spd)) }
+        if parts.isEmpty, let reg = ac.registration { parts.append(reg) }
+        return parts.joined(separator: " · ")
+    }
+
+    private func pillForAircraft(_ ac: OverheadAircraft) -> (String, AtlasTone)? {
+        if ac.isEmergency { return ("EMERGENCY", .emergency) }
+        if ac.isMilitary  { return ("MILITARY", .military) }
+        if let trigger = ac.matches.first?.trigger { return (trigger, .violet) }
+        return nil
+    }
+
+    private func handleFollow(_ ac: OverheadAircraft) {
+        vm.toggleFollow(ac.hex)
+        let name = ac.displayName
+        let msg = vm.isFollowed(ac.hex) ? "Following \(name)" : "Unfollowed \(name)"
+        followToastMessage = msg
+        withAnimation(.spring()) { showFollowToast = true }
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            withAnimation { showFollowToast = false }
+        }
+    }
 
     private func refresh() async {
-        guard let coordinate = location.coordinate else { return }
-        await vm.load(api: auth.api, coordinate: coordinate)
+        guard let coord = location.coordinate else { return }
+        await vm.load(api: auth.api, coordinate: coord)
     }
 
     private func startAutoRefresh() {
@@ -189,196 +266,272 @@ struct SkyView: View {
     }
 }
 
-// MARK: - Map marker
+// MARK: - RadarView
 
-private struct AircraftMarker: View {
-    let aircraft: OverheadAircraft
-
-    private var tint: Color {
-        if aircraft.isEmergency { return .red }
-        if aircraft.isMilitary { return Color.atlasAccent }
-        if !aircraft.matches.isEmpty { return Color.atlasAccentCool }
-        return Color.atlasText
-    }
-
-    var body: some View {
-        Image(systemName: "airplane")
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(tint)
-            .rotationEffect(.degrees((aircraft.track ?? 0) - 90))
-            .padding(6)
-            .background(Color.atlasSurface.opacity(0.85))
-            .clipShape(Circle())
-            .overlay(
-                Circle().stroke(tint.opacity(0.6), lineWidth: 1)
-            )
-    }
-}
-
-// MARK: - Special strip card
-
-private struct SpecialAircraftCard: View {
-    let aircraft: OverheadAircraft
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Image(systemName: aircraft.isEmergency ? "exclamationmark.triangle.fill" : "sparkles")
-                    .foregroundStyle(aircraft.isEmergency ? .red : Color.atlasAccent)
-                Text(aircraft.displayName)
-                    .font(AtlasFont.mono(13, weight: .semibold))
-                    .foregroundStyle(Color.atlasText)
-            }
-            if let match = aircraft.matches.first {
-                Text(match.message)
-                    .font(AtlasFont.body(11))
-                    .foregroundStyle(Color.atlasMuted)
-                    .lineLimit(2)
-                    .frame(maxWidth: 160, alignment: .leading)
-            }
-        }
-        .padding(10)
-        .atlasCard()
-    }
-}
-
-// MARK: - Bottom aircraft list
-
-private struct AircraftListStrip: View {
+struct RadarView: View {
     let aircraft: [OverheadAircraft]
-    let onSelect: (OverheadAircraft) -> Void
+    let userCoordinate: CLLocationCoordinate2D
+    let radiusKm: Double
+    let reduceMotion: Bool
+    let onTap: (OverheadAircraft) -> Void
+
+    @State private var sweepAngle: Double = 0
+
+    private let radarSize: CGFloat = 300
 
     var body: some View {
-        if aircraft.isEmpty {
-            EmptyView()
-        } else {
-            List {
-                ForEach(aircraft) { ac in
-                    Button {
-                        onSelect(ac)
-                    } label: {
-                        AircraftRow(aircraft: ac)
-                    }
-                    .listRowBackground(Color.atlasSurface)
-                }
-            }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Color.atlasBackground.opacity(0.85))
-            .frame(height: 220)
-        }
-    }
-}
+        ZStack {
+            // Dark radar background
+            Circle()
+                .fill(Color(hex: "#04080F"))
+                .frame(width: radarSize, height: radarSize)
+                .overlay(
+                    Circle()
+                        .stroke(Color.atlasAccent.opacity(0.25), lineWidth: 1.5)
+                )
+                .shadow(color: Color.atlasCyan.opacity(0.06), radius: 40)
 
-private struct AircraftRow: View {
-    let aircraft: OverheadAircraft
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "airplane")
-                .foregroundStyle(aircraft.isEmergency ? .red : (aircraft.isMilitary ? Color.atlasAccent : Color.atlasAccentCool))
-                .rotationEffect(.degrees((aircraft.track ?? 0) - 90))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(aircraft.displayName)
-                    .font(AtlasFont.mono(14, weight: .medium))
-                    .foregroundStyle(Color.atlasText)
-                Text([aircraft.type, aircraft.registration].compactMap { $0 }.joined(separator: " · "))
-                    .font(AtlasFont.body(11))
-                    .foregroundStyle(Color.atlasMuted)
+            // Range rings (3 inner + outer rim)
+            ForEach([0.33, 0.67], id: \.self) { fraction in
+                Circle()
+                    .stroke(Color.atlasAccent.opacity(0.10), lineWidth: 0.5)
+                    .frame(width: radarSize * fraction, height: radarSize * fraction)
             }
 
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 2) {
-                if let alt = aircraft.altitude {
-                    Text("\(alt) ft")
-                        .font(AtlasFont.mono(12))
-                        .foregroundStyle(Color.atlasText)
-                }
-                if let dist = aircraft.distanceKm {
-                    Text(String(format: "%.1f km", dist))
-                        .font(AtlasFont.mono(11))
-                        .foregroundStyle(Color.atlasMuted)
-                }
-            }
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-// MARK: - Detail sheet
-
-private struct AircraftDetailSheet: View {
-    let aircraft: OverheadAircraft
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: "airplane.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(aircraft.isEmergency ? .red : (aircraft.isMilitary ? Color.atlasAccent : Color.atlasAccentCool))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(aircraft.displayName)
-                        .font(AtlasFont.display(20))
-                        .foregroundStyle(Color.atlasText)
-                    if let type = aircraft.type {
-                        Text(type)
-                            .font(AtlasFont.body(14))
-                            .foregroundStyle(Color.atlasMuted)
-                    }
-                }
+            // Crosshair lines
+            Group {
+                Rectangle()
+                    .fill(Color.atlasAccent.opacity(0.08))
+                    .frame(width: radarSize, height: 0.5)
+                Rectangle()
+                    .fill(Color.atlasAccent.opacity(0.08))
+                    .frame(width: 0.5, height: radarSize)
             }
 
-            VStack(alignment: .leading, spacing: 10) {
-                detailRow("Registration", aircraft.registration ?? "—")
-                detailRow("Altitude", aircraft.altitude.map { "\($0) ft" } ?? "—")
-                detailRow("Ground speed", aircraft.groundSpeed.map { String(format: "%.0f kt", $0) } ?? "—")
-                detailRow("Track", aircraft.track.map { String(format: "%.0f°", $0) } ?? "—")
-                detailRow("Distance", aircraft.distanceKm.map { String(format: "%.1f km", $0) } ?? "—")
-                detailRow("Squawk", aircraft.squawk ?? "—")
-                if aircraft.isMilitary {
-                    detailRow("Operator", "Military / government")
-                }
-            }
-            .padding(14)
-            .atlasCard()
-
-            if !aircraft.matches.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Why it's special")
-                        .font(AtlasFont.body(13, weight: .semibold))
-                        .foregroundStyle(Color.atlasAccent)
-                    ForEach(aircraft.matches, id: \.message) { match in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "sparkles")
-                                .foregroundStyle(Color.atlasAccent)
-                                .font(.system(size: 12))
-                            Text(match.message)
-                                .font(AtlasFont.body(13))
-                                .foregroundStyle(Color.atlasText)
+            // Sweep
+            if !reduceMotion {
+                SweepBeam()
+                    .frame(width: radarSize, height: radarSize)
+                    .clipShape(Circle())
+                    .rotationEffect(.degrees(sweepAngle))
+                    .onAppear {
+                        withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+                            sweepAngle = 360
                         }
                     }
-                }
-                .padding(14)
-                .atlasCard()
             }
 
-            Spacer()
+            // You-dot
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.2))
+                    .frame(width: 18, height: 18)
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 7, height: 7)
+                    .shadow(color: Color.white.opacity(0.9), radius: 5)
+                    .shadow(color: Color.atlasCyan.opacity(0.6), radius: 10)
+            }
+
+            // Aircraft blips
+            ForEach(aircraft) { ac in
+                if let pos = blipPosition(for: ac) {
+                    BlipView(aircraft: ac, onTap: { onTap(ac) })
+                        .position(pos)
+                }
+            }
+
+            // Range label
+            VStack {
+                Spacer()
+                Text("\(Int(radiusKm)) km")
+                    .font(AtlasFont.mono(9))
+                    .foregroundStyle(Color.atlasInkFaint)
+                    .padding(.bottom, 8)
+            }
+            .frame(width: radarSize, height: radarSize)
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: radarSize, height: radarSize)
+        .frame(maxWidth: .infinity)
     }
 
-    private func detailRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label)
-                .font(AtlasFont.body(13))
-                .foregroundStyle(Color.atlasMuted)
-            Spacer()
-            Text(value)
-                .font(AtlasFont.mono(13))
-                .foregroundStyle(Color.atlasText)
+    private func blipPosition(for ac: OverheadAircraft) -> CGPoint? {
+        guard let acLat = ac.lat, let acLon = ac.lon else { return nil }
+
+        let dLat = acLat - userCoordinate.latitude
+        let dLon = (acLon - userCoordinate.longitude) * cos(userCoordinate.latitude * .pi / 180)
+
+        let radiusDeg = radiusKm / 111.0
+        let distDeg = sqrt(dLat * dLat + dLon * dLon)
+        let normalizedDist = min(distDeg / max(radiusDeg, 0.001), 1.0)
+
+        // Bearing angle (from north, clockwise)
+        let bearing = atan2(dLon, dLat)
+
+        let half = radarSize / 2
+        let maxR = half - 14.0
+
+        let x = half + CGFloat(sin(bearing)) * CGFloat(normalizedDist) * maxR
+        let y = half - CGFloat(cos(bearing)) * CGFloat(normalizedDist) * maxR
+
+        return CGPoint(x: x, y: y)
+    }
+}
+
+// MARK: - RadarPlaceholder
+
+private struct RadarPlaceholder: View {
+    private let size: CGFloat = 300
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color(hex: "#04080F"))
+                .frame(width: size, height: size)
+                .overlay(Circle().stroke(Color.atlasAccent.opacity(0.20), lineWidth: 1.5))
+
+            VStack(spacing: 8) {
+                ProgressView().tint(.atlasCyan)
+                Text("Acquiring location…")
+                    .font(AtlasFont.mono(12))
+                    .foregroundStyle(Color.atlasInkFaint)
+            }
         }
+        .frame(width: size, height: size)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - SweepBeam
+
+private struct SweepBeam: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let r = size.width / 2
+
+            var path = Path()
+            path.move(to: center)
+            path.addArc(
+                center: center,
+                radius: r,
+                startAngle: .degrees(-90),
+                endAngle: .degrees(-30),
+                clockwise: false
+            )
+            path.closeSubpath()
+
+            ctx.fill(
+                path,
+                with: .linearGradient(
+                    Gradient(stops: [
+                        .init(color: Color.atlasCyan.opacity(0.0), location: 0),
+                        .init(color: Color.atlasCyan.opacity(0.20), location: 1)
+                    ]),
+                    startPoint: center,
+                    endPoint: CGPoint(x: center.x, y: 0)
+                )
+            )
+
+            // Leading edge line
+            var line = Path()
+            line.move(to: center)
+            line.addLine(to: CGPoint(x: center.x, y: 0))
+            ctx.stroke(line, with: .color(Color.atlasCyan.opacity(0.55)), lineWidth: 1.5)
+        }
+    }
+}
+
+// MARK: - BlipView
+
+private struct BlipView: View {
+    let aircraft: OverheadAircraft
+    let onTap: () -> Void
+
+    @State private var pulseScale: CGFloat = 1.0
+
+    private var color: Color { aircraft.tone.color }
+    private var isPulsing: Bool { aircraft.isEmergency || !aircraft.matches.isEmpty }
+
+    var body: some View {
+        Button(action: onTap) {
+            ZStack {
+                if isPulsing {
+                    Circle()
+                        .fill(color.opacity(0.25))
+                        .frame(width: 20, height: 20)
+                        .scaleEffect(pulseScale)
+                        .opacity(2.0 - pulseScale)
+                }
+                Circle()
+                    .fill(color)
+                    .frame(width: 9, height: 9)
+                    .shadow(color: color.opacity(0.9), radius: 6)
+            }
+        }
+        .buttonStyle(.plain)
+        .onAppear {
+            if isPulsing {
+                withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) {
+                    pulseScale = 2.2
+                }
+            }
+        }
+    }
+}
+
+// MARK: - SpecialCard
+
+private struct SpecialCard: View {
+    let aircraft: OverheadAircraft
+
+    private var tone: AtlasTone { aircraft.tone }
+    private var glowEnabled: Bool { aircraft.isEmergency }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Pill(text: pillLabel, tone: tone, dot: true)
+
+            Text(aircraft.displayName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color.atlasText)
+                .lineLimit(1)
+
+            HStack(spacing: 6) {
+                if let typeStr = aircraft.type {
+                    Text(typeStr)
+                        .font(AtlasFont.mono(11))
+                        .foregroundStyle(Color.atlasInk2)
+                }
+                if let dist = aircraft.distanceKm {
+                    Text(String(format: "%.0f km", dist))
+                        .font(AtlasFont.mono(11))
+                        .foregroundStyle(tone.color)
+                }
+            }
+
+            if let msg = aircraft.matches.first?.message {
+                Text(msg)
+                    .font(AtlasFont.body(11))
+                    .foregroundStyle(Color.atlasInkFaint)
+                    .lineLimit(2)
+            }
+        }
+        .frame(width: 150, alignment: .leading)
+        .padding(14)
+        .atlasCard(radius: 16, glow: glowEnabled)
+    }
+
+    private var pillLabel: String {
+        if aircraft.isEmergency {
+            switch aircraft.squawk {
+            case "7700": return "MAYDAY"
+            case "7600": return "NORDO"
+            case "7500": return "HIJACK"
+            default:     return "EMERGENCY"
+            }
+        }
+        if aircraft.isMilitary { return "MILITARY" }
+        if let trigger = aircraft.matches.first?.trigger { return trigger }
+        return "SPECIAL"
     }
 }

@@ -77,6 +77,27 @@ Four tabs: **Map · Sky · Flights · Stats** (trip planning removed). Mockup is
 - `/live/box` bounding-box ADS-B (F1) · `/stats` new fields (E2) · route lookup service (F2) ·
   photo proxy/cache (F3) · search endpoints (F4) · trail endpoint (F5). All on free APIs.
 
+## Pain points to fix (what FR24 / Plane Finder users complain about)
+- **Paywalls & ads** → Atlas is fully free, no ads, no gated features.
+- **Cluttered map** → rotate glyphs by heading, cap/cluster markers, hide labels when zoomed out,
+  tap-to-focus dims the rest.
+- **Battery drain** → significant-location + throttled refresh (~10–15s), pause polling when backgrounded.
+- **Buried search** → search is a first-class action (flight #, callsign, reg, airport, type, squawk).
+- **Raw codes** (A320, JBU) → always resolve to human names (airline + aircraft type). Already wired.
+- **Slow with many aircraft** → cap visible markers, throttle, lightweight glyphs.
+- **No sense of "what's interesting"** → Skywatch "special now" surfaces it; emergencies (7700) pinned.
+- **Privacy** → location is last-known only, user-scoped, deletable.
+
+## What people love (must include)
+- **Aircraft photos** (planespotters, free) in the detail sheet — the single most-loved feature.
+- **Rich tap detail**: route origin→dest, altitude/speed/heading, type, reg, photo, **Follow** + **Share**.
+- **Flight trail / path** drawn on the map.
+- **Filter to interesting** (military / rare / emergency).
+- **Personal flight log + stats** (Flighty-style).
+- **Emergency surfacing** — squawk 7700/7600/7500 pinned to the top, red.
+- **Follow a specific flight** → alert when it's near / lands (ties into Skywatch push).
+- A **smooth, beautiful, decluttered map**.
+
 ## Definition of done (per screen)
 Matches the mockup's composition + density; all states (loading skeleton, empty, error); mono for
 data; glass only where functional; reduced-motion paths; builds + runs on device; no serif.

@@ -121,12 +121,14 @@ private struct PlaneGlyph: View {
     let isSelected: Bool
 
     var body: some View {
-        Image(systemName: "airplane")
-            .font(.system(size: isSelected ? 22 : 17, weight: .black))
-            .foregroundStyle(isSelected ? Color.atlasAccent : aircraft.tone.color)
-            .rotationEffect(.degrees((aircraft.track ?? 0) - 90))
-            .shadow(color: aircraft.tone.color.opacity(0.7), radius: isSelected ? 8 : 4)
-            .padding(6)
-            .contentShape(Circle())
+        AircraftMarker(
+            category: AircraftCategory(typeCode: aircraft.type, isMilitary: aircraft.isMilitary),
+            heading: aircraft.track,
+            color: isSelected ? Color.atlasAccent : aircraft.tone.color,
+            baseSize: 19,
+            selected: isSelected
+        )
+        .padding(8)
+        .contentShape(Circle())
     }
 }

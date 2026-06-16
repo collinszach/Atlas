@@ -168,6 +168,10 @@ struct StatsResponse: Codable {
     let mostVisitedCountryCode: String?
     let longestTripTitle: String?
     let longestTripDays: Int?
+    // Added for bento stats — backend delivers these; decode-safe (optional)
+    let hoursInAir: Double?
+    let topAirline: String?
+    let mostFlownAirport: String?
 
     enum CodingKeys: String, CodingKey {
         case countriesVisited = "countries_visited"
@@ -179,6 +183,9 @@ struct StatsResponse: Codable {
         case mostVisitedCountryCode = "most_visited_country_code"
         case longestTripTitle = "longest_trip_title"
         case longestTripDays = "longest_trip_days"
+        case hoursInAir = "hours_in_air"
+        case topAirline = "top_airline"
+        case mostFlownAirport = "most_flown_airport"
     }
 }
 

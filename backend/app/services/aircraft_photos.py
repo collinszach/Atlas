@@ -57,7 +57,7 @@ async def _get_cached(key: str, url: str) -> PhotoInfo | None:
 async def _fetch_photo(url: str) -> PhotoInfo | None:
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(url, headers={"User-Agent": "Atlas-FlightApp/1.0"})
+            resp = await client.get(url, headers={"User-Agent": "AtlasFlightApp/1.0 (+https://atlas.app; contact: zakslax@gmail.com)"})
             if resp.status_code != 200:
                 return None
             data = resp.json()

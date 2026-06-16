@@ -11,6 +11,10 @@ class StatsResponse(BaseModel):
     most_visited_country_code: str | None = None
     longest_trip_title: str | None = None
     longest_trip_days: int | None = None
+    # New fields (EPIC E2)
+    hours_in_air: float | None = None
+    top_airline: str | None = None
+    most_flown_airport: str | None = None
 
 
 class TimelineTrip(BaseModel):

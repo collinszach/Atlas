@@ -132,6 +132,17 @@ class OverheadAircraft(BaseModel):
     is_military: bool = False
     distance_km: float | None = None
     matches: list[AircraftMatch] = []
+    # Route enrichment (adsbdb)
+    origin_iata: str | None = None
+    origin_name: str | None = None
+    dest_iata: str | None = None
+    dest_name: str | None = None
+    # Photo (planespotters)
+    photo_url: str | None = None
+    photo_link: str | None = None
+    photo_credit: str | None = None
+    # Trail (airplanes.live detail)
+    trail: list[list[float]] = []
 
 
 class OverheadResponse(BaseModel):

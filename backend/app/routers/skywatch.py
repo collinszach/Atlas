@@ -1,5 +1,7 @@
+import asyncio
 import logging
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +28,8 @@ from app.schemas.skywatch import (
     SkywatchPreferenceUpdate,
 )
 from app.services.adsb import AdsbServiceError, DataSourceResolver
+from app.services.aircraft_photos import get_photo_by_hex
+from app.services.flightroute import get_route
 from app.services.llm import LocalLLMError
 from app.services.skywatch.airlines import resolve_airline
 from app.services.skywatch.nl_prefs import compile_preferences
@@ -141,8 +145,119 @@ async def get_overhead(
             )
         )
 
+    # Enrich the closest ~15 aircraft with route + photo data concurrently.
+    # Failures in enrichment must not break the response — use return_exceptions.
+    enrich_targets = sorted(items, key=lambda a: a.distance_km or float("inf"))[:15]
+
+    async def _enrich(item: OverheadAircraft) -> None:
+        route_task = get_route(item.flight) if item.flight else asyncio.sleep(0, result=None)
+        photo_task = get_photo_by_hex(item.hex)
+        results = await asyncio.gather(route_task, photo_task, return_exceptions=True)
+        route = results[0] if not isinstance(results[0], Exception) else None
+        photo = results[1] if not isinstance(results[1], Exception) else None
+        if route:
+            item.origin_iata = route.origin_iata
+            item.origin_name = route.origin_name
+            item.dest_iata = route.dest_iata
+            item.dest_name = route.dest_name
+        if photo:
+            item.photo_url = photo.photo_url
+            item.photo_link = photo.link
+            item.photo_credit = photo.photographer
+
+    await asyncio.gather(*[_enrich(item) for item in enrich_targets], return_exceptions=True)
+
     source = "local+network" if resolver.has_local_source else "network"
     return OverheadResponse(aircraft=items, source=source)
+
+
+@router.get("/aircraft/{hex}", response_model=OverheadAircraft)
+async def get_aircraft_detail(
+    hex: str,
+    user_id: CurrentUser,  # noqa: F841 — auth required
+    lat: float = Query(0.0, ge=-90.0, le=90.0),
+    lon: float = Query(0.0, ge=-180.0, le=180.0),
+) -> OverheadAircraft:
+    """Return enriched detail for a single aircraft: route, photo, and trail."""
+    import math
+
+    _AIRPLANES_LIVE = "https://api.airplanes.live/v2/hex"
+    _TIMEOUT = 6.0
+
+    ac_data: dict = {}
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.get(f"{_AIRPLANES_LIVE}/{hex}")
+            if resp.status_code == 200:
+                ac_list = resp.json().get("ac") or []
+                if ac_list:
+                    ac_data = ac_list[0]
+    except Exception as exc:
+        logger.debug("airplanes.live detail fetch failed for %s: %s", hex, exc)
+
+    flight = (ac_data.get("flight") or "").strip() or None
+    registration = ac_data.get("r") or ac_data.get("reg") or None
+    ac_type = ac_data.get("t") or ac_data.get("type") or None
+    ac_lat = ac_data.get("lat")
+    ac_lon = ac_data.get("lon")
+    alt_baro = ac_data.get("alt_baro")
+    ground_speed = ac_data.get("gs")
+    track = ac_data.get("track")
+    squawk = ac_data.get("squawk")
+
+    # Distance from the supplied observer coords
+    dist_km: float | None = None
+    if ac_lat is not None and ac_lon is not None and lat != 0.0:
+        R = 6371.0
+        dlat = math.radians(ac_lat - lat)
+        dlon = math.radians(ac_lon - lon)
+        a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat)) * math.cos(math.radians(ac_lat)) * math.sin(dlon / 2) ** 2
+        dist_km = round(R * 2 * math.asin(math.sqrt(a)), 2)
+
+    # Trail from ac_data if present
+    raw_trail = ac_data.get("trace") or []
+    trail: list[list[float]] = []
+    if isinstance(raw_trail, list):
+        for pt in raw_trail:
+            if isinstance(pt, (list, tuple)) and len(pt) >= 2:
+                try:
+                    trail.append([float(pt[0]), float(pt[1])])
+                except (TypeError, ValueError):
+                    pass
+
+    item = OverheadAircraft(
+        hex=hex,
+        flight=flight,
+        registration=registration,
+        type=ac_type,
+        airline=resolve_airline(flight),
+        lat=ac_lat,
+        lon=ac_lon,
+        alt_baro=int(alt_baro) if alt_baro is not None else None,
+        ground_speed=float(ground_speed) if ground_speed is not None else None,
+        track=float(track) if track is not None else None,
+        squawk=squawk,
+        distance_km=dist_km,
+        trail=trail,
+    )
+
+    # Enrich with route + photo
+    route, photo = await asyncio.gather(
+        get_route(flight) if flight else asyncio.sleep(0, result=None),
+        get_photo_by_hex(hex),
+        return_exceptions=True,
+    )
+    if route and not isinstance(route, Exception):
+        item.origin_iata = route.origin_iata
+        item.origin_name = route.origin_name
+        item.dest_iata = route.dest_iata
+        item.dest_name = route.dest_name
+    if photo and not isinstance(photo, Exception):
+        item.photo_url = photo.photo_url
+        item.photo_link = photo.link
+        item.photo_credit = photo.photographer
+
+    return item
 
 
 @router.get("/preferences", response_model=SkywatchPreferenceRead)

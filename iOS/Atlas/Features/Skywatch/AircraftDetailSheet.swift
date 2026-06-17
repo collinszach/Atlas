@@ -13,6 +13,7 @@ struct AircraftDetailSheet: View {
     @Environment(AuthManager.self) private var auth
     @State private var enriched: OverheadAircraft? = nil
     @State private var isLoadingDetail = false
+    @State private var liveTrail: [[Double]] = []
 
     private var display: OverheadAircraft { enriched ?? aircraft }
 
@@ -63,20 +64,40 @@ struct AircraftDetailSheet: View {
             }
         }
         .task {
-            guard !isLoadingDetail else { return }
             guard let coord = userCoordinate else { return }
+            // Seed with any backend trail + the current position.
+            if let t = aircraft.trail, !t.isEmpty { liveTrail = t }
+            appendPosition(aircraft)
             isLoadingDetail = true
-            defer { isLoadingDetail = false }
-            do {
-                enriched = try await auth.api.fetchAircraftDetail(
-                    hex: aircraft.hex,
-                    lat: coord.latitude,
-                    lon: coord.longitude
-                )
-            } catch {
-                // Fall back to already-loaded aircraft — silently.
+            // Poll while the sheet is open, accumulating a live trail.
+            while !Task.isCancelled {
+                do {
+                    let updated = try await auth.api.fetchAircraftDetail(
+                        hex: aircraft.hex, lat: coord.latitude, lon: coord.longitude
+                    )
+                    enriched = updated
+                    appendPosition(updated)
+                } catch {
+                    // keep showing what we have
+                }
+                isLoadingDetail = false
+                try? await Task.sleep(for: .seconds(6))
             }
         }
+    }
+
+    /// Combined path: accumulated live positions take precedence over the backend trail.
+    private var combinedTrail: [[Double]] {
+        liveTrail.count >= 2 ? liveTrail : (display.trail ?? [])
+    }
+
+    private func appendPosition(_ ac: OverheadAircraft) {
+        guard let lat = ac.lat, let lon = ac.lon else { return }
+        if let last = liveTrail.last, abs(last[0] - lat) < 0.0002, abs(last[1] - lon) < 0.0002 {
+            return  // unchanged
+        }
+        liveTrail.append([lat, lon])
+        if liveTrail.count > 240 { liveTrail.removeFirst(liveTrail.count - 240) }
     }
 
     // MARK: - Header
@@ -336,9 +357,9 @@ struct AircraftDetailSheet: View {
             AtlasSectionHeader(title: "Position")
 
             MiniMapView(
-                coordinate: coordinate,
-                heading: aircraft.track,
-                trail: display.trail
+                coordinate: enriched?.coordinate ?? coordinate,
+                heading: display.track,
+                trail: combinedTrail
             )
             .frame(height: 180)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))

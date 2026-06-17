@@ -14,11 +14,17 @@ struct MapView: View {
     @State private var spanKm: Double = 330
     @State private var selected: OverheadAircraft? = nil
     @State private var refreshTask: Task<Void, Never>? = nil
+    @State private var filter = FlightFilter.default
+    @State private var showFilter = false
+
+    private var visibleAircraft: [OverheadAircraft] {
+        vm.liveAircraft.filter { filter.matches($0) }
+    }
 
     var body: some View {
         ZStack(alignment: .top) {
             Map(position: $position, selection: .constant(nil)) {
-                ForEach(vm.liveAircraft) { ac in
+                ForEach(visibleAircraft) { ac in
                     if let coord = ac.coordinate {
                         Annotation("", coordinate: coord) {
                             PlaneGlyph(aircraft: ac, isSelected: selected?.hex == ac.hex)
@@ -60,6 +66,9 @@ struct MapView: View {
             .presentationBackground(Color.atlasBackground)
             .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showFilter) {
+            FilterSheet(filter: $filter)
+        }
         .task {
             await vm.loadLive(api: auth.api, center: center, spanKm: spanKm)
             startAutoRefresh()
@@ -74,10 +83,15 @@ struct MapView: View {
                 .foregroundStyle(AtlasGradient.accent)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Live map").font(AtlasFont.display(18, weight: .heavy)).foregroundStyle(Color.atlasText)
-                Text("\(vm.liveAircraft.count) aircraft in view")
+                Text("\(visibleAircraft.count) of \(vm.liveAircraft.count) aircraft")
                     .font(AtlasFont.mono(11)).foregroundStyle(Color.atlasInk2)
             }
             Spacer()
+            Button { showFilter = true } label: {
+                Image(systemName: filter.isActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(filter.isActive ? Color.atlasAccent : Color.atlasInk2)
+            }
             HStack(spacing: 5) {
                 Circle().fill(Color.atlasCyan).frame(width: 6, height: 6)
                 Text("LIVE").font(.system(size: 10, weight: .bold, design: .rounded))

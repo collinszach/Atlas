@@ -30,6 +30,7 @@ from app.schemas.skywatch import (
 from app.services.adsb import AdsbServiceError, DataSourceResolver
 from app.services.aircraft_photos import get_photo_by_hex
 from app.services.flightroute import get_route
+from app.services.search import search_aircraft
 from app.services.llm import LocalLLMError
 from app.services.skywatch.airlines import resolve_airline
 from app.services.skywatch.nl_prefs import compile_preferences
@@ -169,6 +170,47 @@ async def get_overhead(
 
     source = "local+network" if resolver.has_local_source else "network"
     return OverheadResponse(aircraft=items, source=source)
+
+
+@router.get("/search", response_model=OverheadResponse)
+async def search(
+    user_id: CurrentUser,
+    q: str = Query(..., min_length=1, max_length=12, description="flight/callsign/reg/hex/type/squawk"),
+) -> OverheadResponse:
+    matches = await search_aircraft(q)
+    items: list[OverheadAircraft] = [
+        OverheadAircraft(
+            hex=ac.hex,
+            flight=ac.flight,
+            registration=ac.registration,
+            type=ac.type,
+            airline=resolve_airline(ac.flight),
+            lat=ac.lat,
+            lon=ac.lon,
+            alt_baro=ac.alt_baro,
+            ground_speed=ac.ground_speed,
+            track=ac.track,
+            squawk=ac.squawk,
+            is_military=ac.is_military,
+            distance_km=ac.distance_km,
+            matches=[],
+        )
+        for ac in matches
+    ]
+
+    async def _enrich(item: OverheadAircraft) -> None:
+        route_task = get_route(item.flight) if item.flight else asyncio.sleep(0, result=None)
+        results = await asyncio.gather(route_task, get_photo_by_hex(item.hex), return_exceptions=True)
+        route = results[0] if not isinstance(results[0], Exception) else None
+        photo = results[1] if not isinstance(results[1], Exception) else None
+        if route:
+            item.origin_iata, item.origin_name = route.origin_iata, route.origin_name
+            item.dest_iata, item.dest_name = route.dest_iata, route.dest_name
+        if photo:
+            item.photo_url, item.photo_link, item.photo_credit = photo.photo_url, photo.link, photo.photographer
+
+    await asyncio.gather(*[_enrich(it) for it in items[:10]], return_exceptions=True)
+    return OverheadResponse(aircraft=items, source="search")
 
 
 @router.get("/aircraft/{hex}", response_model=OverheadAircraft)

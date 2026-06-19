@@ -17,6 +17,7 @@ struct MapView: View {
     @State private var filter = FlightFilter.default
     @State private var showFilter = false
     @State private var showSearch = false
+    @State private var showEmergency = false
 
     private var visibleAircraft: [OverheadAircraft] {
         vm.liveAircraft.filter { filter.matches($0) }
@@ -73,6 +74,9 @@ struct MapView: View {
         .sheet(isPresented: $showSearch) {
             SearchView(userCoordinate: center)
         }
+        .sheet(isPresented: $showEmergency) {
+            EmergencyView()
+        }
         .task {
             await vm.loadLive(api: auth.api, center: center, spanKm: spanKm)
             startAutoRefresh()
@@ -91,6 +95,11 @@ struct MapView: View {
                     .font(AtlasFont.mono(11)).foregroundStyle(Color.atlasInk2)
             }
             Spacer()
+            Button { showEmergency = true } label: {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.atlasDanger)
+            }
             Button { showSearch = true } label: {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 18, weight: .semibold))

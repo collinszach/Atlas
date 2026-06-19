@@ -16,6 +16,7 @@ struct MapView: View {
     @State private var refreshTask: Task<Void, Never>? = nil
     @State private var filter = FlightFilter.default
     @State private var showFilter = false
+    @State private var showSearch = false
 
     private var visibleAircraft: [OverheadAircraft] {
         vm.liveAircraft.filter { filter.matches($0) }
@@ -69,6 +70,9 @@ struct MapView: View {
         .sheet(isPresented: $showFilter) {
             FilterSheet(filter: $filter)
         }
+        .sheet(isPresented: $showSearch) {
+            SearchView(userCoordinate: center)
+        }
         .task {
             await vm.loadLive(api: auth.api, center: center, spanKm: spanKm)
             startAutoRefresh()
@@ -87,6 +91,11 @@ struct MapView: View {
                     .font(AtlasFont.mono(11)).foregroundStyle(Color.atlasInk2)
             }
             Spacer()
+            Button { showSearch = true } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.atlasInk2)
+            }
             Button { showFilter = true } label: {
                 Image(systemName: filter.isActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                     .font(.system(size: 20, weight: .semibold))

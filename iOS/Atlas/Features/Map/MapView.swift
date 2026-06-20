@@ -56,6 +56,13 @@ struct MapView: View {
                     .background(.ultraThinMaterial, in: Capsule())
                     .padding(.top, 116)
             }
+
+            if let err = vm.error, vm.liveAircraft.isEmpty {
+                ErrorBanner(message: err) {
+                    Task { await vm.loadLive(api: auth.api, center: center, spanKm: spanKm) }
+                }
+                .padding(.top, 116)
+            }
         }
         .sheet(item: $selected) { ac in
             AircraftDetailSheet(

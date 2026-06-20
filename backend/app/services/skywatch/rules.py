@@ -59,17 +59,20 @@ def _check_military(
     aircraft: Aircraft,
     mil_prefixes: dict[str, MilCallsignPrefix],
 ) -> Match | None:
-    # A scheduled commercial flight (known airline callsign) is never military —
-    # guards against noisy dbFlags / prefix collisions on airline callsigns.
-    if is_commercial_airline(aircraft.flight):
-        return None
-
+    # The dbFlags military bit is authoritative (the ADS-B database explicitly
+    # flagging the airframe) — trust it regardless of callsign.
     if aircraft.is_military:
         return Match(
             trigger="military",
             score=7,
             message=f"A military aircraft ({aircraft.type or 'unknown type'}) is overhead.",
         )
+
+    # Callsign-prefix and registration heuristics below are noisier, so a known
+    # commercial airline callsign rules them out (prefix collisions on airline
+    # callsigns would otherwise produce false military matches).
+    if is_commercial_airline(aircraft.flight):
+        return None
 
     if aircraft.flight:
         callsign = aircraft.flight.upper()

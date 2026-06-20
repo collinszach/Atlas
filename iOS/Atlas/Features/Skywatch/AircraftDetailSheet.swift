@@ -14,6 +14,8 @@ struct AircraftDetailSheet: View {
     @State private var enriched: OverheadAircraft? = nil
     @State private var isLoadingDetail = false
     @State private var liveTrail: [[Double]] = []
+    @State private var altSamples: [Double] = []
+    @State private var speedSamples: [Double] = []
 
     private var display: OverheadAircraft { enriched ?? aircraft }
 
@@ -34,6 +36,11 @@ struct AircraftDetailSheet: View {
 
                     // Telemetry grid
                     telemetrySection
+
+                    // Live altitude & speed trend
+                    if altSamples.count >= 2 || speedSamples.count >= 2 {
+                        trendSection
+                    }
 
                     // Airframe database
                     if display.manufacturer != nil || display.owner != nil || display.aircraftTypeLong != nil {
@@ -73,6 +80,7 @@ struct AircraftDetailSheet: View {
             // Seed with any backend trail + the current position.
             if let t = aircraft.trail, !t.isEmpty { liveTrail = t }
             appendPosition(aircraft)
+            appendTelemetry(aircraft)
             isLoadingDetail = true
             // Poll while the sheet is open, accumulating a live trail.
             while !Task.isCancelled {
@@ -82,6 +90,7 @@ struct AircraftDetailSheet: View {
                     )
                     enriched = updated
                     appendPosition(updated)
+                    appendTelemetry(updated)
                 } catch {
                     // keep showing what we have
                 }
@@ -103,6 +112,13 @@ struct AircraftDetailSheet: View {
         }
         liveTrail.append([lat, lon])
         if liveTrail.count > 240 { liveTrail.removeFirst(liveTrail.count - 240) }
+    }
+
+    private func appendTelemetry(_ ac: OverheadAircraft) {
+        if let a = ac.altitude { altSamples.append(Double(a)) }
+        if let s = ac.groundSpeed { speedSamples.append(s) }
+        if altSamples.count > 120 { altSamples.removeFirst(altSamples.count - 120) }
+        if speedSamples.count > 120 { speedSamples.removeFirst(speedSamples.count - 120) }
     }
 
     // MARK: - Header
@@ -305,6 +321,32 @@ struct AircraftDetailSheet: View {
 
     // MARK: - Telemetry grid
 
+    private var trendSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            AtlasSectionHeader(title: "Live trend")
+            VStack(spacing: 14) {
+                trendRow(title: "Altitude", samples: altSamples,
+                         value: display.altitude.map { "\($0.formatted()) ft" } ?? "—",
+                         tone: .cyan)
+                trendRow(title: "Ground speed", samples: speedSamples,
+                         value: display.groundSpeed.map { "\(Int($0)) kt" } ?? "—",
+                         tone: .accent)
+            }
+            .padding(14).atlasCard(radius: 16)
+        }
+    }
+
+    private func trendRow(title: String, samples: [Double], value: String, tone: AtlasTone) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(title).font(AtlasFont.body(13)).foregroundStyle(Color.atlasInk2)
+                Spacer()
+                Text(value).font(AtlasFont.mono(13)).foregroundStyle(tone.color)
+            }
+            Sparkline(samples: samples, color: tone.color).frame(height: 38)
+        }
+    }
+
     private var airframeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             AtlasSectionHeader(title: "Airframe")
@@ -477,6 +519,49 @@ struct AircraftDetailSheet: View {
         if let route = display.routeLabel { parts.append(route) }
         parts.append("Spotted via Atlas")
         return parts.joined(separator: " · ")
+    }
+}
+
+// MARK: - Sparkline
+
+private struct Sparkline: View {
+    let samples: [Double]
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            let lo = samples.min() ?? 0, hi = samples.max() ?? 1
+            let range = max(hi - lo, 0.0001)
+            let pts: [CGPoint] = samples.enumerated().map { i, s in
+                let x = samples.count > 1 ? w * CGFloat(i) / CGFloat(samples.count - 1) : w / 2
+                let y = h - 4 - (h - 8) * CGFloat((s - lo) / range)
+                return CGPoint(x: x, y: y)
+            }
+            ZStack {
+                // soft fill under the line
+                Path { p in
+                    guard let first = pts.first else { return }
+                    p.move(to: CGPoint(x: first.x, y: h))
+                    p.addLine(to: first)
+                    pts.dropFirst().forEach { p.addLine(to: $0) }
+                    if let last = pts.last { p.addLine(to: CGPoint(x: last.x, y: h)) }
+                    p.closeSubpath()
+                }
+                .fill(LinearGradient(colors: [color.opacity(0.22), color.opacity(0)],
+                                     startPoint: .top, endPoint: .bottom))
+                // line
+                Path { p in
+                    guard let first = pts.first else { return }
+                    p.move(to: first); pts.dropFirst().forEach { p.addLine(to: $0) }
+                }
+                .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                // leading dot
+                if let last = pts.last {
+                    Circle().fill(color).frame(width: 5, height: 5).position(last)
+                }
+            }
+        }
     }
 }
 

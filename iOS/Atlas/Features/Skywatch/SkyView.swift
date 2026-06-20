@@ -9,6 +9,7 @@ struct SkyView: View {
     @State private var location = LocationProvider()
     @State private var selectedAircraft: OverheadAircraft? = nil
     @State private var showPreferences = false
+    @State private var showAR = false
     @State private var refreshTask: Task<Void, Never>? = nil
     @State private var showFollowToast = false
     @State private var followToastMessage = ""
@@ -98,6 +99,12 @@ struct SkyView: View {
                                 .scaleEffect(0.8)
                         }
                         Button {
+                            showAR = true
+                        } label: {
+                            Image(systemName: "camera.viewfinder")
+                                .foregroundStyle(Color.atlasCyan)
+                        }
+                        Button {
                             showPreferences = true
                         } label: {
                             Image(systemName: "slider.horizontal.3")
@@ -128,6 +135,10 @@ struct SkyView: View {
         .sheet(isPresented: $showPreferences) {
             SkywatchPreferencesView()
                 .presentationBackground(Color.atlasBackground)
+        }
+        .fullScreenCover(isPresented: $showAR) {
+            ARSkyView(locationProvider: location)
+                .environment(auth)
         }
         .task {
             location.api = auth.api

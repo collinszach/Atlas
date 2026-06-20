@@ -24,6 +24,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Atlas uses your camera to show aircraft in the sky around you in AR.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Atlas uses your location to show nearby destinations on the map.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

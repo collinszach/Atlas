@@ -30,7 +30,7 @@ from app.schemas.skywatch import (
 from app.services.adsb import AdsbServiceError, DataSourceResolver
 from app.services.aircraft_photos import get_photo_by_hex
 from app.services.aircraft_db import get_aircraft_info
-from app.services.flightroute import get_route
+from app.services.flightroute import get_route, validate_route
 from app.services.search import search_aircraft
 from app.services.llm import LocalLLMError
 from app.services.skywatch.airlines import resolve_airline
@@ -156,6 +156,7 @@ async def get_overhead(
         photo_task = get_photo_by_hex(item.hex)
         results = await asyncio.gather(route_task, photo_task, return_exceptions=True)
         route = results[0] if not isinstance(results[0], Exception) else None
+        route = validate_route(route, item.lat, item.lon, item.track)
         photo = results[1] if not isinstance(results[1], Exception) else None
         if route:
             item.origin_iata = route.origin_iata
@@ -203,6 +204,7 @@ async def search(
         route_task = get_route(item.flight) if item.flight else asyncio.sleep(0, result=None)
         results = await asyncio.gather(route_task, get_photo_by_hex(item.hex), return_exceptions=True)
         route = results[0] if not isinstance(results[0], Exception) else None
+        route = validate_route(route, item.lat, item.lon, item.track)
         photo = results[1] if not isinstance(results[1], Exception) else None
         if route:
             item.origin_iata, item.origin_name = route.origin_iata, route.origin_name
@@ -291,7 +293,10 @@ async def get_aircraft_detail(
         get_aircraft_info(registration),
         return_exceptions=True,
     )
-    if route and not isinstance(route, Exception):
+    route = validate_route(
+        route if not isinstance(route, Exception) else None, ac_lat, ac_lon, item.track
+    )
+    if route:
         item.origin_iata = route.origin_iata
         item.origin_name = route.origin_name
         item.dest_iata = route.dest_iata

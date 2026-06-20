@@ -138,6 +138,11 @@ final class APIClient {
         try await get("/api/v1/skywatch/preferences")
     }
 
+    /// Recent fired alerts (most recent first) — the history behind push notifications.
+    func listAlerts(limit: Int = 50) async throws -> [AircraftAlert] {
+        try await get("/api/v1/skywatch/alerts?limit=\(limit)")
+    }
+
     func updateSkywatchPreferences(_ update: SkywatchPreferenceUpdate) async throws -> SkywatchPreference {
         try await put("/api/v1/skywatch/preferences", body: update)
     }

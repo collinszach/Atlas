@@ -54,7 +54,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         Task { @MainActor in
-            appState?.selectSkyTab()
+            appState?.openAlerts()
             completionHandler()
         }
     }

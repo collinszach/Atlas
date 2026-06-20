@@ -5,10 +5,12 @@ import CoreLocation
 
 struct SkyView: View {
     @Environment(AuthManager.self) private var auth
+    @Environment(AppState.self) private var appState
     @State private var vm = SkyViewModel()
     @State private var location = LocationProvider()
     @State private var selectedAircraft: OverheadAircraft? = nil
     @State private var showPreferences = false
+    @State private var showAlerts = false
     @State private var showAR = false
     @State private var refreshTask: Task<Void, Never>? = nil
     @State private var showFollowToast = false
@@ -99,6 +101,12 @@ struct SkyView: View {
                                 .scaleEffect(0.8)
                         }
                         Button {
+                            showAlerts = true
+                        } label: {
+                            Image(systemName: "bell")
+                                .foregroundStyle(Color.atlasAccent)
+                        }
+                        Button {
                             showAR = true
                         } label: {
                             Image(systemName: "camera.viewfinder")
@@ -136,6 +144,11 @@ struct SkyView: View {
             SkywatchPreferencesView()
                 .presentationBackground(Color.atlasBackground)
         }
+        .sheet(isPresented: $showAlerts) {
+            AlertsView()
+                .environment(auth)
+                .presentationBackground(Color.atlasBackground)
+        }
         .fullScreenCover(isPresented: $showAR) {
             ARSkyView(locationProvider: location)
                 .environment(auth)
@@ -147,6 +160,12 @@ struct SkyView: View {
             await vm.loadPreferenceRadius(api: auth.api)
             await refresh()
             startAutoRefresh()
+        }
+        .onChange(of: appState.showAlerts) { _, requested in
+            if requested {
+                showAlerts = true
+                appState.showAlerts = false
+            }
         }
         .onDisappear {
             refreshTask?.cancel()

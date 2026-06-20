@@ -70,6 +70,35 @@ struct OverheadResponse: Codable {
     let source: String
 }
 
+// MARK: - Alerts
+
+/// A fired Skywatch alert — the persisted record behind each push notification.
+/// Mirrors backend `AircraftAlertRead`.
+struct AircraftAlert: Codable, Identifiable, Hashable {
+    let id: String
+    let hex: String
+    let callsign: String?
+    let type: String?
+    let registration: String?
+    let trigger: String
+    let score: Int
+    let message: String?
+    let lat: Double?
+    let lng: Double?
+    let altBaro: Int?
+    let distanceKm: Double?
+    let sentAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, hex, type, trigger, score, message, lat, lng
+        case callsign
+        case registration
+        case altBaro = "alt_baro"
+        case distanceKm = "distance_km"
+        case sentAt = "sent_at"
+    }
+}
+
 // MARK: - Devices
 
 struct SkywatchDevice: Codable {

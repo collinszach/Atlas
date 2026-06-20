@@ -17,8 +17,13 @@ final class AppState {
     /// Set once `AuthManager` is available so `AppDelegate` can register the APNs token.
     var api: APIClient?
 
-    /// Posted by `AppDelegate` when the user taps a Skywatch push notification.
-    func selectSkyTab() {
+    /// Requests `SkyView` to present the alerts feed; reset by the view once handled.
+    var showAlerts = false
+
+    /// Posted by `AppDelegate` when the user taps a Skywatch push notification —
+    /// jumps to the Sky tab and opens the alerts feed the push refers to.
+    func openAlerts() {
         selectedTab = .sky
+        showAlerts = true
     }
 }

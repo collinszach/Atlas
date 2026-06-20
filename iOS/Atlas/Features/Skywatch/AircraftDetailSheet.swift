@@ -35,6 +35,11 @@ struct AircraftDetailSheet: View {
                     // Telemetry grid
                     telemetrySection
 
+                    // Airframe database
+                    if display.manufacturer != nil || display.owner != nil || display.aircraftTypeLong != nil {
+                        airframeSection
+                    }
+
                     // Why special
                     if !display.matches.isEmpty {
                         whySpecialSection
@@ -281,6 +286,32 @@ struct AircraftDetailSheet: View {
     }
 
     // MARK: - Telemetry grid
+
+    private var airframeSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            AtlasSectionHeader(title: "Airframe")
+            VStack(spacing: 0) {
+                airframeRow("Aircraft", [display.manufacturer, display.aircraftTypeLong].compactMap { $0 }.joined(separator: " "))
+                airframeRow("Registration", display.registration)
+                airframeRow("Operator", display.owner)
+                airframeRow("Country", display.ownerCountry)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 4)
+            .atlasCard(radius: 16)
+        }
+    }
+
+    @ViewBuilder private func airframeRow(_ label: String, _ value: String?) -> some View {
+        if let value, !value.isEmpty {
+            HStack {
+                Text(label).font(AtlasFont.body(14)).foregroundStyle(Color.atlasInk2)
+                Spacer()
+                Text(value).font(AtlasFont.mono(13)).foregroundStyle(Color.atlasText)
+                    .multilineTextAlignment(.trailing)
+            }
+            .padding(.vertical, 9)
+        }
+    }
 
     private var telemetrySection: some View {
         VStack(alignment: .leading, spacing: 10) {

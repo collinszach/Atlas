@@ -34,6 +34,11 @@ struct OverheadAircraft: Codable, Identifiable, Hashable {
     let photoCredit: String?
     /// Trail breadcrumb: array of [lat, lon] pairs.
     let trail: [[Double]]?
+    // Airframe database (adsbdb)
+    let manufacturer: String?
+    let aircraftTypeLong: String?
+    let owner: String?
+    let ownerCountry: String?
 
     var id: String { hex }
 
@@ -53,6 +58,10 @@ struct OverheadAircraft: Codable, Identifiable, Hashable {
         case photoLink = "photo_link"
         case photoCredit = "photo_credit"
         case trail
+        case manufacturer
+        case aircraftTypeLong = "aircraft_type_long"
+        case owner
+        case ownerCountry = "owner_country"
     }
 }
 

@@ -141,6 +141,11 @@ class OverheadAircraft(BaseModel):
     photo_url: str | None = None
     photo_link: str | None = None
     photo_credit: str | None = None
+    # Airframe database (adsbdb)
+    manufacturer: str | None = None
+    aircraft_type_long: str | None = None
+    owner: str | None = None
+    owner_country: str | None = None
     # Trail (airplanes.live detail)
     trail: list[list[float]] = []
 

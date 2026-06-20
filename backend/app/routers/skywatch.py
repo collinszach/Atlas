@@ -29,6 +29,7 @@ from app.schemas.skywatch import (
 )
 from app.services.adsb import AdsbServiceError, DataSourceResolver
 from app.services.aircraft_photos import get_photo_by_hex
+from app.services.aircraft_db import get_aircraft_info
 from app.services.flightroute import get_route
 from app.services.search import search_aircraft
 from app.services.llm import LocalLLMError
@@ -283,10 +284,11 @@ async def get_aircraft_detail(
         trail=trail,
     )
 
-    # Enrich with route + photo
-    route, photo = await asyncio.gather(
+    # Enrich with route + photo + airframe database
+    route, photo, info = await asyncio.gather(
         get_route(flight) if flight else asyncio.sleep(0, result=None),
         get_photo_by_hex(hex),
+        get_aircraft_info(registration),
         return_exceptions=True,
     )
     if route and not isinstance(route, Exception):
@@ -298,6 +300,11 @@ async def get_aircraft_detail(
         item.photo_url = photo.photo_url
         item.photo_link = photo.link
         item.photo_credit = photo.photographer
+    if info and not isinstance(info, Exception):
+        item.manufacturer = info.manufacturer
+        item.aircraft_type_long = info.type_long
+        item.owner = info.owner
+        item.owner_country = info.owner_country
 
     return item
 

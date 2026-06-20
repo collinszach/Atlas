@@ -2,7 +2,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # APNs credentials live in the gitignored secrets/apns.env; later files in
+    # the tuple win, and real environment variables still override both.
+    model_config = SettingsConfigDict(
+        env_file=(".env", "secrets/apns.env"), extra="ignore"
+    )
 
     # Database
     database_url: str

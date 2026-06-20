@@ -6,6 +6,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.config import settings
 from app.database import async_session_factory
+from app.services.skywatch.apns import ApnsClient
 from app.services.skywatch.watcher import run_watch_cycle
 
 logger = logging.getLogger(__name__)
@@ -40,8 +41,11 @@ def start_scheduler() -> AsyncIOScheduler:
     )
     scheduler.start()
     _scheduler = scheduler
+    apns_state = "configured" if ApnsClient().is_configured else "NOT configured (push disabled)"
     logger.info(
-        "Skywatch scheduler started (every %ss)", settings.skywatch_poll_seconds
+        "Skywatch scheduler started (every %ss) — APNs %s",
+        settings.skywatch_poll_seconds,
+        apns_state,
     )
     return scheduler
 

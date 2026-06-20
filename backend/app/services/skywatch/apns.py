@@ -63,6 +63,14 @@ class ApnsClient:
         candidate = Path(value)
         if candidate.is_file():
             return candidate.read_text()
+        # The path may be recorded relative to the repo root (e.g.
+        # "backend/secrets/AuthKey.p8") while the process runs from the backend
+        # root (Docker WORKDIR /app, or local pytest). Fall back to the backend
+        # package root and its secrets/ dir so it resolves either way.
+        backend_root = Path(__file__).resolve().parents[3]
+        for alt in (backend_root / value, backend_root / "secrets" / candidate.name):
+            if alt.is_file():
+                return alt.read_text()
         return value
 
     @property

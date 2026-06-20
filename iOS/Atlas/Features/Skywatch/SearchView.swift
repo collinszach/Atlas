@@ -84,7 +84,8 @@ struct SearchView: View {
                             FlightRow(
                                 badge: ac.badgeCode, tone: ac.tone,
                                 title: ac.displayName,
-                                subtitle: [ac.type, ac.routeLabel, ac.flightLevelString].compactMap { $0 }.joined(separator: " · "),
+                                subtitle: [ac.routeLabel, ac.flightLevelString].compactMap { $0 }.joined(separator: " · "),
+                                typeCode: ac.type,
                                 pill: ac.isEmergency ? ("EMERGENCY", .emergency) : (ac.isMilitary ? ("MIL", .military) : nil),
                                 chevron: true
                             )

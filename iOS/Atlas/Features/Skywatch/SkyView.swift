@@ -194,6 +194,7 @@ struct SkyView: View {
                             tone: ac.tone,
                             title: ac.displayName,
                             subtitle: buildSubtitle(ac),
+                            typeCode: ac.type,
                             trailing: ac.distanceKm.map { String(format: "%.0f km", $0) },
                             pill: pillForAircraft(ac),
                             chevron: true

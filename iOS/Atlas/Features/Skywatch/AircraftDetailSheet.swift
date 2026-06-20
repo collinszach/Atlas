@@ -107,47 +107,65 @@ struct AircraftDetailSheet: View {
 
     // MARK: - Header
 
+    private var category: AircraftCategory {
+        AircraftCategory(typeCode: display.type, isMilitary: display.isMilitary)
+    }
+
+    /// Big, prominent aircraft-type line: "Airbus A320-232" if known, else the type code.
+    private var aircraftTypeLine: String? {
+        let parts = [display.manufacturer, display.aircraftTypeLong].compactMap { $0 }
+        if !parts.isEmpty { return parts.joined(separator: " ") }
+        return display.type
+    }
+
     private var headerSection: some View {
-        HStack(alignment: .top, spacing: 14) {
-            // Tone icon
-            ZStack {
-                Circle()
-                    .fill(display.tone.tint)
-                    .frame(width: 48, height: 48)
-                Image(systemName: iconName)
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(display.tone.color)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(display.displayName)
-                    .font(AtlasFont.display(22, weight: .bold))
-                    .foregroundStyle(Color.atlasText)
-                    .lineLimit(2)
-
-                HStack(spacing: 8) {
-                    if let type = display.type {
-                        Text(type)
-                            .font(AtlasFont.mono(13))
-                            .foregroundStyle(Color.atlasInk2)
-                    }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 14) {
+                // Type silhouette
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(display.tone.tint)
+                        .frame(width: 56, height: 56)
+                    AircraftMarker(category: category, heading: 0, color: display.tone.color, baseSize: 30)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(display.displayName)
+                        .font(AtlasFont.display(22, weight: .bold))
+                        .foregroundStyle(Color.atlasText)
+                        .lineLimit(2)
                     if let reg = display.registration {
-                        Text(reg)
-                            .font(AtlasFont.mono(13))
-                            .foregroundStyle(Color.atlasInkFaint)
+                        Text(reg).font(AtlasFont.mono(13)).foregroundStyle(Color.atlasInkFaint)
                     }
                 }
-
-                if display.isMilitary {
-                    Pill(text: "MILITARY", tone: .military, dot: true)
-                        .padding(.top, 2)
-                } else if display.isEmergency {
-                    Pill(text: emergencyLabel, tone: .emergency, dot: true)
-                        .padding(.top, 2)
-                }
+                Spacer()
             }
 
-            Spacer()
+            // Prominent aircraft type
+            if let line = aircraftTypeLine {
+                HStack(spacing: 8) {
+                    if let code = display.type {
+                        Text(code)
+                            .font(.system(size: 13, weight: .heavy, design: .monospaced))
+                            .foregroundStyle(Color.atlasCyan)
+                            .padding(.horizontal, 9).padding(.vertical, 4)
+                            .background(Color.atlasCyan.opacity(0.14), in: Capsule())
+                    }
+                    Text(line)
+                        .font(AtlasFont.display(17, weight: .bold))
+                        .foregroundStyle(Color.atlasText)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Spacer()
+                    Text(category.label).font(AtlasFont.body(12)).foregroundStyle(Color.atlasInk2)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                .atlasCard(radius: 14)
+            }
+
+            if display.isMilitary {
+                Pill(text: "MILITARY", tone: .military, dot: true)
+            } else if display.isEmergency {
+                Pill(text: emergencyLabel, tone: .emergency, dot: true)
+            }
         }
     }
 

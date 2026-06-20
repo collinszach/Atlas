@@ -60,6 +60,7 @@ struct FlightRow: View {
     var tone: AtlasTone = .accent
     let title: String
     let subtitle: String
+    var typeCode: String? = nil
     var trailing: String? = nil
     var pill: (String, AtlasTone)? = nil
     var chevron: Bool = false
@@ -73,6 +74,13 @@ struct FlightRow: View {
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(Color.atlasText)
                         .lineLimit(1)
+                    if let typeCode, !typeCode.isEmpty {
+                        Text(typeCode)
+                            .font(.system(size: 10, weight: .heavy, design: .monospaced))
+                            .foregroundStyle(Color.atlasCyan)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Color.atlasCyan.opacity(0.14), in: Capsule())
+                    }
                     if let pill { Pill(text: pill.0, tone: pill.1) }
                 }
                 Text(subtitle)

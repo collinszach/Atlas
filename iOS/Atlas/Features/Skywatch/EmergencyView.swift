@@ -33,7 +33,8 @@ struct EmergencyView: View {
                                     FlightRow(
                                         badge: ac.badgeCode, tone: .emergency,
                                         title: ac.displayName,
-                                        subtitle: [ac.type, ac.routeLabel, ac.flightLevelString].compactMap { $0 }.joined(separator: " · "),
+                                        subtitle: [ac.routeLabel, ac.flightLevelString].compactMap { $0 }.joined(separator: " · "),
+                                        typeCode: ac.type,
                                         pill: (Self.label(ac.squawk), .emergency),
                                         chevron: true
                                     )

@@ -57,3 +57,6 @@ coverage.xml
 .next/
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# Claude Code worktrees / local agent state
+.claude/

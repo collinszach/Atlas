@@ -102,7 +102,7 @@ targets:
       - Atlas
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.atlas.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.zacharyjcollins.atlas
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
         DEVELOPMENT_TEAM: ""
@@ -133,7 +133,7 @@ targets:
 	<key>CFBundleName</key>
 	<string>Atlas</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.atlas.app</string>
+	<string>com.zacharyjcollins.atlas</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>CFBundleShortVersionString</key>

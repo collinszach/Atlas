@@ -47,14 +47,24 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         print("Skywatch: APNs registration failed: \(error.localizedDescription)")
     }
 
-    /// Deep-links a tapped Skywatch alert to the Sky tab.
+    /// Deep-links a tapped Skywatch alert to the Sky tab — to the specific aircraft
+    /// when the push payload carries its hex, otherwise to the alerts feed.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
+        let userInfo = response.notification.request.content.userInfo
         Task { @MainActor in
-            appState?.openAlerts()
+            if let hex = userInfo["hex"] as? String, !hex.isEmpty {
+                appState?.openAlert(
+                    hex: hex,
+                    lat: (userInfo["lat"] as? NSNumber)?.doubleValue,
+                    lon: (userInfo["lon"] as? NSNumber)?.doubleValue
+                )
+            } else {
+                appState?.openAlerts()
+            }
             completionHandler()
         }
     }

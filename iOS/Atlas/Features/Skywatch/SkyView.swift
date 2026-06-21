@@ -147,6 +147,7 @@ struct SkyView: View {
         .sheet(isPresented: $showAlerts) {
             AlertsView()
                 .environment(auth)
+                .environment(appState)
                 .presentationBackground(Color.atlasBackground)
         }
         .fullScreenCover(isPresented: $showAR) {

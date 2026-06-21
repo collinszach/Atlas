@@ -4,6 +4,7 @@ import SwiftUI
 /// Tapping a row tries to open live detail if the aircraft is still trackable.
 struct AlertsView: View {
     @Environment(AuthManager.self) private var auth
+    @Environment(AppState.self) private var appState
     @Environment(\.dismiss) private var dismiss
 
     @State private var vm = AlertsViewModel()
@@ -77,7 +78,31 @@ struct AlertsView: View {
                 .presentationBackground(Color.atlasBackground)
                 .presentationDragIndicator(.visible)
         }
-        .task { await vm.load(api: auth.api) }
+        .task {
+            await vm.load(api: auth.api)
+            await consumePendingAlert()
+        }
+        .onChange(of: appState.pendingAlertHex) { _, hex in
+            if hex != nil { Task { await consumePendingAlert() } }
+        }
+    }
+
+    /// If a push tap named an aircraft, fetch its live detail and present the sheet,
+    /// then clear the request. Silently falls back to the feed if it's no longer trackable.
+    private func consumePendingAlert() async {
+        guard let hex = appState.pendingAlertHex, loadingHex == nil else { return }
+        let lat = appState.pendingAlertLat
+        let lon = appState.pendingAlertLon
+        appState.pendingAlertHex = nil
+        appState.pendingAlertLat = nil
+        appState.pendingAlertLon = nil
+        loadingHex = hex
+        defer { loadingHex = nil }
+        do {
+            detail = try await auth.api.fetchAircraftDetail(hex: hex, lat: lat ?? 0, lon: lon ?? 0)
+        } catch {
+            // Aircraft has likely left the area (404) — just show the feed.
+        }
     }
 
     /// Fetch live detail for the alert's aircraft; silently no-op if it's no longer trackable.

@@ -107,7 +107,7 @@ async def _build_payload(aircraft, match: Match) -> dict[str, Any]:
         if llm_copy is not None:
             title, body = llm_copy
 
-    return {
+    payload: dict[str, Any] = {
         "aps": {
             "alert": {
                 "title": title,
@@ -118,6 +118,12 @@ async def _build_payload(aircraft, match: Match) -> dict[str, Any]:
         "hex": aircraft.hex,
         "trigger": match.trigger,
     }
+    # Carry the aircraft's position so a tapped push can deep-link straight to
+    # live detail (distance/bearing are computed from it client-side).
+    if aircraft.lat is not None and aircraft.lon is not None:
+        payload["lat"] = float(aircraft.lat)
+        payload["lon"] = float(aircraft.lon)
+    return payload
 
 
 async def _process_device(

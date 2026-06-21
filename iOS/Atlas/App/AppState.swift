@@ -25,6 +25,9 @@ final class AppState {
     var pendingAlertHex: String?
     var pendingAlertLat: Double?
     var pendingAlertLon: Double?
+    /// When the pending alert was requested — `AlertsView` only auto-opens a fresh
+    /// one, so a request that never managed to present can't hijack a later open.
+    var pendingAlertSetAt: Date?
 
     /// Posted by `AppDelegate` when the user taps a Skywatch push notification —
     /// jumps to the Sky tab and opens the alerts feed the push refers to.
@@ -39,6 +42,7 @@ final class AppState {
         pendingAlertHex = hex
         pendingAlertLat = lat
         pendingAlertLon = lon
+        pendingAlertSetAt = Date()
         openAlerts()
     }
 }

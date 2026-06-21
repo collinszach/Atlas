@@ -93,9 +93,14 @@ struct AlertsView: View {
         guard let hex = appState.pendingAlertHex, loadingHex == nil else { return }
         let lat = appState.pendingAlertLat
         let lon = appState.pendingAlertLon
+        let setAt = appState.pendingAlertSetAt
         appState.pendingAlertHex = nil
         appState.pendingAlertLat = nil
         appState.pendingAlertLon = nil
+        appState.pendingAlertSetAt = nil
+        // Only auto-open if this came from a just-tapped push — a stale request that
+        // never managed to present shouldn't hijack a later manual open of the feed.
+        guard let setAt, Date().timeIntervalSince(setAt) < 30 else { return }
         loadingHex = hex
         defer { loadingHex = nil }
         do {

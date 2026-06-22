@@ -23,10 +23,15 @@ async def _get_jwks(force_refresh: bool = False) -> dict:
     async with _jwks_lock:
         if _jwks_cache is None or force_refresh or (time.monotonic() - _jwks_fetched_at) > _JWKS_TTL:
             async with httpx.AsyncClient() as http_client:
-                resp = await http_client.get(
-                    "https://api.clerk.com/v1/jwks",
-                    headers={"Authorization": f"Bearer {settings.clerk_secret_key}"},
-                )
+                # Prefer the instance's public well-known JWKS (no secret needed);
+                # fall back to Clerk's authenticated API endpoint if configured.
+                if settings.clerk_jwks_url:
+                    resp = await http_client.get(settings.clerk_jwks_url)
+                else:
+                    resp = await http_client.get(
+                        "https://api.clerk.com/v1/jwks",
+                        headers={"Authorization": f"Bearer {settings.clerk_secret_key}"},
+                    )
                 resp.raise_for_status()
                 _jwks_cache = resp.json()
                 _jwks_fetched_at = time.monotonic()

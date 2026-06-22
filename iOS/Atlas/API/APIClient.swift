@@ -25,6 +25,10 @@ enum APIError: LocalizedError {
 final class APIClient {
     var token: String?
 
+    /// Supplies a fresh, unexpired token per request (Clerk tokens live ~60s).
+    /// Set by AuthManager to call `Clerk.shared.session?.getToken()`.
+    @ObservationIgnored var tokenProvider: (() async -> String?)?
+
     private let base: URL
     private let keychain = KeychainSwift()
     private let keychainKey = "atlas_jwt"
@@ -51,28 +55,28 @@ final class APIClient {
     // MARK: - HTTP methods
 
     func get<T: Decodable>(_ path: String) async throws -> T {
-        try await perform(makeRequest("GET", path: path))
+        try await perform(await makeRequest("GET", path: path))
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        var req = makeRequest("POST", path: path)
+        var req = await makeRequest("POST", path: path)
+        req.httpBody = try JSONEncoder().encode(body)
+        return try await perform(req)
+    }
+
+    func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
+        var req = await makeRequest("PUT", path: path)
         req.httpBody = try JSONEncoder().encode(body)
         return try await perform(req)
     }
 
     func delete(_ path: String) async throws {
-        let req = makeRequest("DELETE", path: path)
+        let req = await makeRequest("DELETE", path: path)
         let (_, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse else { return }
         if !(200..<300).contains(http.statusCode) {
             throw APIError.httpError(http.statusCode, "")
         }
-    }
-
-    func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        var req = makeRequest("PUT", path: path)
-        req.httpBody = try JSONEncoder().encode(body)
-        return try await perform(req)
     }
 
     // MARK: - Convenience API wrappers
@@ -119,6 +123,51 @@ final class APIClient {
         try await get("/api/v1/stats/timeline")
     }
 
+    // MARK: - Skywatch
+
+    func fetchOverhead(lat: Double, lon: Double, radiusKm: Double? = nil) async throws -> [OverheadAircraft] {
+        var path = "/api/v1/skywatch/overhead?lat=\(lat)&lon=\(lon)"
+        if let radiusKm {
+            path += "&radius=\(radiusKm)"
+        }
+        let response: OverheadResponse = try await get(path)
+        return response.aircraft
+    }
+
+    func getSkywatchPreferences() async throws -> SkywatchPreference {
+        try await get("/api/v1/skywatch/preferences")
+    }
+
+    /// Recent fired alerts (most recent first) — the history behind push notifications.
+    func listAlerts(limit: Int = 50) async throws -> [AircraftAlert] {
+        try await get("/api/v1/skywatch/alerts?limit=\(limit)")
+    }
+
+    func updateSkywatchPreferences(_ update: SkywatchPreferenceUpdate) async throws -> SkywatchPreference {
+        try await put("/api/v1/skywatch/preferences", body: update)
+    }
+
+    /// Registers this device's APNs token with the backend and persists the returned device id.
+    @discardableResult
+    func registerDevice(apnsToken: String) async throws -> SkywatchDevice {
+        let body = DeviceCreate(apnsToken: apnsToken, platform: "ios")
+        let device: SkywatchDevice = try await post("/api/v1/skywatch/devices", body: body)
+        UserDefaults.standard.set(device.id, forKey: Self.deviceIdKey)
+        return device
+    }
+
+    /// Posts a significant-location-change update, associating it with the persisted device id if available.
+    @discardableResult
+    func updateLocation(lat: Double, lng: Double, deviceId: String? = nil) async throws -> SkywatchDevice {
+        let resolvedDeviceId = deviceId ?? UserDefaults.standard.string(forKey: Self.deviceIdKey)
+        let body = LocationUpdate(lat: lat, lng: lng, deviceId: resolvedDeviceId)
+        let device: SkywatchDevice = try await post("/api/v1/skywatch/location", body: body)
+        UserDefaults.standard.set(device.id, forKey: Self.deviceIdKey)
+        return device
+    }
+
+    static let deviceIdKey = "atlas_skywatch_device_id"
+
     func listPhotos(tripId: String) async throws -> [Photo] {
         let response: PhotoListResponse = try await get("/api/v1/trips/\(tripId)/photos")
         return response.items
@@ -132,7 +181,7 @@ final class APIClient {
         caption: String? = nil
     ) async throws -> Photo {
         let boundary = UUID().uuidString
-        var req = makeRequest("POST", path: "/api/v1/trips/\(tripId)/photos/upload")
+        var req = await makeRequest("POST", path: "/api/v1/trips/\(tripId)/photos/upload")
         req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         req.timeoutInterval = 120
         var body = Data()
@@ -203,13 +252,22 @@ final class APIClient {
 
     // MARK: - Private
 
-    private func makeRequest(_ method: String, path: String) -> URLRequest {
+    /// Fetches a fresh token (refreshing via Clerk if needed) and caches it.
+    private func freshToken() async -> String? {
+        if let provider = tokenProvider, let t = await provider() {
+            persistToken(t)
+            return t
+        }
+        return token
+    }
+
+    private func makeRequest(_ method: String, path: String) async -> URLRequest {
         let url = URL(string: path, relativeTo: base)?.absoluteURL ?? base
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let token {
-            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        if let t = await freshToken() {
+            req.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization")
         }
         req.timeoutInterval = 15
         return req
@@ -241,7 +299,7 @@ final class APIClient {
     }
 
     private func postVoid(_ path: String) async throws {
-        var req = makeRequest("POST", path: path)
+        var req = await makeRequest("POST", path: path)
         req.httpBody = "{}".data(using: .utf8)
         let data: Data
         let response: URLResponse

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from decimal import Decimal
 from typing import Literal
 
@@ -12,6 +13,7 @@ from app.auth import CurrentUser
 from app.database import get_db
 from app.models.destination import Destination
 from app.models.transport import TransportLeg
+from app.services.skywatch.airlines import resolve_airline
 
 router = APIRouter(tags=["stats"])
 
@@ -30,6 +32,10 @@ class UserStats(BaseModel):
     most_visited_country_code: str | None
     most_visited_country_count: int | None
     co2_kg_estimate: float
+    # Skywatch-era flight detail (consumed by the iOS stats view)
+    hours_in_air: float | None = None
+    top_airline: str | None = None
+    most_flown_airport: str | None = None
 
 
 class HeatmapEntry(BaseModel):
@@ -111,6 +117,57 @@ async def get_stats(
     )
     mv_row = mv_result.fetchone()
 
+    # --- hours_in_air ---
+    # Sum duration_min where available; fall back to distance_km / 800 km·h⁻¹ for flight legs.
+    flight_legs_rows = (
+        await db.execute(
+            select(TransportLeg.duration_min, TransportLeg.distance_km).where(
+                TransportLeg.user_id == user_id, TransportLeg.type == "flight"
+            )
+        )
+    ).all()
+
+    total_minutes = 0.0
+    for row in flight_legs_rows:
+        if row.duration_min is not None:
+            total_minutes += float(row.duration_min)
+        elif row.distance_km is not None:
+            total_minutes += float(row.distance_km) / 800.0 * 60.0
+    hours_in_air = round(total_minutes / 60.0, 1) if flight_legs_rows else None
+
+    # --- top_airline (most frequent operator across flight legs) ---
+    airline_legs_rows = (
+        await db.execute(
+            select(TransportLeg.flight_number, TransportLeg.airline).where(
+                TransportLeg.user_id == user_id, TransportLeg.type == "flight"
+            )
+        )
+    ).all()
+
+    airline_counter: Counter[str] = Counter()
+    for row in airline_legs_rows:
+        resolved = resolve_airline(row.flight_number) or row.airline
+        if resolved:
+            airline_counter[resolved] += 1
+    top_airline = airline_counter.most_common(1)[0][0] if airline_counter else None
+
+    # --- most_flown_airport (most frequent IATA across flight leg origins + destinations) ---
+    airport_rows = (
+        await db.execute(
+            select(TransportLeg.origin_iata, TransportLeg.dest_iata).where(
+                TransportLeg.user_id == user_id, TransportLeg.type == "flight"
+            )
+        )
+    ).all()
+
+    airport_counter: Counter[str] = Counter()
+    for row in airport_rows:
+        if row.origin_iata:
+            airport_counter[row.origin_iata.upper()] += 1
+        if row.dest_iata:
+            airport_counter[row.dest_iata.upper()] += 1
+    most_flown_airport = airport_counter.most_common(1)[0][0] if airport_counter else None
+
     return UserStats(
         countries_visited=dest_row.countries,
         cities_visited=dest_row.cities,
@@ -123,6 +180,9 @@ async def get_stats(
         most_visited_country_code=mv_row.country_code if mv_row else None,
         most_visited_country_count=mv_row.visit_count if mv_row else None,
         co2_kg_estimate=round(total_distance_km * CO2_KG_PER_KM, 2),
+        hours_in_air=hours_in_air,
+        top_airline=top_airline,
+        most_flown_airport=most_flown_airport,
     )
 
 

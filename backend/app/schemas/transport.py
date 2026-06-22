@@ -88,10 +88,10 @@ class TransportRead(BaseModel):
     departure_at: datetime | None
     arrival_at: datetime | None
     duration_min: int | None
-    distance_km: Decimal | None
+    distance_km: float | None  # serialize as JSON number (Decimal would emit a string)
     seat_class: str | None
     booking_ref: str | None
-    cost: Decimal | None
+    cost: float | None
     currency: str
     notes: str | None
     origin_lat: float | None = None

@@ -19,10 +19,10 @@ export function Tooltip({ label, children }: { label: string; children: ReactNod
         <RadixTooltip.Content
           side="right"
           sideOffset={8}
-          className="z-50 rounded bg-atlas-surface px-2.5 py-1.5 text-xs text-atlas-text shadow-lg border border-atlas-border"
+          className="z-[1500] rounded-md border border-atlas-border-strong bg-atlas-surface-2 px-2.5 py-1.5 text-xs text-atlas-ink shadow-elev-2"
         >
           {label}
-          <RadixTooltip.Arrow className="fill-atlas-surface" />
+          <RadixTooltip.Arrow className="fill-atlas-surface-2" />
         </RadixTooltip.Content>
       </RadixTooltip.Portal>
     </RadixTooltip.Root>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sparkles, MapPin, ChevronRight, X, Loader2 } from "lucide-react";
 import { useRecommendations, useDestinationBrief } from "@/hooks/useDiscover";
 import { useMapCountries } from "@/hooks/useMapData";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type { Recommendation, DestinationBriefResponse, RecommendationPreferences } from "@/types";
 
 const MONTH_NAMES = [
@@ -176,12 +177,13 @@ export default function DiscoverPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="h-full overflow-y-auto px-6 py-7 sm:px-8">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold text-atlas-text font-display mb-1">Discover</h1>
-          <p className="text-sm text-atlas-muted">AI-powered destination recommendations based on your preferences.</p>
-        </div>
+        <PageHeader
+          eyebrow="The Compass"
+          title="Discover"
+          description="Destination recommendations drawn from where you've been and what you're after next."
+        />
 
         <div className="rounded-lg border border-atlas-border bg-atlas-surface p-5 mb-6 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

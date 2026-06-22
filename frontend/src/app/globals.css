@@ -1,29 +1,174 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* Field & surfaces */
     --atlas-bg: #0a0e1a;
+    --atlas-bg-deep: #070a13;
     --atlas-surface: #111827;
+    --atlas-surface-2: #16203a;
     --atlas-border: #1e2d45;
+    --atlas-border-strong: #2a3c5c;
+
+    /* Ink ramp (contrast-checked on --atlas-bg) */
+    --atlas-ink: #e8eef7;
+    --atlas-ink-2: #aebbd0;
+    --atlas-ink-faint: #6b7a94;
+
+    /* Signal */
     --atlas-accent: #c9a84c;
-    --atlas-accent-cool: #4a90d9;
-    --atlas-text: #e2e8f0;
-    --atlas-text-muted: #64748b;
+    --atlas-accent-hi: #e3c673;
+    --atlas-cool: #4a90d9;
+
+    /* Map encodings */
+    --atlas-visited: #4a90d9;
+    --atlas-planned: #c9a84c;
+    --atlas-bucket: #5b6b86;
+
+    /* Status */
+    --atlas-success: #4ca87a;
+    --atlas-warning: #c99a4c;
+    --atlas-danger: #d36b6b;
+    --atlas-info: #4a90d9;
+
+    /* Elevation */
+    --elev-1: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 6px 18px -10px rgba(0, 0, 0, 0.6);
+    --elev-2: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 14px 36px -14px rgba(0, 0, 0, 0.7);
+
+    /* z-scale */
+    --z-dropdown: 1000;
+    --z-sticky: 1100;
+    --z-backdrop: 1200;
+    --z-modal: 1300;
+    --z-toast: 1400;
+    --z-tooltip: 1500;
   }
 
   html,
   body {
-    @apply bg-atlas-bg text-atlas-text font-sans;
+    @apply bg-atlas-bg text-atlas-ink font-sans antialiased;
     height: 100%;
     overflow: hidden;
+    font-feature-settings: "ss01", "cv05";
+  }
+
+  .font-mono,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--atlas-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(201, 168, 76, 0.28);
+    color: var(--atlas-ink);
   }
 
   /* maplibre-gl requires a non-zero size container */
   #map-container {
     width: 100%;
     height: 100%;
+  }
+
+  /* Cartographic scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--atlas-border);
+    border: 2px solid var(--atlas-bg);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--atlas-border-strong);
+  }
+}
+
+@layer components {
+  /* ── Cartographic materials ───────────────────────────── */
+
+  /* Faint lat/long graticule — the recurring brand texture */
+  .bg-graticule {
+    background-image:
+      linear-gradient(to right, rgba(107, 122, 148, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(107, 122, 148, 0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .bg-graticule-fine {
+    background-image:
+      linear-gradient(to right, rgba(107, 122, 148, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(107, 122, 148, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Deep field — radial darkening center→edge */
+  .bg-deep-field {
+    background:
+      radial-gradient(120% 120% at 50% 0%, rgba(74, 144, 217, 0.06), transparent 55%),
+      radial-gradient(100% 100% at 50% 100%, var(--atlas-bg-deep), var(--atlas-bg) 70%);
+  }
+
+  .elev-1 {
+    box-shadow: var(--elev-1);
+  }
+  .elev-2 {
+    box-shadow: var(--elev-2);
+  }
+
+  /* Hairline divider with a faint meridian tick */
+  .rule-meridian {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--atlas-border) 12%,
+      var(--atlas-border) 88%,
+      transparent
+    );
+  }
+}
+
+@layer utilities {
+  @keyframes atlas-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes atlas-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  .animate-fade-up {
+    animation: atlas-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .animate-fade-up {
+      animation: none;
+    }
   }
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, MapPin, Globe, Trash2, Star, Sparkles, Loader2 } from "lucide-react";
 import { useTrips } from "@/hooks/useTrips";
 import { useBucketList, useDeleteBucketListItem, useAddBucketListItem, useEnrichBucketListItem } from "@/hooks/useBucketList";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type { BucketListItem } from "@/types";
 
 const SEASON_LABELS: Record<string, string> = {
@@ -144,8 +145,13 @@ export default function PlanPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="h-full overflow-y-auto px-6 py-7 sm:px-8">
       <div className="max-w-4xl mx-auto">
+        <PageHeader
+          eyebrow="The Horizon"
+          title="Plan"
+          description="Trips taking shape and the places still on the list. Where you're headed next."
+        />
         {/* Future Trips */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">

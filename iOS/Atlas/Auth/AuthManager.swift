@@ -1,5 +1,5 @@
 import Foundation
-import ClerkSDK
+import ClerkKit
 
 @MainActor
 @Observable
@@ -10,12 +10,26 @@ final class AuthManager {
 
     private(set) var api: APIClient = APIClient()
 
-    /// Called at app launch to restore session from Keychain.
+    init() {
+        // Always hand the API client a fresh Clerk token; session tokens expire ~60s,
+        // and Clerk.getToken() returns a cached one or transparently refreshes.
+        api.tokenProvider = {
+            if let token = try? await Clerk.shared.session?.getToken() {
+                return token
+            }
+            return nil
+        }
+    }
+
+    /// Called at app launch to restore session from Keychain / Clerk.
     func checkSession() async {
         defer { isLoading = false }
-        // If we already have a stored token, treat as signed in.
-        // The backend will reject it if expired.
-        isSignedIn = api.token != nil
+        // Prefer a live Clerk session; fall back to a stored token.
+        if Clerk.shared.session != nil {
+            isSignedIn = true
+        } else {
+            isSignedIn = api.token != nil
+        }
     }
 
     /// Sign in via Clerk using email + password.
@@ -24,12 +38,9 @@ final class AuthManager {
         isLoading = true
         defer { isLoading = false }
         do {
-            guard let client = Clerk.shared.client else {
-                error = "Authentication service not ready. Please restart the app."
-                return
-            }
-            let signIn = try await client.signIn.create(
-                strategy: .password(identifier: email, password: password)
+            let signIn = try await Clerk.shared.auth.signInWithPassword(
+                identifier: email,
+                password: password
             )
             guard signIn.status == .complete,
                   let token = try await Clerk.shared.session?.getToken() else {
@@ -39,6 +50,57 @@ final class AuthManager {
             api.persistToken(token)
             isSignedIn = true
         } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Sign in (or auto-register) with Apple — native, no manual account creation.
+    /// Clerk provisions a new user automatically on first use.
+    func signInWithApple() async {
+        error = nil
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            _ = try await Clerk.shared.auth.signInWithApple()
+            guard let token = try await Clerk.shared.session?.getToken() else {
+                error = "Apple sign-in incomplete — please try again."
+                return
+            }
+            api.persistToken(token)
+            isSignedIn = true
+        } catch is CancellationError {
+            // user dismissed the Apple sheet — stay quiet
+        } catch {
+            let ns = error as NSError
+            // ASAuthorizationError.canceled (code 1001) — don't surface as an error
+            if ns.domain == "com.apple.AuthenticationServices.AuthorizationError" && ns.code == 1001 {
+                return
+            }
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Sign in (or auto-register) with Google via Clerk's OAuth web flow.
+    func signInWithGoogle() async {
+        error = nil
+        isLoading = true
+        defer { isLoading = false }
+        do {
+            _ = try await Clerk.shared.auth.signInWithOAuth(provider: .google)
+            guard let token = try await Clerk.shared.session?.getToken() else {
+                error = "Google sign-in incomplete — please try again."
+                return
+            }
+            api.persistToken(token)
+            isSignedIn = true
+        } catch is CancellationError {
+            // user dismissed the web sheet — stay quiet
+        } catch {
+            let ns = error as NSError
+            // ASWebAuthenticationSessionError.canceledLogin (code 1) — don't surface
+            if ns.domain == "com.apple.AuthenticationServices.WebAuthenticationSession" && ns.code == 1 {
+                return
+            }
             self.error = error.localizedDescription
         }
     }
@@ -55,7 +117,7 @@ final class AuthManager {
         api.persistToken(nil)
         isSignedIn = false
         Task {
-            try? await Clerk.shared.signOut()
+            try? await Clerk.shared.auth.signOut()
         }
     }
 }

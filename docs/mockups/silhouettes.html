@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>silhouettes</title>
+<style>
+ body{background:#0a1322;margin:0;padding:30px;display:flex;gap:26px;flex-wrap:wrap;font-family:system-ui}
+ .cell{display:flex;flex-direction:column;align-items:center;gap:8px}
+ svg{background:#101725;border:1px solid #212e45;border-radius:12px}
+ .lbl{color:#9fb0cc;font-size:13px;font-weight:600}
+ path,line,ellipse{fill:#26e0e0;stroke:#26e0e0}
+ .stroke path,.stroke line,.stroke ellipse{fill:none;stroke-width:5}
+</style>
+<body>
+<div class="cell"><svg width="120" height="120" viewBox="0 0 100 100"><path d="M50 4 L56 18 L56 40 L95 64 L95 72 L56 56 L56 80 L70 90 L70 95 L50 88 L30 95 L30 90 L44 80 L44 56 L5 72 L5 64 L44 40 L44 18 Z"/></svg><div class="lbl">jet (airliner)</div></div>
+<div class="cell"><svg width="120" height="120" viewBox="0 0 100 100"><path d="M50 8 L55 20 L55 42 L96 42 L96 50 L55 50 L55 82 L68 88 L68 93 L50 86 L32 93 L32 88 L45 82 L45 50 L4 50 L4 42 L45 42 L45 20 Z"/><line x1="34" y1="8" x2="66" y2="8" stroke-width="4"/></svg><div class="lbl">prop (GA/turboprop)</div></div>
+<div class="cell"><svg width="120" height="120" viewBox="0 0 100 100"><path d="M50 2 L58 35 L92 86 L58 74 L58 92 L50 98 L42 92 L42 74 L8 86 L42 35 Z"/></svg><div class="lbl">fighter (delta)</div></div>
+<div class="cell stroke"><svg width="120" height="120" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="16" ry="20"/><line x1="50" y1="66" x2="50" y2="96"/><line x1="40" y1="94" x2="60" y2="94"/><line x1="14" y1="14" x2="86" y2="86"/><line x1="86" y1="14" x2="14" y2="86"/></svg><div class="lbl">helicopter</div></div>
+<div class="cell"><svg width="120" height="120" viewBox="0 0 100 100"><path d="M50 8 L53 24 L53 44 L99 46 L99 50 L53 52 L53 86 L64 92 L50 88 L36 92 L47 86 L47 52 L1 50 L1 46 L47 44 L47 24 Z"/></svg><div class="lbl">glider</div></div>
+</body>

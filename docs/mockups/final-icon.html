@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>icon</title>
+<style>html,body{margin:0;padding:0;background:#000}svg{display:block}</style>
+<svg width="1024" height="1024" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+   <stop offset="0" stop-color="#13294f"/><stop offset=".55" stop-color="#0a1730"/><stop offset="1" stop-color="#050b16"/>
+  </linearGradient>
+  <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+   <stop offset="0" stop-color="#26E0E0" stop-opacity=".18"/><stop offset="1" stop-color="#26E0E0" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="1">
+   <stop offset="0" stop-color="#26E0E0" stop-opacity=".6"/><stop offset="1" stop-color="#26E0E0" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="jet" x1="0" y1="0" x2="1" y2="1">
+   <stop offset="0" stop-color="#7FE9FF"/><stop offset="1" stop-color="#26E0E0"/>
+  </linearGradient>
+ </defs>
+
+ <rect width="100" height="100" fill="url(#bg)"/>
+ <circle cx="50" cy="50" r="46" fill="url(#glow)"/>
+
+ <!-- range rings -->
+ <g fill="none" stroke="#4F8DFF" stroke-opacity=".42" stroke-width="1.4">
+  <circle cx="50" cy="50" r="22"/>
+  <circle cx="50" cy="50" r="37"/>
+ </g>
+
+ <!-- sweep wedge -->
+ <path d="M50 50 L50 7 A43 43 0 0 1 89 33 Z" fill="url(#sweep)"/>
+
+ <!-- center -->
+ <circle cx="50" cy="50" r="4.6" fill="#ffffff"/>
+ <circle cx="50" cy="50" r="4.6" fill="none" stroke="#26E0E0" stroke-opacity=".5" stroke-width="1"/>
+
+ <!-- aircraft blip on the outer ring -->
+ <g transform="translate(71,30) rotate(48) scale(.20)">
+  <path fill="url(#jet)" d="M50 4 L56 18 L56 40 L95 64 L95 72 L56 56 L56 80 L70 90 L70 95 L50 88 L30 95 L30 90 L44 80 L44 56 L5 72 L5 64 L44 40 L44 18 Z"/>
+ </g>
+ <circle cx="71" cy="30" r="9" fill="none" stroke="#26E0E0" stroke-opacity=".4" stroke-width="1.2"/>
+</svg>

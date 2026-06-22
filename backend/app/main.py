@@ -10,6 +10,7 @@ from app.routers.transport import router as transport_router
 from app.routers.accommodations import router as accommodations_router
 from app.routers.bucket_list import router as bucket_list_router
 from app.routers.discover import router as discover_router
+from app.routers.skywatch import router as skywatch_router
 from app.routers.stats import router as stats_router
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,20 @@ async def lifespan(app: FastAPI):
         await storage.ensure_bucket_exists()
     except Exception as exc:
         logger.warning("MinIO bucket init failed (continuing without photo storage): %s", exc)
+
+    try:
+        from app.tasks.scheduler import start_scheduler
+        start_scheduler()
+    except Exception as exc:
+        logger.warning("Skywatch scheduler failed to start: %s", exc)
+
     yield
+
+    try:
+        from app.tasks.scheduler import shutdown_scheduler
+        shutdown_scheduler()
+    except Exception:
+        logger.exception("Skywatch scheduler shutdown failed")
     logger.info("Atlas backend shutting down")
 
 
@@ -51,6 +65,7 @@ app.include_router(transport_router, prefix="/api/v1")
 app.include_router(accommodations_router, prefix="/api/v1")
 app.include_router(bucket_list_router, prefix="/api/v1")
 app.include_router(discover_router, prefix="/api/v1")
+app.include_router(skywatch_router, prefix="/api/v1")
 app.include_router(stats_router, prefix="/api/v1")
 
 

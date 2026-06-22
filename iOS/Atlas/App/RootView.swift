@@ -51,8 +51,12 @@ struct MainTabView: View {
                 .tag(AppTab.sky)
 
             TripListView()
-                .tabItem { Label("Flights", systemImage: "airplane.departure") }
+                .tabItem { Label("Trips", systemImage: "mappin.circle") }
                 .tag(AppTab.trips)
+
+            PlanView()
+                .tabItem { Label("Plan", systemImage: "calendar") }
+                .tag(AppTab.plan)
 
             StatsView()
                 .tabItem { Label("Stats", systemImage: "chart.bar.fill") }

@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     skywatch_poll_seconds: int = 20
     skywatch_location_freshness_minutes: int = 15
 
+    # Flight enrichment (optional)
+    aviationstack_api_key: str = ""
+
     # App
     app_env: str = "development"
 

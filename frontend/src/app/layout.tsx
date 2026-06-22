@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" afterSignInUrl="/map" afterSignUpUrl="/map">
       <html lang="en">
         <body>
           <QueryProvider>{children}</QueryProvider>

@@ -36,6 +36,7 @@ secrets/
 
 # Superpowers dev tooling
 .superpowers/
+docs/superpowers/
 
 # Git worktrees
 .worktrees/

@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  experimental: {
-    typedRoutes: true,
-  },
+  experimental: {},
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "img.clerk.com" },

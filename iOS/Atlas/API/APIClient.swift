@@ -168,6 +168,88 @@ final class APIClient {
 
     static let deviceIdKey = "atlas_skywatch_device_id"
 
+    func listPhotos(tripId: String) async throws -> [Photo] {
+        let response: PhotoListResponse = try await get("/api/v1/trips/\(tripId)/photos")
+        return response.items
+    }
+
+    func uploadPhoto(
+        tripId: String,
+        data: Data,
+        filename: String,
+        mimeType: String,
+        caption: String? = nil
+    ) async throws -> Photo {
+        let boundary = UUID().uuidString
+        var req = await makeRequest("POST", path: "/api/v1/trips/\(tripId)/photos/upload")
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = 120
+        var body = Data()
+        body.appendString("--\(boundary)\r\n")
+        body.appendString("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
+        body.appendString("Content-Type: \(mimeType)\r\n\r\n")
+        body.append(data)
+        body.appendString("\r\n")
+        if let caption {
+            body.appendString("--\(boundary)\r\n")
+            body.appendString("Content-Disposition: form-data; name=\"caption\"\r\n\r\n")
+            body.appendString(caption)
+            body.appendString("\r\n")
+        }
+        body.appendString("--\(boundary)--\r\n")
+        req.httpBody = body
+        return try await perform(req)
+    }
+
+    func deletePhoto(photoId: String) async throws {
+        try await delete("/api/v1/photos/\(photoId)")
+    }
+
+    func setCoverPhoto(photoId: String) async throws {
+        try await postVoid("/api/v1/photos/\(photoId)/set-cover")
+    }
+
+    // MARK: - Trip write operations
+
+    func createTrip(body: TripCreate) async throws -> Trip {
+        try await post("/api/v1/trips", body: body)
+    }
+
+    func updateTrip(id: String, body: TripUpdate) async throws -> Trip {
+        try await put("/api/v1/trips/\(id)", body: body)
+    }
+
+    func deleteTrip(id: String) async throws {
+        try await delete("/api/v1/trips/\(id)")
+    }
+
+    // MARK: - Destination write operations
+
+    func addDestination(tripId: String, body: DestinationCreate) async throws -> Destination {
+        try await post("/api/v1/trips/\(tripId)/destinations", body: body)
+    }
+
+    func deleteDestination(id: String) async throws {
+        try await delete("/api/v1/destinations/\(id)")
+    }
+
+    // MARK: - Transport write operations
+
+    func createTransportLeg(tripId: String, body: TransportCreate) async throws -> TransportLeg {
+        try await post("/api/v1/trips/\(tripId)/transport", body: body)
+    }
+
+    func deleteTransportLeg(id: String) async throws {
+        try await delete("/api/v1/transport/\(id)")
+    }
+
+    func enrichFlight(flightNumber: String, date: String) async throws -> FlightEnrichResponse {
+        try await post(
+            "/api/v1/transport/enrich-flight",
+            body: FlightEnrichRequest(flightNumber: flightNumber, date: date)
+        )
+    }
+
     // MARK: - Private
 
     /// Fetches a fresh token (refreshing via Clerk if needed) and caches it.
@@ -214,5 +296,31 @@ final class APIClient {
         } catch {
             throw APIError.decodingError(error)
         }
+    }
+
+    private func postVoid(_ path: String) async throws {
+        var req = await makeRequest("POST", path: path)
+        req.httpBody = "{}".data(using: .utf8)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: req)
+        } catch {
+            throw APIError.networkError(error)
+        }
+        guard let http = response as? HTTPURLResponse else {
+            throw APIError.httpError(0, "No HTTP response")
+        }
+        if http.statusCode == 401 { throw APIError.notAuthenticated }
+        if !(200..<300).contains(http.statusCode) {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            throw APIError.httpError(http.statusCode, body)
+        }
+    }
+}
+
+private extension Data {
+    mutating func appendString(_ string: String) {
+        if let d = string.data(using: .utf8) { append(d) }
     }
 }

@@ -1,33 +1,37 @@
 import Foundation
 
-struct LoggedFlight: Identifiable {
-    let id: String
-    let leg: TransportLeg
-    let trip: Trip
-}
-
 @MainActor
 @Observable
 final class TripListViewModel {
-    var flights: [LoggedFlight] = []
+    var trips: [Trip] = []
     var isLoading = false
     var error: String? = nil
-
-    // Legacy stubs — kept so any surviving call-sites compile
-    var trips: [Trip] = []
     var selectedStatus: TripStatus? = nil
     var searchText = ""
-    var filtered: [Trip] { trips }
+    private var hasMore = true
+    private var currentPage = 1
+
+    var filtered: [Trip] {
+        guard !searchText.isEmpty else { return trips }
+        let q = searchText.lowercased()
+        return trips.filter { $0.title.lowercased().contains(q) }
+    }
 
     func load(api: APIClient, reset: Bool = false) async {
-        guard !isLoading else { return }
-        if reset { flights = [] }
+        if reset {
+            trips = []
+            currentPage = 1
+            hasMore = true
+        }
+        guard !isLoading, hasMore else { return }
         isLoading = true
         error = nil
         defer { isLoading = false }
         do {
-            let pairs = try await api.allFlights()
-            flights = pairs.map { LoggedFlight(id: $0.leg.id, leg: $0.leg, trip: $0.trip) }
+            let response = try await api.trips(page: currentPage, status: selectedStatus)
+            trips.append(contentsOf: response.items)
+            hasMore = trips.count < response.total
+            currentPage += 1
         } catch {
             self.error = error.localizedDescription
         }

@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical,
+  Plus, MapPin, Plane, Car, Train, Ship, Bus, Footprints, GripVertical, Pencil, BedDouble, Trash2,
 } from "lucide-react";
+import { TripForm } from "@/components/trips/TripForm";
 import {
   DndContext,
   closestCenter,
@@ -24,11 +25,12 @@ import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@clerk/nextjs";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTrip } from "@/hooks/useTrips";
-import { useDestinations } from "@/hooks/useDestinations";
-import { useTransport } from "@/hooks/useTransport";
+import { useDestinations, useDeleteDestination } from "@/hooks/useDestinations";
+import { useTransport, useDeleteTransport } from "@/hooks/useTransport";
+import { useAccommodations, useDeleteAccommodation } from "@/hooks/useAccommodations";
 import { formatDateRange, nightsLabel } from "@/lib/utils";
 import { apiPatch } from "@/lib/api";
-import type { TransportLeg, Destination } from "@/types";
+import type { TransportLeg, Destination, Accommodation } from "@/types";
 
 const TRANSPORT_ICONS: Record<TransportLeg["type"], React.ReactNode> = {
   flight: <Plane size={14} />,
@@ -50,7 +52,7 @@ function transportLabel(leg: TransportLeg): string {
   return leg.flight_number ?? leg.type;
 }
 
-function SortableDestination({ dest }: { dest: Destination }) {
+function SortableDestination({ dest, onDelete }: { dest: Destination; onDelete: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: dest.id });
 
@@ -85,6 +87,13 @@ function SortableDestination({ dest }: { dest: Destination }) {
         <p className="text-xs font-mono text-atlas-muted">{dest.arrival_date ?? "—"}</p>
         <p className="text-xs text-atlas-muted">{nightsLabel(dest.nights)}</p>
       </div>
+      <button
+        onClick={onDelete}
+        className="text-atlas-muted hover:text-red-400 transition-colors shrink-0"
+        aria-label="Delete destination"
+      >
+        <Trash2 size={14} />
+      </button>
     </div>
   );
 }
@@ -96,7 +105,12 @@ export default function TripDetailPage() {
   const { data: trip, isLoading: tripLoading } = useTrip(id);
   const { data: destinations = [], isLoading: destLoading } = useDestinations(id);
   const { data: transport = [], isLoading: transportLoading } = useTransport(id);
+  const { data: accommodations = [], isLoading: accLoading } = useAccommodations(id);
+  const { mutate: deleteDestination } = useDeleteDestination(id);
+  const { mutate: deleteTransport } = useDeleteTransport(id);
+  const { mutate: deleteAccommodation } = useDeleteAccommodation(id);
 
+  const [isEditing, setIsEditing] = useState(false);
   const [orderedDests, setOrderedDests] = useState<Destination[]>(destinations);
   const isDraggingRef = useRef(false);
   useEffect(() => {
@@ -142,13 +156,32 @@ export default function TripDetailPage() {
           <Link href="/trips" className="text-xs text-atlas-muted hover:text-atlas-text mb-3 inline-block">
             ← All trips
           </Link>
-          <h1 className="font-display text-3xl font-semibold text-atlas-text">{trip.title}</h1>
-          {trip.description && (
-            <p className="text-atlas-muted mt-2 text-sm">{trip.description}</p>
-          )}
-          <p className="text-xs font-mono text-atlas-muted mt-2">
-            {formatDateRange(trip.start_date, trip.end_date)}
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="font-display text-3xl font-semibold text-atlas-text">{trip.title}</h1>
+              {trip.description && (
+                <p className="text-atlas-muted mt-2 text-sm">{trip.description}</p>
+              )}
+              <p className="text-xs font-mono text-atlas-muted mt-2">
+                {formatDateRange(trip.start_date, trip.end_date)}
+              </p>
+              <div className="flex gap-4 mt-3">
+                <Link
+                  href={`/trips/${id}/photos`}
+                  className="text-xs text-atlas-muted hover:text-atlas-accent transition-colors"
+                >
+                  Photos
+                </Link>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-atlas-muted hover:text-atlas-text transition-colors shrink-0 mt-1"
+              aria-label="Edit trip"
+            >
+              <Pencil size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Destinations */}
@@ -181,11 +214,78 @@ export default function TripDetailPage() {
             >
               <div className="flex flex-col gap-2">
                 {orderedDests.map((dest) => (
-                  <SortableDestination key={dest.id} dest={dest} />
+                  <SortableDestination
+                    key={dest.id}
+                    dest={dest}
+                    onDelete={() => deleteDestination(dest.id)}
+                  />
                 ))}
               </div>
             </SortableContext>
           </DndContext>
+        </div>
+
+        {/* Accommodations */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-atlas-text uppercase tracking-widest">
+              Accommodations
+            </h2>
+            <Link
+              href={`/trips/${id}/accommodations/new`}
+              className="flex items-center gap-1.5 text-xs text-atlas-accent hover:text-atlas-accent/80 transition-colors"
+            >
+              <Plus size={12} />
+              Add accommodation
+            </Link>
+          </div>
+
+          {accLoading && <p className="text-atlas-muted text-sm">Loading...</p>}
+
+          {!accLoading && accommodations.length === 0 && (
+            <p className="text-atlas-muted text-sm py-6 text-center border border-dashed border-atlas-border rounded-lg">
+              No accommodations logged yet.
+            </p>
+          )}
+
+          <div className="flex flex-col gap-2">
+            {accommodations.map((acc: Accommodation) => (
+              <div
+                key={acc.id}
+                className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-3 flex items-center gap-4"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded bg-atlas-accent/10 text-atlas-accent shrink-0">
+                  <BedDouble size={14} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-atlas-text">{acc.name}</p>
+                  <p className="text-xs text-atlas-muted capitalize">
+                    {acc.type ?? "accommodation"}
+                    {acc.address ? ` · ${acc.address}` : ""}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  {acc.check_in && (
+                    <p className="text-xs font-mono text-atlas-muted">
+                      {acc.check_in.slice(0, 10)}
+                    </p>
+                  )}
+                  {acc.cost_per_night != null && (
+                    <p className="text-xs text-atlas-muted">
+                      {acc.currency} {Number(acc.cost_per_night).toLocaleString()}/night
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => deleteAccommodation(acc.id)}
+                  className="text-atlas-muted hover:text-red-400 transition-colors shrink-0"
+                  aria-label="Delete accommodation"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Transport */}
@@ -240,11 +340,33 @@ export default function TripDetailPage() {
                     </p>
                   )}
                 </div>
+                <button
+                  onClick={() => deleteTransport(leg.id)}
+                  className="text-atlas-muted hover:text-red-400 transition-colors shrink-0"
+                  aria-label="Delete transport leg"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {isEditing && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-atlas-bg/80 pt-20 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setIsEditing(false); }}
+        >
+          <div className="w-full max-w-lg rounded-xl border border-atlas-border bg-atlas-surface p-6 shadow-2xl">
+            <h2 className="font-display text-xl font-semibold text-atlas-text mb-5">Edit trip</h2>
+            <TripForm
+              initialValues={trip}
+              onSuccess={() => setIsEditing(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

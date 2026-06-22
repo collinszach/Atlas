@@ -1,6 +1,8 @@
 import logging
 import uuid
+from datetime import datetime as dt
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
@@ -8,10 +10,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import CurrentUser
+from app.config import settings
 from app.database import get_db
 from app.models.transport import TransportLeg
 from app.models.trip import Trip
-from app.schemas.transport import TransportCreate, TransportRead, TransportUpdate
+from app.schemas.transport import TransportCreate, TransportRead, TransportUpdate, EnrichFlightRequest, EnrichFlightResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["transport"])
@@ -83,6 +86,65 @@ async def add_transport(
     await db.flush()
     await db.refresh(leg)
     return TransportRead.from_orm_with_geo(leg)
+
+
+@router.post("/transport/enrich-flight", response_model=EnrichFlightResponse)
+async def enrich_flight(
+    body: EnrichFlightRequest,
+    user_id: CurrentUser,
+) -> EnrichFlightResponse:
+    if not settings.aviationstack_api_key:
+        raise HTTPException(status_code=503, detail="Flight enrichment not configured")
+
+    async with httpx.AsyncClient(timeout=10.0) as http:
+        try:
+            resp = await http.get(
+                "http://api.aviationstack.com/v1/flights",
+                params={
+                    "access_key": settings.aviationstack_api_key,
+                    "flight_iata": body.flight_number.upper(),
+                    "flight_date": str(body.date),
+                },
+            )
+        except httpx.HTTPError as exc:
+            logger.warning("AviationStack request failed: %s", exc)
+            raise HTTPException(status_code=502, detail="Flight lookup failed")
+
+    if resp.status_code != 200:
+        raise HTTPException(status_code=502, detail="Flight data unavailable")
+
+    data = resp.json()
+    flights = data.get("data") or []
+    if not flights:
+        raise HTTPException(status_code=404, detail=f"No data for {body.flight_number}")
+
+    f = flights[0]
+    dep = f.get("departure") or {}
+    arr = f.get("arrival") or {}
+
+    duration_min = None
+    dep_sched = dep.get("scheduled")
+    arr_sched = arr.get("scheduled")
+    if dep_sched and arr_sched:
+        try:
+            d_dep = dt.fromisoformat(dep_sched.replace("Z", "+00:00"))
+            d_arr = dt.fromisoformat(arr_sched.replace("Z", "+00:00"))
+            delta = int((d_arr - d_dep).total_seconds() / 60)
+            if delta > 0:
+                duration_min = delta
+        except ValueError:
+            pass
+
+    return EnrichFlightResponse(
+        flight_number=(f.get("flight") or {}).get("iata"),
+        airline=(f.get("airline") or {}).get("name"),
+        origin_iata=dep.get("iata"),
+        dest_iata=arr.get("iata"),
+        origin_city=dep.get("airport"),
+        dest_city=arr.get("airport"),
+        duration_min=duration_min,
+        distance_km=None,  # AviationStack free tier omits distance
+    )
 
 
 @router.put("/transport/{leg_id}", response_model=TransportRead)

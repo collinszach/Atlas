@@ -44,11 +44,11 @@ It is built for real travelers who want data fidelity — not an Instagram grid.
 - **Background tasks:** APScheduler (flight data sync, weather fetch)
 - **HTTP client:** httpx (async)
 
-### Infrastructure (Docker Compose)
-```
-services: atlas-frontend, atlas-backend, atlas-db (postgres+postgis), atlas-redis, atlas-minio
-```
-All services on `atlas-network` bridge. PostgreSQL data and MinIO buckets on named volumes.
+### Infrastructure
+- **Frontend hosting:** Vercel (Next.js deployment)
+- **Backend hosting:** Local NUC (Docker Compose)
+  - Services: `atlas-backend`, `atlas-db` (postgres+postgis), `atlas-redis`, `atlas-minio`
+  - All services on `atlas-network` bridge. PostgreSQL data and MinIO buckets on named volumes.
 
 ---
 

@@ -19,5 +19,11 @@ class UserRead(BaseModel):
     email: str
     display_name: str | None
     avatar_url: str | None
+    home_country: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class UserUpdate(BaseModel):
+    display_name: str | None = None
+    home_country: str | None = None

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pydantic import BaseModel, model_validator
 
@@ -119,3 +119,19 @@ class TransportRead(BaseModel):
         data["dest_lat"] = dest_lat
         data["dest_lng"] = dest_lng
         return cls(**data)
+
+
+class EnrichFlightRequest(BaseModel):
+    flight_number: str
+    date: date
+
+
+class EnrichFlightResponse(BaseModel):
+    flight_number: str | None = None
+    airline: str | None = None
+    origin_iata: str | None = None
+    dest_iata: str | None = None
+    origin_city: str | None = None
+    dest_city: str | None = None
+    duration_min: int | None = None
+    distance_km: float | None = None

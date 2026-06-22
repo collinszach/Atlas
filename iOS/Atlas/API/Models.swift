@@ -45,6 +45,55 @@ struct TripListResponse: Codable {
     let limit: Int
 }
 
+// MARK: - Write request bodies
+
+struct TripCreate: Encodable {
+    let title: String
+    let status: TripStatus
+
+    enum CodingKeys: String, CodingKey {
+        case title, status
+    }
+}
+
+struct TripUpdate: Encodable {
+    var title: String?
+    var status: TripStatus?
+    var startDate: String?
+    var endDate: String?
+    var description: String?
+    var tags: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case title, status, description, tags
+        case startDate = "start_date"
+        case endDate = "end_date"
+    }
+}
+
+struct DestinationCreate: Encodable {
+    let city: String
+    let countryCode: String
+    let countryName: String
+    let region: String?
+    let latitude: Double?
+    let longitude: Double?
+    let arrivalDate: String?
+    let departureDate: String?
+    let rating: Int?
+    let notes: String?
+    let orderIndex: Int
+
+    enum CodingKeys: String, CodingKey {
+        case city, region, latitude, longitude, rating, notes
+        case countryCode = "country_code"
+        case countryName = "country_name"
+        case arrivalDate = "arrival_date"
+        case departureDate = "departure_date"
+        case orderIndex = "order_index"
+    }
+}
+
 // MARK: - Destinations
 
 struct Destination: Codable, Identifiable {
@@ -205,6 +254,69 @@ struct TimelineTrip: Codable, Identifiable {
     }
 }
 
+// MARK: - Transport write
+
+struct FlightEnrichRequest: Encodable {
+    let flightNumber: String
+    let date: String
+
+    enum CodingKeys: String, CodingKey {
+        case flightNumber = "flight_number"
+        case date
+    }
+}
+
+struct FlightEnrichResponse: Decodable {
+    let flightNumber: String?
+    let airline: String?
+    let originIata: String?
+    let destIata: String?
+    let originCity: String?
+    let destCity: String?
+    let durationMin: Int?
+    let distanceKm: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case airline
+        case flightNumber = "flight_number"
+        case originIata = "origin_iata"
+        case destIata = "dest_iata"
+        case originCity = "origin_city"
+        case destCity = "dest_city"
+        case durationMin = "duration_min"
+        case distanceKm = "distance_km"
+    }
+}
+
+struct TransportCreate: Encodable {
+    let type: String
+    let flightNumber: String?
+    let airline: String?
+    let originIata: String?
+    let destIata: String?
+    let originCity: String?
+    let destCity: String?
+    let departureAt: String?   // "yyyy-MM-dd" or "yyyy-MM-dd'T'HH:mm:ss"
+    let arrivalAt: String?
+    let durationMin: Int?
+    let distanceKm: Double?
+    let seatClass: String?
+
+    enum CodingKeys: String, CodingKey {
+        case type, airline
+        case flightNumber = "flight_number"
+        case originIata = "origin_iata"
+        case destIata = "dest_iata"
+        case originCity = "origin_city"
+        case destCity = "dest_city"
+        case departureAt = "departure_at"
+        case arrivalAt = "arrival_at"
+        case durationMin = "duration_min"
+        case distanceKm = "distance_km"
+        case seatClass = "seat_class"
+    }
+}
+
 // MARK: - Transport
 
 struct TransportLeg: Codable, Identifiable {
@@ -235,4 +347,41 @@ struct TransportLeg: Codable, Identifiable {
         case distanceKm = "distance_km"
         case seatClass = "seat_class"
     }
+}
+
+// MARK: - Photos
+
+struct Photo: Codable, Identifiable {
+    let id: String
+    let tripId: String
+    let destinationId: String?
+    let originalFilename: String?
+    let caption: String?
+    let takenAt: String?
+    let latitude: Double?
+    let longitude: Double?
+    let width: Int?
+    let height: Int?
+    let sizeBytes: Int?
+    let isCover: Bool
+    let orderIndex: Int?
+    let url: String
+    let thumbnailUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, caption, latitude, longitude, width, height, url
+        case tripId = "trip_id"
+        case destinationId = "destination_id"
+        case originalFilename = "original_filename"
+        case takenAt = "taken_at"
+        case sizeBytes = "size_bytes"
+        case isCover = "is_cover"
+        case orderIndex = "order_index"
+        case thumbnailUrl = "thumbnail_url"
+    }
+}
+
+struct PhotoListResponse: Codable {
+    let items: [Photo]
+    let total: Int
 }

@@ -1,67 +1,48 @@
-import Image from "next/image";
 import Link from "next/link";
-import { Calendar, MapPin, ArrowUpRight } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
-import { formatDateRange } from "@/lib/utils";
+import { MapPin, Calendar } from "lucide-react";
+import { cn, formatDateRange } from "@/lib/utils";
 import type { Trip } from "@/types";
 
-const STATUS_TONE: Record<Trip["status"], "visited" | "active" | "planned" | "dream"> = {
-  past: "visited",
-  active: "active",
-  planned: "planned",
-  dream: "dream",
+const STATUS_STYLES: Record<Trip["status"], string> = {
+  past: "bg-atlas-visited/10 text-atlas-visited border border-atlas-visited/20",
+  active: "bg-green-900/20 text-green-400 border border-green-800",
+  planned: "bg-atlas-accent/10 text-atlas-accent border border-atlas-accent/20",
+  dream: "bg-atlas-muted/10 text-atlas-muted border border-atlas-muted/20",
 };
 
-export function TripCard({ trip, coverPhotoUrl }: { trip: Trip; coverPhotoUrl?: string }) {
+export function TripCard({ trip }: { trip: Trip }) {
   return (
     <Link
       href={`/trips/${trip.id}`}
-      className="group block overflow-hidden rounded-lg border border-atlas-border bg-atlas-surface shadow-elev-1 transition-all duration-200 ease-out-quart hover:-translate-y-0.5 hover:border-atlas-border-strong hover:shadow-elev-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-atlas-accent focus-visible:ring-offset-2 focus-visible:ring-offset-atlas-bg"
+      className={cn(
+        "block rounded-lg border border-atlas-border bg-atlas-surface p-4",
+        "hover:border-atlas-accent/40 transition-colors group"
+      )}
     >
-      <div className="relative h-32 w-full overflow-hidden">
-        {coverPhotoUrl ? (
-          <Image
-            src={coverPhotoUrl}
-            alt={trip.title}
-            fill
-            className="object-cover transition-transform duration-500 ease-out-quart group-hover:scale-105"
-            unoptimized
-          />
-        ) : (
-          <div className="bg-graticule-fine flex h-full w-full items-center justify-center bg-atlas-bg-deep">
-            <MapPin size={22} className="text-atlas-ink-faint/60" strokeWidth={1.5} />
-          </div>
-        )}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-atlas-surface to-transparent" />
-        <div className="absolute right-2.5 top-2.5">
-          <Badge tone={STATUS_TONE[trip.status]}>{trip.status}</Badge>
-        </div>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <h3 className="font-display text-base font-semibold text-atlas-text group-hover:text-atlas-accent transition-colors line-clamp-1">
+          {trip.title}
+        </h3>
+        <span className={cn("shrink-0 rounded px-2 py-0.5 text-xs font-medium", STATUS_STYLES[trip.status])}>
+          {trip.status}
+        </span>
       </div>
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 font-display text-lg font-semibold text-atlas-ink transition-colors group-hover:text-atlas-accent">
-            {trip.title}
-          </h3>
-          <ArrowUpRight
-            size={16}
-            className="mt-1 shrink-0 text-atlas-ink-faint opacity-0 transition-opacity duration-150 group-hover:opacity-100"
-          />
-        </div>
+      {trip.description && (
+        <p className="text-sm text-atlas-muted line-clamp-2 mb-3">{trip.description}</p>
+      )}
 
-        {trip.description && (
-          <p className="mt-1.5 line-clamp-2 text-sm text-atlas-ink-2">{trip.description}</p>
-        )}
-
-        <div className="mt-3.5 flex items-center gap-3 font-mono text-xs text-atlas-ink-faint">
-          <span className="flex items-center gap-1.5">
-            <Calendar size={12} />
-            {formatDateRange(trip.start_date, trip.end_date)}
+      <div className="flex items-center gap-4 text-xs text-atlas-muted">
+        <span className="flex items-center gap-1">
+          <Calendar size={12} />
+          {formatDateRange(trip.start_date, trip.end_date)}
+        </span>
+        {trip.tags.length > 0 && (
+          <span className="flex items-center gap-1">
+            <MapPin size={12} />
+            {trip.tags.slice(0, 2).join(", ")}
           </span>
-          {trip.tags.length > 0 && (
-            <span className="line-clamp-1">· {trip.tags.slice(0, 2).join(" · ")}</span>
-          )}
-        </div>
+        )}
       </div>
     </Link>
   );

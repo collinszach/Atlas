@@ -196,6 +196,19 @@ export interface MonthlyClimate {
   avg_precipitation_mm: number;
 }
 
+export interface EnrichFlightResponse {
+  flight_number?: string;
+  airline?: string;
+  origin_iata?: string;
+  dest_iata?: string;
+  origin_city?: string;
+  dest_city?: string;
+  departure_at?: string;
+  arrival_at?: string;
+  duration_min?: number;
+  distance_km?: number;
+}
+
 export interface BestTimeResponse {
   location: string;
   latitude: number;
@@ -246,23 +259,33 @@ export interface DestinationBriefResponse {
   transport_within: string;
 }
 
-export interface StatsResponse {
+export interface UserStats {
   countries_visited: number;
+  cities_visited: number;
   trips_count: number;
   nights_away: number;
   total_distance_km: number;
-  co2_kg_estimate: number;
+  longest_trip_days: number | null;
+  longest_trip_title: string | null;
   most_visited_country: string | null;
   most_visited_country_code: string | null;
-  longest_trip_title: string | null;
-  longest_trip_days: number | null;
+  most_visited_country_count: number | null;
+  co2_kg_estimate: number;
+}
+
+export interface HeatmapEntry {
+  country_code: string;
+  country_name: string;
+  visit_count: number;
+  total_nights: number;
 }
 
 export interface TimelineTrip {
   id: string;
   title: string;
-  status: Trip["status"];
+  status: "past" | "active" | "planned" | "dream";
   start_date: string | null;
   end_date: string | null;
   destination_count: number;
+  transport_count: number;
 }

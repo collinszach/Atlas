@@ -12,16 +12,28 @@ struct SearchView: View {
     @State private var searched = false
     @State private var selected: OverheadAircraft? = nil
     @State private var searchTask: Task<Void, Never>? = nil
+    @State private var trackQuery: TrackTarget? = nil
+
+    private struct TrackTarget: Identifiable, Hashable {
+        let id: String
+        var value: String { id }
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 searchField
+                if !query.trimmingCharacters(in: .whitespaces).isEmpty {
+                    trackFlightButton
+                }
                 content
             }
             .background(Color.atlasBackground)
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(item: $trackQuery) { target in
+                TrackFlightView(query: target.value)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }.foregroundStyle(Color.atlasAccent).fontWeight(.semibold)
@@ -63,6 +75,28 @@ struct SearchView: View {
         .background(Color.atlasSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.atlasBorder, lineWidth: 1))
         .padding(16)
+    }
+
+    private var trackFlightButton: some View {
+        Button {
+            let q = query.trimmingCharacters(in: .whitespaces)
+            if !q.isEmpty { trackQuery = TrackTarget(id: q) }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "dot.radiowaves.left.and.right")
+                    .font(.system(size: 15, weight: .semibold))
+                Text("Track \(query.trimmingCharacters(in: .whitespaces).uppercased()) live")
+                    .font(.system(size: 14, weight: .semibold)).lineLimit(1)
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(Color.atlasAccent)
+            .padding(.horizontal, 14).padding(.vertical, 11)
+            .background(Color.atlasAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 
     @ViewBuilder private var content: some View {

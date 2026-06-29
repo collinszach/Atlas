@@ -10,6 +10,11 @@ EMERGENCY_SQUAWKS = {"7700": "general emergency", "7600": "radio failure", "7500
 
 LOW_ALTITUDE_FT = 500
 
+# Only the rarer half of the notable-types table is worth a push — score is
+# max(1, 10 - rarity_tier), so tier <=5 (score >=5) keeps the genuinely "cool"
+# aircraft and drops common types that otherwise spam users in busy airspace.
+NOTABLE_MIN_SCORE = 5
+
 # Government / VIP registration prefixes not covered by the military dbFlags bit
 # (e.g. head-of-state and government transport aircraft).
 GOV_REGISTRATION_PREFIXES: tuple[str, ...] = (
@@ -48,6 +53,8 @@ def _check_notable_types(aircraft: Aircraft, notable_types: dict[str, NotableTyp
     if notable is None:
         return None
     score = max(1, 10 - notable.rarity_tier)
+    if score < NOTABLE_MIN_SCORE:
+        return None
     return Match(
         trigger="notable_type",
         score=score,

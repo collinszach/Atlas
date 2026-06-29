@@ -11,11 +11,13 @@ struct AircraftDetailSheet: View {
     let onFollow: () -> Void
 
     @Environment(AuthManager.self) private var auth
+    private let bookmarks = BookmarksStore.shared
     @State private var enriched: OverheadAircraft? = nil
     @State private var isLoadingDetail = false
     @State private var liveTrail: [[Double]] = []
     @State private var altSamples: [Double] = []
     @State private var speedSamples: [Double] = []
+    @State private var showTypePage = false
 
     private var display: OverheadAircraft { enriched ?? aircraft }
 
@@ -67,10 +69,23 @@ struct AircraftDetailSheet: View {
             }
             .background(Color.atlasBackground)
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $showTypePage) {
+                if let code = display.type {
+                    AircraftTypePage(typeCode: code, userCoordinate: userCoordinate)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if isLoadingDetail {
                         ProgressView().tint(.atlasCyan).scaleEffect(0.8)
+                    }
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        bookmarks.toggleAircraft(display)
+                    } label: {
+                        Image(systemName: bookmarks.isAircraftBookmarked(aircraft.hex) ? "star.fill" : "star")
+                            .foregroundStyle(bookmarks.isAircraftBookmarked(aircraft.hex) ? Color.atlasAccent : Color.atlasInk2)
                     }
                 }
             }
@@ -175,6 +190,24 @@ struct AircraftDetailSheet: View {
                 }
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .atlasCard(radius: 14)
+            }
+
+            if let code = display.type, !code.isEmpty {
+                Button { showTypePage = true } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "airplane.circle.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text("See all \(code.uppercased()) flying")
+                            .font(.system(size: 14, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.atlasAccent)
+                    .padding(.horizontal, 14).padding(.vertical, 11)
+                    .background(Color.atlasAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
 
             if display.isMilitary {

@@ -1,0 +1,98 @@
+{
+  "KJFK": [
+    { "label": "JFK Tower", "streamUrl": "https://www.liveatc.net/play/kjfk_twr.pls" },
+    { "label": "JFK Ground", "streamUrl": "https://www.liveatc.net/play/kjfk_gnd.pls" }
+  ],
+  "KEWR": [
+    { "label": "Newark Tower", "streamUrl": "https://www.liveatc.net/play/kewr_twr.pls" }
+  ],
+  "KLGA": [
+    { "label": "LaGuardia Tower", "streamUrl": "https://www.liveatc.net/play/klga_twr.pls" }
+  ],
+  "KLAX": [
+    { "label": "LAX Tower", "streamUrl": "https://www.liveatc.net/play/klax_twr.pls" },
+    { "label": "LAX Ground", "streamUrl": "https://www.liveatc.net/play/klax_gnd.pls" }
+  ],
+  "KSFO": [
+    { "label": "SFO Tower", "streamUrl": "https://www.liveatc.net/play/ksfo_twr.pls" },
+    { "label": "SFO Ground", "streamUrl": "https://www.liveatc.net/play/ksfo_gnd.pls" }
+  ],
+  "KSAN": [
+    { "label": "San Diego Tower", "streamUrl": "https://www.liveatc.net/play/ksan_twr.pls" }
+  ],
+  "KSEA": [
+    { "label": "Seattle Tower", "streamUrl": "https://www.liveatc.net/play/ksea_twr.pls" }
+  ],
+  "KPDX": [
+    { "label": "Portland Tower", "streamUrl": "https://www.liveatc.net/play/kpdx_twr.pls" }
+  ],
+  "KLAS": [
+    { "label": "Las Vegas Tower", "streamUrl": "https://www.liveatc.net/play/klas_twr.pls" }
+  ],
+  "KPHX": [
+    { "label": "Phoenix Tower", "streamUrl": "https://www.liveatc.net/play/kphx_twr.pls" }
+  ],
+  "KDEN": [
+    { "label": "Denver Tower", "streamUrl": "https://www.liveatc.net/play/kden_twr.pls" }
+  ],
+  "KSLC": [
+    { "label": "Salt Lake Tower", "streamUrl": "https://www.liveatc.net/play/kslc_twr.pls" }
+  ],
+  "KORD": [
+    { "label": "O'Hare Tower", "streamUrl": "https://www.liveatc.net/play/kord_twr.pls" }
+  ],
+  "KMDW": [
+    { "label": "Midway Tower", "streamUrl": "https://www.liveatc.net/play/kmdw_twr.pls" }
+  ],
+  "KDFW": [
+    { "label": "DFW Tower", "streamUrl": "https://www.liveatc.net/play/kdfw_twr.pls" }
+  ],
+  "KIAH": [
+    { "label": "Houston Tower", "streamUrl": "https://www.liveatc.net/play/kiah_twr.pls" }
+  ],
+  "KATL": [
+    { "label": "Atlanta Tower", "streamUrl": "https://www.liveatc.net/play/katl_twr.pls" }
+  ],
+  "KMCO": [
+    { "label": "Orlando Tower", "streamUrl": "https://www.liveatc.net/play/kmco_twr.pls" }
+  ],
+  "KMIA": [
+    { "label": "Miami Tower", "streamUrl": "https://www.liveatc.net/play/kmia_twr.pls" }
+  ],
+  "KTPA": [
+    { "label": "Tampa Tower", "streamUrl": "https://www.liveatc.net/play/ktpa_twr.pls" }
+  ],
+  "KCLT": [
+    { "label": "Charlotte Tower", "streamUrl": "https://www.liveatc.net/play/kclt_twr.pls" }
+  ],
+  "KBOS": [
+    { "label": "Boston Tower", "streamUrl": "https://www.liveatc.net/play/kbos_twr.pls" }
+  ],
+  "KDCA": [
+    { "label": "Reagan National Tower", "streamUrl": "https://www.liveatc.net/play/kdca_twr.pls" }
+  ],
+  "KIAD": [
+    { "label": "Dulles Tower", "streamUrl": "https://www.liveatc.net/play/kiad_twr.pls" }
+  ],
+  "KBWI": [
+    { "label": "Baltimore Tower", "streamUrl": "https://www.liveatc.net/play/kbwi_twr.pls" }
+  ],
+  "KPHL": [
+    { "label": "Philadelphia Tower", "streamUrl": "https://www.liveatc.net/play/kphl_twr.pls" }
+  ],
+  "KMSP": [
+    { "label": "Minneapolis Tower", "streamUrl": "https://www.liveatc.net/play/kmsp_twr.pls" }
+  ],
+  "KDTW": [
+    { "label": "Detroit Tower", "streamUrl": "https://www.liveatc.net/play/kdtw_twr.pls" }
+  ],
+  "CYYZ": [
+    { "label": "Toronto Tower", "streamUrl": "https://www.liveatc.net/play/cyyz_twr.pls" }
+  ],
+  "CYVR": [
+    { "label": "Vancouver Tower", "streamUrl": "https://www.liveatc.net/play/cyvr_twr.pls" }
+  ],
+  "EGLL": [
+    { "label": "Heathrow Tower", "streamUrl": "https://www.liveatc.net/play/egll_twr.pls" }
+  ]
+}

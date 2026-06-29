@@ -35,6 +35,22 @@ targets:
         product: ClerkKit
       - package: KeychainSwift
         product: KeychainSwift
+      - target: SkywatchWidget
+
+  SkywatchWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - SkywatchWidget
+      - path: Atlas/Shared/FlightActivityAttributes.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.zacharyjcollins.atlas.SkywatchWidget
+        SWIFT_VERSION: 5.9
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        DEVELOPMENT_TEAM: "K28M38H7Y5"
+        INFOPLIST_FILE: SkywatchWidget/Info.plist
+        ALWAYS_SEARCH_USER_PATHS: NO
 
   AtlasTests:
     type: bundle.unit-test

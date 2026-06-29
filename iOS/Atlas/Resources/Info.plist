@@ -32,6 +32,7 @@
 	<string>Atlas uses your location in the background to alert you when interesting aircraft pass overhead.</string>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>audio</string>
 		<string>location</string>
 		<string>remote-notification</string>
 	</array>
@@ -40,5 +41,7 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 </dict>
 </plist>

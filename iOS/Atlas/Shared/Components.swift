@@ -75,11 +75,7 @@ struct FlightRow: View {
                         .foregroundStyle(Color.atlasText)
                         .lineLimit(1)
                     if let typeCode, !typeCode.isEmpty {
-                        Text(typeCode)
-                            .font(.system(size: 10, weight: .heavy, design: .monospaced))
-                            .foregroundStyle(Color.atlasCyan)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Color.atlasCyan.opacity(0.14), in: Capsule())
+                        TypePill(typeCode: typeCode)
                     }
                     if let pill { Pill(text: pill.0, tone: pill.1) }
                 }

@@ -12,6 +12,7 @@ struct SkyView: View {
     @State private var showPreferences = false
     @State private var showAlerts = false
     @State private var showAR = false
+    @State private var showBookmarks = false
     @State private var refreshTask: Task<Void, Never>? = nil
     @State private var showFollowToast = false
     @State private var followToastMessage = ""
@@ -101,6 +102,12 @@ struct SkyView: View {
                                 .scaleEffect(0.8)
                         }
                         Button {
+                            showBookmarks = true
+                        } label: {
+                            Image(systemName: "star")
+                                .foregroundStyle(Color.atlasAccent)
+                        }
+                        Button {
                             showAlerts = true
                         } label: {
                             Image(systemName: "bell")
@@ -149,6 +156,14 @@ struct SkyView: View {
                 .environment(auth)
                 .environment(appState)
                 .presentationBackground(Color.atlasBackground)
+        }
+        .sheet(isPresented: $showBookmarks) {
+            BookmarksView(onSelectAircraft: { hex in
+                showBookmarks = false
+                Task { await openAircraft(hex: hex) }
+            })
+            .environment(auth)
+            .presentationBackground(Color.atlasBackground)
         }
         .fullScreenCover(isPresented: $showAR) {
             ARSkyView(locationProvider: location)
@@ -269,8 +284,26 @@ struct SkyView: View {
         return nil
     }
 
+    private func openAircraft(hex: String) async {
+        if let live = vm.aircraft.first(where: { $0.hex == hex }) {
+            selectedAircraft = live
+            return
+        }
+        let coord = location.coordinate
+        if let detail = try? await auth.api.fetchAircraftDetail(
+            hex: hex, lat: coord?.latitude ?? 0, lon: coord?.longitude ?? 0
+        ) {
+            selectedAircraft = detail
+        }
+    }
+
     private func handleFollow(_ ac: OverheadAircraft) {
         vm.toggleFollow(ac.hex)
+        if vm.isFollowed(ac.hex) {
+            FlightActivityController.shared.start(for: ac)
+        } else {
+            FlightActivityController.shared.stop(hex: ac.hex)
+        }
         let name = ac.displayName
         let msg = vm.isFollowed(ac.hex) ? "Following \(name)" : "Unfollowed \(name)"
         followToastMessage = msg

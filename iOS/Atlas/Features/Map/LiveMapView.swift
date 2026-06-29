@@ -118,19 +118,27 @@ struct LiveMapView: UIViewRepresentable {
             let existing = mapView.annotations.compactMap { $0 as? AircraftAnnotation }
             var byHex = Dictionary(existing.map { ($0.hex, $0) }, uniquingKeysWith: { a, _ in a })
 
+            // Update existing annotations in place, collect adds, and apply add/remove
+            // in batches AFTER the loop. Mutating mapView.annotations while a coordinate
+            // KVO is being processed makes MapKit's annotation manager abort with a
+            // "collection mutated while enumerated" exception.
+            var toAdd: [AircraftAnnotation] = []
             for ac in aircraft {
                 guard let c = ac.coordinate else { continue }
                 let isSel = ac.hex == selectedHex
                 if let ann = byHex.removeValue(forKey: ac.hex) {
-                    ann.coordinate = c
+                    if ann.coordinate.latitude != c.latitude || ann.coordinate.longitude != c.longitude {
+                        ann.coordinate = c
+                    }
                     ann.aircraft = ac
                     ann.isSelected = isSel
                     if let v = mapView.view(for: ann) as? AircraftAnnotationView { v.configure(ann) }
                 } else {
-                    mapView.addAnnotation(AircraftAnnotation(aircraft: ac, selected: isSel))
+                    toAdd.append(AircraftAnnotation(aircraft: ac, selected: isSel))
                 }
             }
             if !byHex.isEmpty { mapView.removeAnnotations(Array(byHex.values)) }
+            if !toAdd.isEmpty { mapView.addAnnotations(toAdd) }
         }
 
         // MARK: Airport annotations (diffed by icao)
@@ -139,12 +147,14 @@ struct LiveMapView: UIViewRepresentable {
             let existing = mapView.annotations.compactMap { $0 as? AirportAnnotation }
             var byIcao = Dictionary(existing.map { ($0.airport.icao, $0) }, uniquingKeysWith: { a, _ in a })
 
+            var toAdd: [AirportAnnotation] = []
             for ap in airports {
                 if byIcao.removeValue(forKey: ap.icao) == nil {
-                    mapView.addAnnotation(AirportAnnotation(ap))
+                    toAdd.append(AirportAnnotation(ap))
                 }
             }
             if !byIcao.isEmpty { mapView.removeAnnotations(Array(byIcao.values)) }
+            if !toAdd.isEmpty { mapView.addAnnotations(toAdd) }
         }
 
         // MARK: Weather radar (RainViewer)

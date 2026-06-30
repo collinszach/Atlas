@@ -1,98 +1,560 @@
 {
-  "KJFK": [
-    { "label": "JFK Tower", "streamUrl": "https://www.liveatc.net/play/kjfk_twr.pls" },
-    { "label": "JFK Ground", "streamUrl": "https://www.liveatc.net/play/kjfk_gnd.pls" }
-  ],
-  "KEWR": [
-    { "label": "Newark Tower", "streamUrl": "https://www.liveatc.net/play/kewr_twr.pls" }
-  ],
-  "KLGA": [
-    { "label": "LaGuardia Tower", "streamUrl": "https://www.liveatc.net/play/klga_twr.pls" }
+  "KATL": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/katl_twr.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/katl_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/katl_del.pls"
+    }
   ],
   "KLAX": [
-    { "label": "LAX Tower", "streamUrl": "https://www.liveatc.net/play/klax_twr.pls" },
-    { "label": "LAX Ground", "streamUrl": "https://www.liveatc.net/play/klax_gnd.pls" }
-  ],
-  "KSFO": [
-    { "label": "SFO Tower", "streamUrl": "https://www.liveatc.net/play/ksfo_twr.pls" },
-    { "label": "SFO Ground", "streamUrl": "https://www.liveatc.net/play/ksfo_gnd.pls" }
-  ],
-  "KSAN": [
-    { "label": "San Diego Tower", "streamUrl": "https://www.liveatc.net/play/ksan_twr.pls" }
-  ],
-  "KSEA": [
-    { "label": "Seattle Tower", "streamUrl": "https://www.liveatc.net/play/ksea_twr.pls" }
-  ],
-  "KPDX": [
-    { "label": "Portland Tower", "streamUrl": "https://www.liveatc.net/play/kpdx_twr.pls" }
-  ],
-  "KLAS": [
-    { "label": "Las Vegas Tower", "streamUrl": "https://www.liveatc.net/play/klas_twr.pls" }
-  ],
-  "KPHX": [
-    { "label": "Phoenix Tower", "streamUrl": "https://www.liveatc.net/play/kphx_twr.pls" }
-  ],
-  "KDEN": [
-    { "label": "Denver Tower", "streamUrl": "https://www.liveatc.net/play/kden_twr.pls" }
-  ],
-  "KSLC": [
-    { "label": "Salt Lake Tower", "streamUrl": "https://www.liveatc.net/play/kslc_twr.pls" }
+    {
+      "label": "Tower (North/South) #1",
+      "streamUrl": "https://www.liveatc.net/play/klax_twr.pls"
+    },
+    {
+      "label": "Ground (North/South)",
+      "streamUrl": "https://www.liveatc.net/play/klax_gnd.pls"
+    }
   ],
   "KORD": [
-    { "label": "O'Hare Tower", "streamUrl": "https://www.liveatc.net/play/kord_twr.pls" }
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kord_twr.pls"
+    },
+    {
+      "label": "Chicago Approach",
+      "streamUrl": "https://www.liveatc.net/play/kord_app.pls"
+    },
+    {
+      "label": "Chicago Departure",
+      "streamUrl": "https://www.liveatc.net/play/kord_dep.pls"
+    }
   ],
-  "KMDW": [
-    { "label": "Midway Tower", "streamUrl": "https://www.liveatc.net/play/kmdw_twr.pls" }
+  "KDEN": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kden_twr.pls"
+    },
+    {
+      "label": "Ground/Ramp",
+      "streamUrl": "https://www.liveatc.net/play/kden_gnd.pls"
+    },
+    {
+      "label": "Departure",
+      "streamUrl": "https://www.liveatc.net/play/kden_dep.pls"
+    }
   ],
-  "KDFW": [
-    { "label": "DFW Tower", "streamUrl": "https://www.liveatc.net/play/kdfw_twr.pls" }
+  "KJFK": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kjfk_twr.pls"
+    },
+    {
+      "label": "Ground #2",
+      "streamUrl": "https://www.liveatc.net/play/kjfk_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/kjfk_del.pls"
+    },
+    {
+      "label": "NY Departure (JFK)",
+      "streamUrl": "https://www.liveatc.net/play/kjfk_dep.pls"
+    }
   ],
-  "KIAH": [
-    { "label": "Houston Tower", "streamUrl": "https://www.liveatc.net/play/kiah_twr.pls" }
+  "KSFO": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/ksfo_twr.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/ksfo_gnd.pls"
+    },
+    {
+      "label": "Clearance",
+      "streamUrl": "https://www.liveatc.net/play/ksfo_del.pls"
+    },
+    {
+      "label": "NORCAL Departure",
+      "streamUrl": "https://www.liveatc.net/play/ksfo_dep.pls"
+    }
   ],
-  "KATL": [
-    { "label": "Atlanta Tower", "streamUrl": "https://www.liveatc.net/play/katl_twr.pls" }
+  "KSEA": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/ksea_twr.pls"
+    },
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/ksea_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/ksea_gnd.pls"
+    },
+    {
+      "label": "Departure",
+      "streamUrl": "https://www.liveatc.net/play/ksea_dep.pls"
+    }
   ],
   "KMCO": [
-    { "label": "Orlando Tower", "streamUrl": "https://www.liveatc.net/play/kmco_twr.pls" }
+    {
+      "label": "Departure (East/West)",
+      "streamUrl": "https://www.liveatc.net/play/kmco_dep.pls"
+    }
+  ],
+  "KEWR": [
+    {
+      "label": "Tower #1",
+      "streamUrl": "https://www.liveatc.net/play/kewr_twr.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/kewr_del.pls"
+    },
+    {
+      "label": "Newark Departure #1",
+      "streamUrl": "https://www.liveatc.net/play/kewr_dep.pls"
+    }
   ],
   "KMIA": [
-    { "label": "Miami Tower", "streamUrl": "https://www.liveatc.net/play/kmia_twr.pls" }
+    {
+      "label": "Tower #1",
+      "streamUrl": "https://www.liveatc.net/play/kmia_twr.pls"
+    },
+    {
+      "label": "Approach #1",
+      "streamUrl": "https://www.liveatc.net/play/kmia_app.pls"
+    },
+    {
+      "label": "Departure/Approach",
+      "streamUrl": "https://www.liveatc.net/play/kmia_dep.pls"
+    }
   ],
-  "KTPA": [
-    { "label": "Tampa Tower", "streamUrl": "https://www.liveatc.net/play/ktpa_twr.pls" }
-  ],
-  "KCLT": [
-    { "label": "Charlotte Tower", "streamUrl": "https://www.liveatc.net/play/kclt_twr.pls" }
+  "KPHX": [
+    {
+      "label": "Departure",
+      "streamUrl": "https://www.liveatc.net/play/kphx_dep.pls"
+    }
   ],
   "KBOS": [
-    { "label": "Boston Tower", "streamUrl": "https://www.liveatc.net/play/kbos_twr.pls" }
-  ],
-  "KDCA": [
-    { "label": "Reagan National Tower", "streamUrl": "https://www.liveatc.net/play/kdca_twr.pls" }
-  ],
-  "KIAD": [
-    { "label": "Dulles Tower", "streamUrl": "https://www.liveatc.net/play/kiad_twr.pls" }
-  ],
-  "KBWI": [
-    { "label": "Baltimore Tower", "streamUrl": "https://www.liveatc.net/play/kbwi_twr.pls" }
-  ],
-  "KPHL": [
-    { "label": "Philadelphia Tower", "streamUrl": "https://www.liveatc.net/play/kphl_twr.pls" }
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kbos_twr.pls"
+    },
+    {
+      "label": "Del/Gnd",
+      "streamUrl": "https://www.liveatc.net/play/kbos_gnd.pls"
+    },
+    {
+      "label": "Clearance",
+      "streamUrl": "https://www.liveatc.net/play/kbos_del.pls"
+    },
+    {
+      "label": "Dep (ID/Lincoln)",
+      "streamUrl": "https://www.liveatc.net/play/kbos_dep.pls"
+    }
   ],
   "KMSP": [
-    { "label": "Minneapolis Tower", "streamUrl": "https://www.liveatc.net/play/kmsp_twr.pls" }
+    {
+      "label": "Tower #1",
+      "streamUrl": "https://www.liveatc.net/play/kmsp_twr.pls"
+    },
+    {
+      "label": "Minneapolis App",
+      "streamUrl": "https://www.liveatc.net/play/kmsp_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kmsp_gnd.pls"
+    }
   ],
   "KDTW": [
-    { "label": "Detroit Tower", "streamUrl": "https://www.liveatc.net/play/kdtw_twr.pls" }
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kdtw_twr.pls"
+    },
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/kdtw_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kdtw_gnd.pls"
+    },
+    {
+      "label": "Departure",
+      "streamUrl": "https://www.liveatc.net/play/kdtw_dep.pls"
+    }
+  ],
+  "KPHL": [
+    {
+      "label": "Tower (East/West) #2",
+      "streamUrl": "https://www.liveatc.net/play/kphl_twr.pls"
+    },
+    {
+      "label": "App (N/S Arrival)",
+      "streamUrl": "https://www.liveatc.net/play/kphl_app.pls"
+    },
+    {
+      "label": "Ground (Both)",
+      "streamUrl": "https://www.liveatc.net/play/kphl_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery #1",
+      "streamUrl": "https://www.liveatc.net/play/kphl_del.pls"
+    },
+    {
+      "label": "Dep (N/S Dep)",
+      "streamUrl": "https://www.liveatc.net/play/kphl_dep.pls"
+    }
+  ],
+  "KLGA": [
+    {
+      "label": "Tower #1",
+      "streamUrl": "https://www.liveatc.net/play/klga_twr.pls"
+    },
+    {
+      "label": "Ground #1",
+      "streamUrl": "https://www.liveatc.net/play/klga_gnd.pls"
+    },
+    {
+      "label": "Del/ARINC/TCA",
+      "streamUrl": "https://www.liveatc.net/play/klga_del.pls"
+    }
+  ],
+  "KCLT": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kclt_twr.pls"
+    },
+    {
+      "label": "Approach/Departure",
+      "streamUrl": "https://www.liveatc.net/play/kclt_app.pls"
+    },
+    {
+      "label": "Del/Gnd",
+      "streamUrl": "https://www.liveatc.net/play/kclt_gnd.pls"
+    }
+  ],
+  "KBWI": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kbwi_twr.pls"
+    },
+    {
+      "label": "Del/Gnd/FBO",
+      "streamUrl": "https://www.liveatc.net/play/kbwi_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/kbwi_del.pls"
+    }
+  ],
+  "KSLC": [
+    {
+      "label": "Approach/Departure",
+      "streamUrl": "https://www.liveatc.net/play/kslc_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kslc_gnd.pls"
+    }
+  ],
+  "KPDX": [
+    {
+      "label": "Tower #2",
+      "streamUrl": "https://www.liveatc.net/play/kpdx_twr.pls"
+    },
+    {
+      "label": "App/Dep",
+      "streamUrl": "https://www.liveatc.net/play/kpdx_app.pls"
+    }
+  ],
+  "KBNA": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kbna_twr.pls"
+    },
+    {
+      "label": "App/Dep",
+      "streamUrl": "https://www.liveatc.net/play/kbna_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kbna_gnd.pls"
+    }
+  ],
+  "KSTL": [
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/kstl_app.pls"
+    }
+  ],
+  "KOAK": [
+    {
+      "label": "NORCAL Approach (KOAK)",
+      "streamUrl": "https://www.liveatc.net/play/koak_app.pls"
+    },
+    {
+      "label": "NORCAL Departure (KSFO/KOAK)",
+      "streamUrl": "https://www.liveatc.net/play/koak_dep.pls"
+    }
+  ],
+  "KSMF": [
+    {
+      "label": "KSMF/KSAC App/Dep",
+      "streamUrl": "https://www.liveatc.net/play/ksmf_app.pls"
+    }
+  ],
+  "KSJC": [
+    {
+      "label": "Tower (Feed 1)",
+      "streamUrl": "https://www.liveatc.net/play/ksjc_twr.pls"
+    },
+    {
+      "label": "NORCAL Approach #1",
+      "streamUrl": "https://www.liveatc.net/play/ksjc_app.pls"
+    },
+    {
+      "label": "NORCAL Departure",
+      "streamUrl": "https://www.liveatc.net/play/ksjc_dep.pls"
+    }
+  ],
+  "KSNA": [
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/ksna_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/ksna_del.pls"
+    }
+  ],
+  "KRDU": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/krdu_twr.pls"
+    },
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/krdu_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/krdu_gnd.pls"
+    },
+    {
+      "label": "Departure",
+      "streamUrl": "https://www.liveatc.net/play/krdu_dep.pls"
+    }
+  ],
+  "KPIT": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kpit_twr.pls"
+    },
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/kpit_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kpit_gnd.pls"
+    }
+  ],
+  "KCVG": [
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/kcvg_app.pls"
+    }
+  ],
+  "KIND": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kind_twr.pls"
+    },
+    {
+      "label": "App/Dep",
+      "streamUrl": "https://www.liveatc.net/play/kind_app.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kind_gnd.pls"
+    },
+    {
+      "label": "Departure",
+      "streamUrl": "https://www.liveatc.net/play/kind_dep.pls"
+    }
+  ],
+  "KMKE": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kmke_twr.pls"
+    },
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/kmke_app.pls"
+    }
+  ],
+  "KBDL": [
+    {
+      "label": "Approach/ANG",
+      "streamUrl": "https://www.liveatc.net/play/kbdl_app.pls"
+    }
+  ],
+  "KBOI": [
+    {
+      "label": "Del/Gnd",
+      "streamUrl": "https://www.liveatc.net/play/kboi_gnd.pls"
+    }
+  ],
+  "KOKC": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kokc_twr.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kokc_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/kokc_del.pls"
+    }
+  ],
+  "KSDF": [
+    {
+      "label": "Ground/Tower #1",
+      "streamUrl": "https://www.liveatc.net/play/ksdf_twr.pls"
+    }
+  ],
+  "KMEM": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kmem_twr.pls"
+    }
+  ],
+  "KDAL": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kdal_twr.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/kdal_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/kdal_del.pls"
+    }
+  ],
+  "KHPN": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/khpn_twr.pls"
+    }
+  ],
+  "KTEB": [
+    {
+      "label": "Tower #3",
+      "streamUrl": "https://www.liveatc.net/play/kteb_twr.pls"
+    }
+  ],
+  "KMRY": [
+    {
+      "label": "App/Dep",
+      "streamUrl": "https://www.liveatc.net/play/kmry_app.pls"
+    }
+  ],
+  "KPVD": [
+    {
+      "label": "Approach/Departure",
+      "streamUrl": "https://www.liveatc.net/play/kpvd_app.pls"
+    }
+  ],
+  "KBUF": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/kbuf_twr.pls"
+    },
+    {
+      "label": "Twr/App/Dep",
+      "streamUrl": "https://www.liveatc.net/play/kbuf_app.pls"
+    }
+  ],
+  "KOMA": [
+    {
+      "label": "Approach/ZMP",
+      "streamUrl": "https://www.liveatc.net/play/koma_app.pls"
+    }
   ],
   "CYYZ": [
-    { "label": "Toronto Tower", "streamUrl": "https://www.liveatc.net/play/cyyz_twr.pls" }
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/cyyz_twr.pls"
+    },
+    {
+      "label": "Arrival",
+      "streamUrl": "https://www.liveatc.net/play/cyyz_app.pls"
+    },
+    {
+      "label": "Dep/CZYZ Toronto Centre",
+      "streamUrl": "https://www.liveatc.net/play/cyyz_dep.pls"
+    }
   ],
-  "CYVR": [
-    { "label": "Vancouver Tower", "streamUrl": "https://www.liveatc.net/play/cyvr_twr.pls" }
+  "CYUL": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/cyul_twr.pls"
+    },
+    {
+      "label": "Approach/Departure",
+      "streamUrl": "https://www.liveatc.net/play/cyul_app.pls"
+    },
+    {
+      "label": "Del/Ground/Apron",
+      "streamUrl": "https://www.liveatc.net/play/cyul_gnd.pls"
+    }
   ],
-  "EGLL": [
-    { "label": "Heathrow Tower", "streamUrl": "https://www.liveatc.net/play/egll_twr.pls" }
+  "CYEG": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/cyeg_twr.pls"
+    },
+    {
+      "label": "Approach",
+      "streamUrl": "https://www.liveatc.net/play/cyeg_app.pls"
+    },
+    {
+      "label": "Departure",
+      "streamUrl": "https://www.liveatc.net/play/cyeg_dep.pls"
+    }
+  ],
+  "CYHZ": [
+    {
+      "label": "Tower",
+      "streamUrl": "https://www.liveatc.net/play/cyhz_twr.pls"
+    },
+    {
+      "label": "Ground",
+      "streamUrl": "https://www.liveatc.net/play/cyhz_gnd.pls"
+    },
+    {
+      "label": "Clearance Delivery",
+      "streamUrl": "https://www.liveatc.net/play/cyhz_del.pls"
+    },
+    {
+      "label": "Departure/Arrival",
+      "streamUrl": "https://www.liveatc.net/play/cyhz_dep.pls"
+    }
   ]
 }

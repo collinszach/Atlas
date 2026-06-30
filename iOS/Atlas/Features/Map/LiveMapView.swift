@@ -45,8 +45,6 @@ struct LiveMapView: UIViewRepresentable {
         mv.pointOfInterestFilter = .excludingAll
         mv.register(AircraftAnnotationView.self,
                     forAnnotationViewWithReuseIdentifier: AircraftAnnotationView.reuse)
-        mv.register(MKMarkerAnnotationView.self,
-                    forAnnotationViewWithReuseIdentifier: Coordinator.clusterReuse)
         mv.register(AirportAnnotationView.self,
                     forAnnotationViewWithReuseIdentifier: AirportAnnotationView.reuse)
         let delta = max(0.02, initialSpanKm / 111.0)
@@ -80,7 +78,6 @@ struct LiveMapView: UIViewRepresentable {
     // MARK: Coordinator
 
     final class Coordinator: NSObject, MKMapViewDelegate {
-        static let clusterReuse = "cluster"
         var parent: LiveMapView
         var appliedStyle: MapLayers.Style?
 
@@ -211,16 +208,6 @@ struct LiveMapView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKUserLocation { return nil }
-            if let cluster = annotation as? MKClusterAnnotation {
-                let v = mapView.dequeueReusableAnnotationView(
-                    withIdentifier: Coordinator.clusterReuse, for: cluster) as! MKMarkerAnnotationView
-                v.markerTintColor = UIColor(Color.atlasAccent)
-                v.glyphText = "\(cluster.memberAnnotations.count)"
-                v.titleVisibility = .hidden
-                v.subtitleVisibility = .hidden
-                v.displayPriority = .required
-                return v
-            }
             if let airport = annotation as? AirportAnnotation {
                 let v = mapView.dequeueReusableAnnotationView(
                     withIdentifier: AirportAnnotationView.reuse, for: airport)
@@ -252,17 +239,6 @@ struct LiveMapView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-            if let cluster = view.annotation as? MKClusterAnnotation {
-                mapView.deselectAnnotation(cluster, animated: false)
-                let rect = cluster.memberAnnotations.reduce(MKMapRect.null) { acc, a in
-                    let p = MKMapPoint(a.coordinate)
-                    return acc.union(MKMapRect(x: p.x, y: p.y, width: 0, height: 0))
-                }
-                mapView.setVisibleMapRect(
-                    rect.insetBy(dx: -rect.width * 0.4 - 1, dy: -rect.height * 0.4 - 1),
-                    animated: true)
-                return
-            }
             if let airport = view.annotation as? AirportAnnotation {
                 mapView.deselectAnnotation(airport, animated: false)
                 parent.selectedAirport = airport.airport
@@ -299,12 +275,24 @@ final class AircraftAnnotationView: MKAnnotationView {
     static let reuse = "plane"
 
     func configure(_ a: AircraftAnnotation) {
-        clusteringIdentifier = "plane"
+        // No clustering: real silhouettes only, never a count bubble. When markers
+        // overlap, `.circle` collision hides the lower-priority one — so density is
+        // resolved by keeping the aircraft that matter (emergency → notable/military
+        // → higher traffic), and the rest reveal as you zoom in.
         collisionMode = .circle
         centerOffset = .zero
         canShowCallout = false
-        displayPriority = a.isSelected ? .required : .defaultHigh
+        displayPriority = Self.priority(for: a)
         image = MarkerImageCache.image(for: a.aircraft, selected: a.isSelected)
+    }
+
+    private static func priority(for a: AircraftAnnotation) -> MKFeatureDisplayPriority {
+        let ac = a.aircraft
+        if a.isSelected || ac.isEmergency { return .required }              // 1000
+        if ac.isMilitary || !ac.matches.isEmpty { return .init(rawValue: 880) }
+        // Base tier 600–750: higher-altitude traffic stays legible when the map is busy.
+        let altBoost = min(150, Float(ac.altitude ?? 0) / 280)
+        return .init(rawValue: 600 + altBoost)
     }
 }
 

@@ -6,34 +6,45 @@ struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
     var userCoordinate: CLLocationCoordinate2D? = nil
 
+    private enum Scope: String, CaseIterable { case aircraft = "Aircraft", airports = "Airports" }
+
+    @State private var scope: Scope = .aircraft
     @State private var query = ""
     @State private var results: [OverheadAircraft] = []
     @State private var isSearching = false
     @State private var searched = false
     @State private var selected: OverheadAircraft? = nil
+    @State private var selectedAirport: Airport? = nil
     @State private var searchTask: Task<Void, Never>? = nil
-    @State private var trackQuery: TrackTarget? = nil
 
-    private struct TrackTarget: Identifiable, Hashable {
-        let id: String
-        var value: String { id }
+    private let airportStore = AirportStore.shared
+
+    private var airportResults: [Airport] {
+        let q = query.trimmingCharacters(in: .whitespaces).uppercased()
+        guard q.count >= 2 else { return [] }
+        return airportStore.airports.filter { matches($0, q) }.prefix(30).map { $0 }
+    }
+
+    private func matches(_ ap: Airport, _ q: String) -> Bool {
+        if ap.iata?.uppercased() == q { return true }
+        if ap.icao.uppercased() == q { return true }
+        if ap.iata?.uppercased().hasPrefix(q) == true { return true }
+        if ap.icao.uppercased().hasPrefix(q) { return true }
+        if ap.name.uppercased().contains(q) { return true }
+        if ap.city?.uppercased().contains(q) == true { return true }
+        return false
     }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                scopePicker
                 searchField
-                if !query.trimmingCharacters(in: .whitespaces).isEmpty {
-                    trackFlightButton
-                }
                 content
             }
             .background(Color.atlasBackground)
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationDestination(item: $trackQuery) { target in
-                TrackFlightView(query: target.value)
-            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }.foregroundStyle(Color.atlasAccent).fontWeight(.semibold)
@@ -51,12 +62,24 @@ struct SearchView: View {
             .presentationBackground(Color.atlasBackground)
             .presentationDragIndicator(.visible)
         }
+        .sheet(item: $selectedAirport) { ap in
+            AirportPage(airport: ap)
+        }
+    }
+
+    private var scopePicker: some View {
+        Picker("Scope", selection: $scope) {
+            ForEach(Scope.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 
     private var searchField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass").foregroundStyle(Color.atlasInkFaint)
-            TextField("", text: $query, prompt: Text("Flight, callsign, reg, type, 7700").foregroundColor(Color.atlasInkFaint))
+            TextField("", text: $query, prompt: Text(scope == .aircraft ? "Flight, callsign, reg, type, 7700" : "Airport code or name (JFK, Heathrow)").foregroundColor(Color.atlasInkFaint))
                 .font(AtlasFont.body(16))
                 .foregroundStyle(Color.atlasText)
                 .autocorrectionDisabled()
@@ -77,29 +100,15 @@ struct SearchView: View {
         .padding(16)
     }
 
-    private var trackFlightButton: some View {
-        Button {
-            let q = query.trimmingCharacters(in: .whitespaces)
-            if !q.isEmpty { trackQuery = TrackTarget(id: q) }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "dot.radiowaves.left.and.right")
-                    .font(.system(size: 15, weight: .semibold))
-                Text("Track \(query.trimmingCharacters(in: .whitespaces).uppercased()) live")
-                    .font(.system(size: 14, weight: .semibold)).lineLimit(1)
-                Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold))
-            }
-            .foregroundStyle(Color.atlasAccent)
-            .padding(.horizontal, 14).padding(.vertical, 11)
-            .background(Color.atlasAccent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    @ViewBuilder private var content: some View {
+        if scope == .aircraft {
+            aircraftContent
+        } else {
+            airportContent
         }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
     }
 
-    @ViewBuilder private var content: some View {
+    @ViewBuilder private var aircraftContent: some View {
         if !searched && results.isEmpty {
             AtlasEmptyState(
                 icon: "magnifyingglass",
@@ -108,7 +117,7 @@ struct SearchView: View {
             )
             Spacer()
         } else if searched && results.isEmpty && !isSearching {
-            AtlasEmptyState(icon: "airplane.slash", title: "No aircraft found", message: "Nothing matching “\(query)” is airborne right now. Try a full flight number or registration.")
+            AtlasEmptyState(icon: "dot.radiowaves.left.and.right", title: "Not currently trackable", message: "“\(query.uppercased())” isn’t airborne or visible on ADS-B right now. Search works while it's in the air and within coverage.")
             Spacer()
         } else {
             ScrollView {
@@ -134,6 +143,48 @@ struct SearchView: View {
         }
     }
 
+    @ViewBuilder private var airportContent: some View {
+        if query.trimmingCharacters(in: .whitespaces).count < 2 {
+            AtlasEmptyState(
+                icon: "airplane.circle",
+                title: "Find any airport",
+                message: "Search an IATA/ICAO code (JFK, KJFK), name, or city."
+            )
+            Spacer()
+        } else if airportResults.isEmpty {
+            AtlasEmptyState(icon: "airplane.circle", title: "No matching airports", message: "“\(query.uppercased())” isn't in the airport dataset.")
+            Spacer()
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(airportResults) { ap in
+                        Button { selectedAirport = ap } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "airplane.circle.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(Color.atlasAccent)
+                                    .frame(width: 28)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(ap.name).font(AtlasFont.body(15, weight: .medium)).foregroundStyle(Color.atlasText)
+                                    Text([ap.code, ap.city].compactMap { $0 }.joined(separator: " · "))
+                                        .font(AtlasFont.mono(11)).foregroundStyle(Color.atlasInk2)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(Color.atlasInkFaint)
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 11)
+                        }
+                        .buttonStyle(.plain)
+                        Divider().overlay(Color.atlasBorder).padding(.leading, 60)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+        }
+    }
+
     private func debounce() {
         searchTask?.cancel()
         let current = query
@@ -147,6 +198,7 @@ struct SearchView: View {
     private func runSearch() { searchTask?.cancel(); Task { await performSearch() } }
 
     private func performSearch() async {
+        guard scope == .aircraft else { return }
         let q = query.trimmingCharacters(in: .whitespaces)
         guard q.count >= 2 else { results = []; searched = false; return }
         isSearching = true

@@ -12,6 +12,7 @@ struct AircraftDetailSheet: View {
 
     @Environment(AuthManager.self) private var auth
     private let bookmarks = BookmarksStore.shared
+    private let spotted = SpottedStore.shared
     @State private var enriched: OverheadAircraft? = nil
     @State private var isLoadingDetail = false
     @State private var liveTrail: [[Double]] = []
@@ -91,6 +92,7 @@ struct AircraftDetailSheet: View {
             }
         }
         .task {
+            spotted.record(aircraft)
             guard let coord = userCoordinate else { return }
             // Seed with any backend trail + the current position.
             if let t = aircraft.trail, !t.isEmpty { liveTrail = t }
@@ -498,12 +500,12 @@ struct AircraftDetailSheet: View {
 
     private var actionSection: some View {
         HStack(spacing: 12) {
-            // Follow button
+            // Watch button
             Button(action: onFollow) {
                 HStack(spacing: 8) {
                     Image(systemName: isFollowed ? "bell.fill" : "bell")
                         .font(.system(size: 15, weight: .semibold))
-                    Text(isFollowed ? "Following" : "Follow")
+                    Text(isFollowed ? "Watching" : "Watch")
                         .font(.system(size: 15, weight: .semibold))
                 }
                 .frame(maxWidth: .infinity)

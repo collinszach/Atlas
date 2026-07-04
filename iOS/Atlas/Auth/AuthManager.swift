@@ -24,11 +24,21 @@ final class AuthManager {
     /// Called at app launch to restore session from Keychain / Clerk.
     func checkSession() async {
         defer { isLoading = false }
-        // Prefer a live Clerk session; fall back to a stored token.
-        if Clerk.shared.session != nil {
+        // Give Clerk's fire-and-forget configure() load a moment to settle.
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
+        let hasSession = Clerk.shared.session != nil
+        Self.logDiagnostic(
+            "launch",
+            NSError(domain: "diagnostic", code: 0, userInfo: ["hasSession": hasSession]),
+            clerkLoaded: Clerk.shared.isLoaded
+        )
+        // Require a LIVE Clerk session. A stale persisted token (no session) only
+        // produces 401s on every request and traps the user "signed in" — drop it.
+        if hasSession {
             isSignedIn = true
         } else {
-            isSignedIn = api.token != nil
+            api.persistToken(nil)
+            isSignedIn = false
         }
     }
 
@@ -50,6 +60,7 @@ final class AuthManager {
             api.persistToken(token)
             isSignedIn = true
         } catch {
+            Self.logDiagnostic("signIn(email)", error, clerkLoaded: Clerk.shared.isLoaded)
             self.error = error.localizedDescription
         }
     }
@@ -76,7 +87,33 @@ final class AuthManager {
             if ns.domain == "com.apple.AuthenticationServices.AuthorizationError" && ns.code == 1001 {
                 return
             }
+            Self.logDiagnostic("signInWithApple", error, clerkLoaded: Clerk.shared.isLoaded)
             self.error = error.localizedDescription
+        }
+    }
+
+    /// Writes full error detail to Documents/auth_error.log so it can be pulled off the
+    /// device for diagnosis (the on-screen banner truncates and hides the underlying cause).
+    static func logDiagnostic(_ where_: String, _ error: Error, clerkLoaded: Bool) {
+        let ns = error as NSError
+        let text = """
+        [\(Date())] \(where_)
+        clerkLoaded=\(clerkLoaded)
+        localizedDescription=\(error.localizedDescription)
+        domain=\(ns.domain) code=\(ns.code)
+        userInfo=\(ns.userInfo)
+        reflecting=\(String(reflecting: error))
+
+        """
+        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let url = dir.appendingPathComponent("auth_error.log")
+            if let data = text.data(using: .utf8) {
+                if let h = try? FileHandle(forWritingTo: url) {
+                    h.seekToEndOfFile(); h.write(data); try? h.close()
+                } else {
+                    try? data.write(to: url)
+                }
+            }
         }
     }
 
@@ -101,6 +138,7 @@ final class AuthManager {
             if ns.domain == "com.apple.AuthenticationServices.WebAuthenticationSession" && ns.code == 1 {
                 return
             }
+            Self.logDiagnostic("signInWithGoogle", error, clerkLoaded: Clerk.shared.isLoaded)
             self.error = error.localizedDescription
         }
     }

@@ -51,10 +51,9 @@ struct SignInView: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(AtlasGradient.accent)
                     .frame(width: 76, height: 76)
-                Image(systemName: "paperplane.fill")
+                Image(systemName: "dot.radiowaves.up.forward")
                     .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(.white)
-                    .rotationEffect(.degrees(-12))
             }
             .shadow(color: Color.atlasAccent.opacity(0.45), radius: 28, y: 10)
 
@@ -63,7 +62,7 @@ struct SignInView: View {
                     .font(.system(size: 44, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color.atlasText)
 
-                Text("TRACK THE SKIES")
+                Text("EYES ON THE SKY")
                     .font(.system(size: 11, weight: .semibold, design: .monospaced))
                     .tracking(3)
                     .foregroundStyle(Color.atlasInk2)

@@ -85,16 +85,9 @@ final class FlightActivityController {
             altitude: ac.altitude,
             groundSpeed: ac.groundSpeed,
             heading: ac.track,
-            progress: routeProgress(for: ac),
-            etaMinutes: nil,
             statusLine: ac.routeLabel
         )
     }
-
-    /// Best-effort progress. Route geometry (origin/dest coordinates) is not available from the
-    /// overhead feed, so this stays at 0 until a richer route source lands. The bar renders an
-    /// empty track in that case.
-    private func routeProgress(for ac: OverheadAircraft) -> Double { 0 }
 
     private func isAirborne(_ ac: OverheadAircraft) -> Bool {
         guard let alt = ac.altitude else { return true }

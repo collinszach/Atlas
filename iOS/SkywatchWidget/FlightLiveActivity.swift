@@ -34,19 +34,15 @@ struct FlightLiveActivity: Widget {
                     Text(context.attributes.routeText).font(.subheadline).foregroundStyle(Color.atlasInk)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(spacing: 6) {
-                        ProgressView(value: context.state.progress)
-                            .tint(Color.atlasGold)
-                        HStack {
-                            Text(context.state.altitudeText)
-                            Spacer()
-                            Text(context.state.speedText)
-                            Spacer()
-                            Text(context.state.etaText)
-                        }
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(Color.atlasInk)
+                    HStack {
+                        Text(context.state.altitudeText)
+                        Spacer()
+                        Text(context.state.speedText)
+                        Spacer()
+                        Text(context.state.headingText)
                     }
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(Color.atlasInk)
                 }
             } compactLeading: {
                 Image(systemName: "airplane").foregroundStyle(Color.atlasGold)
@@ -78,13 +74,12 @@ private struct LockScreenView: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.atlasInk)
             }
-            ProgressView(value: context.state.progress).tint(Color.atlasGold)
             HStack {
                 metric("ALT", context.state.altitudeText)
                 Spacer()
                 metric("SPD", context.state.speedText)
                 Spacer()
-                metric("ETA", context.state.etaText)
+                metric("HDG", context.state.headingText)
             }
         }
         .foregroundStyle(.white)

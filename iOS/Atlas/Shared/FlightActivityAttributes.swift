@@ -8,8 +8,6 @@ struct FlightActivityAttributes: ActivityAttributes {
         var altitude: Int?
         var groundSpeed: Double?
         var heading: Double?
-        var progress: Double
-        var etaMinutes: Int?
         var statusLine: String?
 
         var altitudeText: String {
@@ -22,12 +20,9 @@ struct FlightActivityAttributes: ActivityAttributes {
             return "\(Int(groundSpeed)) kt"
         }
 
-        var etaText: String {
-            guard let etaMinutes, etaMinutes > 0 else { return "—" }
-            if etaMinutes >= 60 {
-                return "\(etaMinutes / 60)h \(etaMinutes % 60)m"
-            }
-            return "\(etaMinutes)m"
+        var headingText: String {
+            guard let heading else { return "—" }
+            return "\(Int(heading))°"
         }
     }
 

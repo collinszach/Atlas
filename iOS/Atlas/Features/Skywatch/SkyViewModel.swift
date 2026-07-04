@@ -10,7 +10,7 @@ final class SkyViewModel {
     var lastSource: String? = nil
     var radiusKm: Double = 30
 
-    /// Hexes the user has tapped "Follow" on — persisted in UserDefaults.
+    /// Hexes the user has tapped "Watch" on — persisted in UserDefaults.
     var followedHexes: Set<String> = {
         let stored = UserDefaults.standard.stringArray(forKey: "skywatch_followed_hexes") ?? []
         return Set(stored)

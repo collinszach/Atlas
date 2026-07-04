@@ -206,7 +206,7 @@ struct MapLayersSheet: View {
                             .padding(.horizontal, 14).padding(.bottom, 12)
                         }
                         toggle("Day / night terminator", icon: "circle.lefthalf.filled", $layers.dayNight)
-                        toggle("Airports", icon: "building.2.fill", $layers.airports)
+                        toggle("Airports", icon: "airplane.circle.fill", $layers.airports)
                     }
                 }
                 .padding(16)

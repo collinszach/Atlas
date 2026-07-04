@@ -348,7 +348,7 @@ enum AirportGlyph {
             circle.lineWidth = 1
             circle.stroke()
             let cfg = UIImage.SymbolConfiguration(pointSize: 12, weight: .bold)
-            if let sym = UIImage(systemName: "building.2.fill", withConfiguration: cfg)?
+            if let sym = UIImage(systemName: "airplane", withConfiguration: cfg)?
                 .withTintColor(UIColor(Color.atlasInk2), renderingMode: .alwaysOriginal) {
                 let symRect = CGRect(
                     x: (size.width - sym.size.width) / 2,

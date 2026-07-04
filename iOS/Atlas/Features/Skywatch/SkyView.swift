@@ -305,7 +305,7 @@ struct SkyView: View {
             FlightActivityController.shared.stop(hex: ac.hex)
         }
         let name = ac.displayName
-        let msg = vm.isFollowed(ac.hex) ? "Following \(name)" : "Unfollowed \(name)"
+        let msg = vm.isFollowed(ac.hex) ? "Watching \(name)" : "Stopped watching \(name)"
         followToastMessage = msg
         withAnimation(.spring()) { showFollowToast = true }
         Task {

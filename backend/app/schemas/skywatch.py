@@ -174,3 +174,26 @@ class AircraftAlertRead(BaseModel):
     sent_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# --- Airport schedule ---
+
+class ScheduledFlightRead(BaseModel):
+    flight_number: str | None
+    airline: str | None
+    aircraft_type: str | None
+    scheduled_time: str | None
+    estimated_time: str | None
+    actual_time: str | None
+    status: str | None
+    origin_iata: str | None
+    origin_name: str | None
+    dest_iata: str | None
+    dest_name: str | None
+    gate: str | None
+    terminal: str | None
+
+
+class AirportScheduleResponse(BaseModel):
+    flights: list[ScheduledFlightRead]
+    configured: bool

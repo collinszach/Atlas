@@ -182,3 +182,66 @@ struct SkywatchPreferenceUpdate: Codable {
         case nlPrompt = "nl_prompt"
     }
 }
+
+// MARK: - Airport schedule
+
+/// A single scheduled flight from an airport departures/arrivals board.
+/// Mirrors backend `ScheduledFlightRead`.
+struct ScheduledFlight: Codable, Hashable, Identifiable {
+    let flightNumber: String?
+    let airline: String?
+    let aircraftType: String?
+    let scheduledTime: String?
+    let estimatedTime: String?
+    let actualTime: String?
+    let status: String?
+    let originIata: String?
+    let originName: String?
+    let destIata: String?
+    let destName: String?
+    let gate: String?
+    let terminal: String?
+
+    var id: String {
+        (flightNumber ?? "") + (scheduledTime ?? UUID().uuidString)
+    }
+
+    /// Prefers actual (landed/departed) over estimated (delayed) over scheduled, formatted local time.
+    var displayTime: String {
+        let iso = actualTime ?? estimatedTime ?? scheduledTime
+        guard let iso, let date = ScheduledFlight.isoFormatter.date(from: iso) else { return "—" }
+        return ScheduledFlight.timeFormatter.string(from: date)
+    }
+
+    private static let isoFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+
+    enum CodingKeys: String, CodingKey {
+        case flightNumber = "flight_number"
+        case airline
+        case aircraftType = "aircraft_type"
+        case scheduledTime = "scheduled_time"
+        case estimatedTime = "estimated_time"
+        case actualTime = "actual_time"
+        case status
+        case originIata = "origin_iata"
+        case originName = "origin_name"
+        case destIata = "dest_iata"
+        case destName = "dest_name"
+        case gate, terminal
+    }
+}
+
+struct AirportSchedule: Codable {
+    let flights: [ScheduledFlight]
+    let configured: Bool
+}

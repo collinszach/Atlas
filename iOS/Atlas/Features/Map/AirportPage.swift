@@ -1,9 +1,9 @@
 import SwiftUI
 import CoreLocation
 
-/// Airport detail: identity, local time, bookmark, and live aircraft on the
-/// ground & nearby (via the existing `/skywatch/overhead` point query).
-/// Departure/arrival boards require a paid schedule API — out of scope.
+/// Airport detail: identity, local time, bookmark, departures/arrivals board,
+/// and live aircraft on the ground & nearby (via the existing
+/// `/skywatch/overhead` point query).
 struct AirportPage: View {
     let airport: Airport
 
@@ -13,10 +13,20 @@ struct AirportPage: View {
     private let atc = ATCPlayer.shared
     private var feeds: [ATCFeed] { ATCFeedStore.shared.feeds(forICAO: airport.icao) }
 
+    private enum BoardDirection: String, CaseIterable { case departures = "Departures", arrivals = "Arrivals" }
+
     @State private var nearby: [OverheadAircraft] = []
     @State private var isLoading = true
     @State private var selected: OverheadAircraft? = nil
     @State private var refreshTask: Task<Void, Never>? = nil
+
+    @State private var boardDirection: BoardDirection = .departures
+    @State private var departures: [ScheduledFlight] = []
+    @State private var arrivals: [ScheduledFlight] = []
+    @State private var boardsConfigured = true
+    @State private var boardsLoading = true
+    @State private var boardsLoadFailed = false
+    @State private var boardLookupInFlight = false
 
     private static let nearbyRadiusKm = 30.0
 
@@ -26,7 +36,8 @@ struct AirportPage: View {
                 VStack(alignment: .leading, spacing: 18) {
                     header
                     if !feeds.isEmpty { atcSection }
-                    boardsNote
+                    boardsSection
+                    activitySection
                     nearbySection
                 }
                 .padding(.horizontal, 16)
@@ -60,7 +71,7 @@ struct AirportPage: View {
             .presentationBackground(Color.atlasBackground)
             .presentationDragIndicator(.visible)
         }
-        .task { await load(); startAutoRefresh() }
+        .task { await load(); await loadBoards(); startAutoRefresh() }
         .onDisappear { refreshTask?.cancel(); atc.stop() }
     }
 
@@ -71,7 +82,7 @@ struct AirportPage: View {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(Color.atlasAccent.opacity(0.14))
                         .frame(width: 56, height: 56)
-                    Image(systemName: "building.2.fill")
+                    Image(systemName: "airplane.circle.fill")
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundStyle(Color.atlasAccent)
                 }
@@ -181,20 +192,150 @@ struct AirportPage: View {
         .buttonStyle(.plain)
     }
 
-    private var boardsNote: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "rectangle.stack.badge.clock")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Color.atlasInkFaint)
+    @ViewBuilder private var boardsSection: some View {
+        if let iata = airport.iata {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    AtlasSectionHeader(title: "Departures & arrivals")
+                    Spacer()
+                    Picker("", selection: $boardDirection) {
+                        ForEach(BoardDirection.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 200)
+                }
+
+                if boardsLoading {
+                    HStack { Spacer(); ProgressView().tint(Color.atlasAccent); Spacer() }
+                        .padding(.vertical, 20)
+                } else if boardsLoadFailed {
+                    AtlasEmptyState(
+                        icon: "wifi.slash",
+                        title: "Couldn't load the board",
+                        message: "Pull to refresh to try again."
+                    )
+                } else if !boardsConfigured {
+                    AtlasEmptyState(
+                        icon: "rectangle.stack.badge.clock",
+                        title: "Schedule source not configured",
+                        message: "Live-derived activity is shown below instead of a full \(iata) board."
+                    )
+                } else if currentBoard.isEmpty {
+                    AtlasEmptyState(
+                        icon: "rectangle.stack.badge.clock",
+                        title: "No \(boardDirection.rawValue.lowercased()) found",
+                        message: "Nothing scheduled for \(iata) right now."
+                    )
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(currentBoard) { flight in
+                            Button { Task { await openFromBoard(flight) } } label: {
+                                boardRow(flight)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(boardLookupInFlight)
+                            if flight.id != currentBoard.last?.id {
+                                Divider().overlay(Color.atlasBorder).padding(.leading, 60)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var currentBoard: [ScheduledFlight] {
+        boardDirection == .departures ? departures : arrivals
+    }
+
+    private func boardRow(_ flight: ScheduledFlight) -> some View {
+        let isArrival = boardDirection == .arrivals
+        let place = isArrival ? (flight.originIata ?? "???") : (flight.destIata ?? "???")
+        let placeName = isArrival ? flight.originName : flight.destName
+        return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Departure & arrival boards")
-                    .font(AtlasFont.body(13, weight: .semibold)).foregroundStyle(Color.atlasInk2)
-                Text("Coming soon").font(AtlasFont.body(12)).foregroundStyle(Color.atlasInkFaint)
+                Text(flight.flightNumber ?? "—")
+                    .font(AtlasFont.mono(14, weight: .semibold))
+                    .foregroundStyle(Color.atlasText)
+                if let airline = flight.airline {
+                    Text(airline).font(AtlasFont.body(11)).foregroundStyle(Color.atlasInk2).lineLimit(1)
+                }
+            }
+            .frame(width: 96, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(place).font(AtlasFont.mono(14, weight: .semibold)).foregroundStyle(Color.atlasText)
+                if let placeName {
+                    Text(placeName).font(AtlasFont.body(11)).foregroundStyle(Color.atlasInkFaint).lineLimit(1)
+                }
             }
             Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(flight.displayTime).font(AtlasFont.mono(13, weight: .semibold)).foregroundStyle(Color.atlasText)
+                statusPill(flight.status)
+            }
         }
-        .padding(14)
-        .atlasCard(radius: 14)
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
+    }
+
+    private func statusPill(_ status: String?) -> some View {
+        let color: Color = {
+            switch status {
+            case "cancelled": return .atlasDanger
+            case "landed", "active": return .atlasSuccess
+            case "delayed": return .atlasWarning
+            default: return .atlasViolet
+            }
+        }()
+        return Text((status ?? "scheduled").capitalized)
+            .font(.system(size: 9, weight: .bold, design: .monospaced))
+            .tracking(0.4)
+            .foregroundStyle(color)
+            .padding(.horizontal, 6).padding(.vertical, 2)
+            .background(color.opacity(0.15), in: Capsule())
+    }
+
+    /// If a board entry's flight is currently airborne and visible on ADS-B, open its live
+    /// detail sheet; otherwise it's not yet departed or already landed — nothing to show live.
+    private func openFromBoard(_ flight: ScheduledFlight) async {
+        guard let number = flight.flightNumber, !boardLookupInFlight else { return }
+        boardLookupInFlight = true
+        defer { boardLookupInFlight = false }
+        if let match = try? await auth.api.searchAircraft(query: number).first {
+            selected = match
+        }
+    }
+
+    /// Live snapshot only — "today"/historical stats (busiest routes, daily movement
+    /// count) would need a persisted movements table server-side; not built yet.
+    @ViewBuilder private var activitySection: some View {
+        if !nearby.isEmpty {
+            let typeCounts = Dictionary(grouping: nearby.compactMap(\.type), by: { $0 })
+                .mapValues(\.count)
+            let topType = typeCounts.max { $0.value < $1.value }
+            let airlineCount = Set(nearby.compactMap(\.airline)).count
+
+            HStack(spacing: 10) {
+                activityStat(value: "\(nearby.count)", label: "AIRCRAFT NOW")
+                Divider().frame(height: 30).overlay(Color.atlasBorder)
+                activityStat(value: topType?.key ?? "—", label: "TOP TYPE")
+                Divider().frame(height: 30).overlay(Color.atlasBorder)
+                activityStat(value: "\(airlineCount)", label: "AIRLINES")
+            }
+            .padding(14)
+            .atlasCard(radius: 14)
+        }
+    }
+
+    private func activityStat(value: String, label: String) -> some View {
+        VStack(spacing: 3) {
+            Text(value).font(AtlasFont.mono(16, weight: .bold)).foregroundStyle(Color.atlasText)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Text(label).font(.system(size: 9, weight: .bold, design: .monospaced))
+                .tracking(0.5).foregroundStyle(Color.atlasInkFaint)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var nearbySection: some View {
@@ -255,5 +396,22 @@ struct AirportPage: View {
                 await load()
             }
         }
+    }
+
+    /// Schedules don't change second-to-second — fetched once on appear and via
+    /// pull-to-refresh, not on the 15s live-aircraft cadence (keeps API usage cheap).
+    private func loadBoards() async {
+        guard let iata = airport.iata else { boardsLoading = false; return }
+        boardsLoading = true
+        defer { boardsLoading = false }
+        async let dep = try? auth.api.airportDepartures(iata: iata)
+        async let arr = try? auth.api.airportArrivals(iata: iata)
+        let (depResult, arrResult) = await (dep, arr)
+        // Distinguish "server has no schedule key" (configured: false) from a request
+        // that failed outright (nil) — only the former should show the setup message.
+        boardsLoadFailed = depResult == nil && arrResult == nil
+        departures = depResult?.flights ?? []
+        arrivals = arrResult?.flights ?? []
+        boardsConfigured = (depResult?.configured ?? true) && (arrResult?.configured ?? true)
     }
 }

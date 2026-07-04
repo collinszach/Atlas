@@ -18,18 +18,22 @@ from app.models.skywatch import (
 from app.schemas.skywatch import (
     AircraftAlertRead,
     AircraftMatch,
+    AirportScheduleResponse,
     DeviceCreate,
     DeviceRead,
     LocationUpdate,
     OverheadAircraft,
     OverheadResponse,
     PreferencesFromText,
+    ScheduledFlightRead,
     SkywatchPreferenceRead,
     SkywatchPreferenceUpdate,
 )
 from app.services.adsb import AdsbServiceError, DataSourceResolver
 from app.services.aircraft_photos import get_photo_by_hex
 from app.services.aircraft_db import get_aircraft_info
+from app.services.airport_schedule import Direction, get_schedule
+from app.config import settings
 from app.services.flightroute import get_route, validate_route
 from app.services.search import search_aircraft
 from app.services.llm import LocalLLMError
@@ -371,3 +375,21 @@ async def list_alerts(
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+@router.get("/airports/{iata}/departures", response_model=AirportScheduleResponse)
+async def airport_departures(iata: str, user_id: CurrentUser) -> AirportScheduleResponse:
+    flights = await get_schedule(iata, Direction.DEPARTURES)
+    return AirportScheduleResponse(
+        flights=[ScheduledFlightRead(**f._asdict()) for f in flights],
+        configured=bool(settings.aviationstack_api_key),
+    )
+
+
+@router.get("/airports/{iata}/arrivals", response_model=AirportScheduleResponse)
+async def airport_arrivals(iata: str, user_id: CurrentUser) -> AirportScheduleResponse:
+    flights = await get_schedule(iata, Direction.ARRIVALS)
+    return AirportScheduleResponse(
+        flights=[ScheduledFlightRead(**f._asdict()) for f in flights],
+        configured=bool(settings.aviationstack_api_key),
+    )

@@ -143,6 +143,17 @@ final class APIClient {
         try await get("/api/v1/skywatch/alerts?limit=\(limit)")
     }
 
+    /// Departures board for an airport (by IATA code). Empty `flights` with
+    /// `configured == false` means no schedule API key is set server-side —
+    /// callers should fall back to a live-derived view, not show a dead end.
+    func airportDepartures(iata: String) async throws -> AirportSchedule {
+        try await get("/api/v1/skywatch/airports/\(iata)/departures")
+    }
+
+    func airportArrivals(iata: String) async throws -> AirportSchedule {
+        try await get("/api/v1/skywatch/airports/\(iata)/arrivals")
+    }
+
     func updateSkywatchPreferences(_ update: SkywatchPreferenceUpdate) async throws -> SkywatchPreference {
         try await put("/api/v1/skywatch/preferences", body: update)
     }

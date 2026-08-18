@@ -257,7 +257,6 @@ async def test_stats_new_fields_with_flight_legs(client, seed_test_users, db_ses
     """hours_in_air, top_airline, most_flown_airport are computed from flight legs."""
     import uuid
     from app.models.transport import TransportLeg
-    from app.models.trip import Trip
     from app.main import app
     from app.auth import get_current_user_id
 
@@ -265,20 +264,9 @@ async def test_stats_new_fields_with_flight_legs(client, seed_test_users, db_ses
     app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
 
     async with db_session as session:
-        # Create a dummy trip first
-        trip = Trip(
-            user_id=TEST_USER_ID,
-            title="Stats test trip",
-            status="past",
-        )
-        session.add(trip)
-        await session.flush()
-
         # Two JetBlue legs, one Delta leg
         leg1 = TransportLeg(
-            trip_id=trip.id,
             user_id=TEST_USER_ID,
-            type="flight",
             flight_number="JBU100",
             origin_iata="JFK",
             dest_iata="LAX",
@@ -286,9 +274,7 @@ async def test_stats_new_fields_with_flight_legs(client, seed_test_users, db_ses
             distance_km=4000,
         )
         leg2 = TransportLeg(
-            trip_id=trip.id,
             user_id=TEST_USER_ID,
-            type="flight",
             flight_number="JBU200",
             origin_iata="LAX",
             dest_iata="BOS",
@@ -296,9 +282,7 @@ async def test_stats_new_fields_with_flight_legs(client, seed_test_users, db_ses
             distance_km=4200,
         )
         leg3 = TransportLeg(
-            trip_id=trip.id,
             user_id=TEST_USER_ID,
-            type="flight",
             flight_number="DAL50",
             origin_iata="JFK",
             dest_iata="ORD",
@@ -326,7 +310,6 @@ async def test_stats_new_fields_with_flight_legs(client, seed_test_users, db_ses
 async def test_stats_hours_fallback_from_distance(client, seed_test_users, db_session):
     """When duration_min is null, fall back to distance_km / 800 km/h estimate."""
     from app.models.transport import TransportLeg
-    from app.models.trip import Trip
     from app.main import app
     from app.auth import get_current_user_id
 
@@ -334,15 +317,9 @@ async def test_stats_hours_fallback_from_distance(client, seed_test_users, db_se
     app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID
 
     async with db_session as session:
-        trip = Trip(user_id=TEST_USER_ID, title="Fallback trip", status="past")
-        session.add(trip)
-        await session.flush()
-
         # 1600 km / 800 km·h⁻¹ = 2h
         leg = TransportLeg(
-            trip_id=trip.id,
             user_id=TEST_USER_ID,
-            type="flight",
             flight_number="UAL999",
             origin_iata="SFO",
             dest_iata="SEA",

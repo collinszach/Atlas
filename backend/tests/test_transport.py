@@ -13,15 +13,9 @@ async def authed_client(client, seed_test_users):
     app.dependency_overrides.pop(get_current_user_id, None)
 
 
-async def _create_trip(client) -> str:
-    resp = await client.post("/api/v1/trips", json={"title": "Transport Test Trip"})
-    assert resp.status_code == 201
-    return resp.json()["id"]
-
-
-async def _create_leg(client, trip_id: str, **overrides) -> str:
-    payload = {"type": "flight", "origin_city": "JFK", "dest_city": "LHR", **overrides}
-    resp = await client.post(f"/api/v1/trips/{trip_id}/transport", json=payload)
+async def _create_leg(client, **overrides) -> str:
+    payload = {"origin_city": "JFK", "dest_city": "LHR", **overrides}
+    resp = await client.post("/api/v1/flights", json=payload)
     assert resp.status_code == 201
     return resp.json()["id"]
 
@@ -29,11 +23,9 @@ async def _create_leg(client, trip_id: str, **overrides) -> str:
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_create_flight_leg(authed_client):
-    trip_id = await _create_trip(authed_client)
     resp = await authed_client.post(
-        f"/api/v1/trips/{trip_id}/transport",
+        "/api/v1/flights",
         json={
-            "type": "flight",
             "flight_number": "BA178",
             "airline": "British Airways",
             "origin_iata": "JFK",
@@ -61,10 +53,9 @@ async def test_create_flight_leg(authed_client):
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_list_transport_legs(authed_client):
-    trip_id = await _create_trip(authed_client)
-    await _create_leg(authed_client, trip_id)
-    await _create_leg(authed_client, trip_id, type="train", origin_city="London", dest_city="Paris")
-    resp = await authed_client.get(f"/api/v1/trips/{trip_id}/transport")
+    await _create_leg(authed_client)
+    await _create_leg(authed_client, origin_city="London", dest_city="Paris")
+    resp = await authed_client.get("/api/v1/flights")
     assert resp.status_code == 200
     assert len(resp.json()) == 2
 
@@ -72,10 +63,9 @@ async def test_list_transport_legs(authed_client):
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_update_transport_leg(authed_client):
-    trip_id = await _create_trip(authed_client)
-    leg_id = await _create_leg(authed_client, trip_id)
+    leg_id = await _create_leg(authed_client)
     resp = await authed_client.put(
-        f"/api/v1/transport/{leg_id}",
+        f"/api/v1/flights/{leg_id}",
         json={"flight_number": "AA100", "seat_class": "business"},
     )
     assert resp.status_code == 200
@@ -87,12 +77,11 @@ async def test_update_transport_leg(authed_client):
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_delete_transport_leg(authed_client):
-    trip_id = await _create_trip(authed_client)
-    leg_id = await _create_leg(authed_client, trip_id)
-    resp = await authed_client.delete(f"/api/v1/transport/{leg_id}")
+    leg_id = await _create_leg(authed_client)
+    resp = await authed_client.delete(f"/api/v1/flights/{leg_id}")
     assert resp.status_code == 204
-    list_resp = await authed_client.get(f"/api/v1/trips/{trip_id}/transport")
-    assert list_resp.json() == []
+    list_resp = await authed_client.get("/api/v1/flights")
+    assert leg_id not in [f["id"] for f in list_resp.json()]
 
 
 @pytest.mark.asyncio
@@ -101,26 +90,15 @@ async def test_transport_user_isolation(authed_client):
     from app.main import app
     from app.auth import get_current_user_id
 
-    trip_id = await _create_trip(authed_client)
-    await _create_leg(authed_client, trip_id)
+    leg_id = await _create_leg(authed_client)
 
     app.dependency_overrides[get_current_user_id] = lambda: OTHER_USER_ID
     try:
-        resp = await authed_client.get(f"/api/v1/trips/{trip_id}/transport")
+        resp = await authed_client.get("/api/v1/flights")
     finally:
         app.dependency_overrides.pop(get_current_user_id, None)
-    assert resp.status_code == 404
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_invalid_transport_type_rejected(authed_client):
-    trip_id = await _create_trip(authed_client)
-    resp = await authed_client.post(
-        f"/api/v1/trips/{trip_id}/transport",
-        json={"type": "teleporter", "origin_city": "A", "dest_city": "B"},
-    )
-    assert resp.status_code == 422
+    assert resp.status_code == 200
+    assert leg_id not in [f["id"] for f in resp.json()]
 
 
 @pytest.mark.asyncio

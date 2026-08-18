@@ -21,10 +21,7 @@ async def authed_client(client, seed_test_users):
 
 
 async def _seed_flight(client, with_geo: bool = True) -> None:
-    trip_resp = await client.post("/api/v1/trips", json={"title": "Arc Test Trip"})
-    trip_id = trip_resp.json()["id"]
     payload = {
-        "type": "flight",
         "flight_number": "UA900",
         "origin_city": "San Francisco",
         "dest_city": "Tokyo",
@@ -36,7 +33,7 @@ async def _seed_flight(client, with_geo: bool = True) -> None:
             dest_lat=35.5494,
             dest_lng=139.7798,
         )
-    await client.post(f"/api/v1/trips/{trip_id}/transport", json=payload)
+    await client.post("/api/v1/flights", json=payload)
 
 
 @pytest.mark.asyncio
@@ -67,29 +64,6 @@ async def test_map_arcs_excludes_flights_without_geo(authed_client):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_map_arcs_excludes_non_flight_legs(authed_client):
-    trip_resp = await authed_client.post("/api/v1/trips", json={"title": "Non-flight Trip"})
-    trip_id = trip_resp.json()["id"]
-    await authed_client.post(
-        f"/api/v1/trips/{trip_id}/transport",
-        json={
-            "type": "train",
-            "origin_city": "Paris",
-            "dest_city": "Amsterdam",
-            "origin_lat": 48.8566,
-            "origin_lng": 2.3522,
-            "dest_lat": 52.3676,
-            "dest_lng": 4.9041,
-        },
-    )
-    resp = await authed_client.get("/api/v1/map/arcs")
-    arcs = resp.json()
-    paris_arcs = [a for a in arcs if a.get("origin_city") == "Paris"]
-    assert len(paris_arcs) == 0
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
 async def test_map_arcs_user_isolation(client, seed_test_users):
     """User B's flights do not appear in User A's arc response."""
     import redis.asyncio as aioredis
@@ -105,12 +79,9 @@ async def test_map_arcs_user_isolation(client, seed_test_users):
 
     # User B seeds a flight
     app.dependency_overrides[get_current_user_id] = lambda: OTHER_USER_ID
-    trip_resp = await client.post("/api/v1/trips", json={"title": "Other User Trip"})
-    trip_id = trip_resp.json()["id"]
     await client.post(
-        f"/api/v1/trips/{trip_id}/transport",
+        "/api/v1/flights",
         json={
-            "type": "flight",
             "flight_number": "XY999",
             "origin_city": "Berlin",
             "dest_city": "Rome",

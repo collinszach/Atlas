@@ -19,109 +19,26 @@ async def test_stats_empty_user(auth_stats_client):
     resp = await auth_stats_client.get("/api/v1/stats")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["countries_visited"] == 0
-    assert body["cities_visited"] == 0
-    assert body["nights_away"] == 0
+    assert body["flights_count"] == 0
     assert body["total_distance_km"] == 0.0
     assert body["co2_kg_estimate"] == 0.0
-    assert body["longest_trip_days"] is None
-    assert body["most_visited_country"] is None
+    assert body["hours_in_air"] is None
+    assert body["top_airline"] is None
 
 
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_stats_with_data(auth_stats_client):
-    """Stats aggregate correctly after creating a trip with destinations."""
-    trip_resp = await auth_stats_client.post(
-        "/api/v1/trips",
-        json={"title": "Stats Test Trip", "status": "past"},
+    """Stats aggregate correctly after logging a flight."""
+    resp = await auth_stats_client.post(
+        "/api/v1/flights",
+        json={"distance_km": "5560", "origin_iata": "NRT", "dest_iata": "SFO"},
     )
-    assert trip_resp.status_code == 201
-    trip_id = trip_resp.json()["id"]
-
-    await auth_stats_client.post(
-        f"/api/v1/trips/{trip_id}/destinations",
-        json={
-            "city": "Tokyo",
-            "country_code": "JP",
-            "country_name": "Japan",
-            "arrival_date": "2025-03-10",
-            "departure_date": "2025-03-17",
-        },
-    )
-
-    await auth_stats_client.post(
-        f"/api/v1/trips/{trip_id}/transport",
-        json={"type": "flight", "distance_km": "5560"},
-    )
-
-    # Refresh materialized view so most_visited_country is current
-    from app.database import get_db
-    from sqlalchemy import text
-    async for db in get_db():
-        await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY country_visits"))
-        await db.commit()
-        break
+    assert resp.status_code == 201
 
     resp = await auth_stats_client.get("/api/v1/stats")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["countries_visited"] == 1
-    assert body["cities_visited"] == 1
-    assert body["nights_away"] == 7
+    assert body["flights_count"] == 1
     assert body["total_distance_km"] == 5560.0
     assert abs(body["co2_kg_estimate"] - 5560.0 * 0.115) < 0.01
-    assert body["most_visited_country"] == "Japan"
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_stats_heatmap(auth_stats_client):
-    trip_resp = await auth_stats_client.post(
-        "/api/v1/trips",
-        json={"title": "Heatmap Trip", "status": "past"},
-    )
-    trip_id = trip_resp.json()["id"]
-    await auth_stats_client.post(
-        f"/api/v1/trips/{trip_id}/destinations",
-        json={"city": "Paris", "country_code": "FR", "country_name": "France"},
-    )
-    # Refresh materialized view so heatmap query sees the data
-    from app.database import get_db
-    from sqlalchemy import text
-    async for db in get_db():
-        await db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY country_visits"))
-        await db.commit()
-        break
-
-    resp = await auth_stats_client.get("/api/v1/stats/heatmap")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert any(e["country_code"] == "FR" for e in body)
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_stats_timeline_empty(auth_stats_client):
-    resp = await auth_stats_client.get("/api/v1/stats/timeline")
-    assert resp.status_code == 200
-    assert resp.json() == []
-
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_stats_timeline_with_trip(auth_stats_client):
-    trip_resp = await auth_stats_client.post(
-        "/api/v1/trips",
-        json={"title": "Timeline Trip", "status": "past", "start_date": "2025-01-01"},
-    )
-    trip_id = trip_resp.json()["id"]
-
-    resp = await auth_stats_client.get("/api/v1/stats/timeline")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert len(body) >= 1
-    trip_entry = next(e for e in body if e["id"] == trip_id)
-    assert trip_entry["title"] == "Timeline Trip"
-    assert trip_entry["destination_count"] == 0
-    assert trip_entry["transport_count"] == 0

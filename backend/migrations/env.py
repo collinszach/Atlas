@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.database import Base
 # Import all models so their metadata is registered
-from app.models import User, Trip, Destination, TransportLeg, Accommodation  # noqa
+from app.models import User, TransportLeg, Photo  # noqa
 
 config = context.config
 

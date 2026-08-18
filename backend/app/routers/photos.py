@@ -12,7 +12,7 @@ from app.auth import CurrentUser
 from app.config import settings
 from app.database import get_db
 from app.models.photo import Photo
-from app.models.trip import Trip
+from app.models.transport import TransportLeg
 from app.schemas.photo import PhotoListResponse, PhotoRead
 from app.services.storage import StorageService, get_storage
 
@@ -108,8 +108,7 @@ def _to_photo_read(photo: Photo, storage: StorageService) -> PhotoRead:
     return PhotoRead(
         id=photo.id,
         user_id=photo.user_id,
-        trip_id=photo.trip_id,
-        destination_id=photo.destination_id,
+        transport_leg_id=photo.transport_leg_id,
         storage_key=photo.storage_key,
         thumbnail_key=photo.thumbnail_key,
         original_filename=photo.original_filename,
@@ -150,20 +149,19 @@ def _parse_float(value) -> float | None:
 
 # ─── Endpoints ─────────────────────────────────────────────────────────────────
 
-@router.post("/trips/{trip_id}/photos/upload", response_model=PhotoRead, status_code=201)
+@router.post("/flights/{leg_id}/photos/upload", response_model=PhotoRead, status_code=201)
 async def upload_photo(
-    trip_id: uuid.UUID,
+    leg_id: uuid.UUID,
     user_id: CurrentUser,
     file: UploadFile,
     background_tasks: BackgroundTasks,
     caption: str | None = Form(None),
-    destination_id: uuid.UUID | None = Form(None),
     db: AsyncSession = Depends(get_db),
     storage: StorageService = Depends(get_storage),
 ) -> PhotoRead:
-    result = await db.execute(select(Trip).where(Trip.id == trip_id, Trip.user_id == user_id))
+    result = await db.execute(select(TransportLeg).where(TransportLeg.id == leg_id, TransportLeg.user_id == user_id))
     if result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=404, detail="Trip not found")
+        raise HTTPException(status_code=404, detail="Flight not found")
 
     if file.content_type not in _ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=422, detail=f"Unsupported file type: {file.content_type}")
@@ -174,8 +172,8 @@ async def upload_photo(
 
     photo_id = uuid.uuid4()
     ext = (file.filename or "photo.jpg").rsplit(".", 1)[-1].lower()
-    storage_key = f"photos/{user_id}/{trip_id}/{photo_id}.{ext}"
-    thumb_key = f"thumbnails/{user_id}/{trip_id}/{photo_id}_thumb.webp"
+    storage_key = f"photos/{user_id}/{leg_id}/{photo_id}.{ext}"
+    thumb_key = f"thumbnails/{user_id}/{leg_id}/{photo_id}_thumb.webp"
 
     meta = _extract_metadata(data)
 
@@ -184,8 +182,7 @@ async def upload_photo(
     photo = Photo(
         id=photo_id,
         user_id=user_id,
-        trip_id=trip_id,
-        destination_id=destination_id,
+        transport_leg_id=leg_id,
         storage_key=storage_key,
         thumbnail_key=None,
         original_filename=file.filename,
@@ -213,20 +210,20 @@ async def upload_photo(
     return _to_photo_read(photo, storage)
 
 
-@router.get("/trips/{trip_id}/photos", response_model=PhotoListResponse)
+@router.get("/flights/{leg_id}/photos", response_model=PhotoListResponse)
 async def list_photos(
-    trip_id: uuid.UUID,
+    leg_id: uuid.UUID,
     user_id: CurrentUser,
     db: AsyncSession = Depends(get_db),
     storage: StorageService = Depends(get_storage),
 ) -> PhotoListResponse:
-    result = await db.execute(select(Trip).where(Trip.id == trip_id, Trip.user_id == user_id))
+    result = await db.execute(select(TransportLeg).where(TransportLeg.id == leg_id, TransportLeg.user_id == user_id))
     if result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=404, detail="Trip not found")
+        raise HTTPException(status_code=404, detail="Flight not found")
 
     photos_result = await db.execute(
         select(Photo)
-        .where(Photo.trip_id == trip_id, Photo.user_id == user_id)
+        .where(Photo.transport_leg_id == leg_id, Photo.user_id == user_id)
         .order_by(Photo.order_index.asc().nullsfirst(), Photo.created_at.asc())
     )
     photos = list(photos_result.scalars().all())
@@ -256,13 +253,6 @@ async def delete_photo(
         logger.error("MinIO delete failed for photo %s: %s", photo_id, exc)
         raise HTTPException(status_code=500, detail="Storage delete failed")
 
-    trip_result = await db.execute(
-        select(Trip).where(Trip.id == photo.trip_id, Trip.cover_photo_id == photo_id)
-    )
-    trip = trip_result.scalar_one_or_none()
-    if trip:
-        trip.cover_photo_id = None
-
     await db.delete(photo)
     await db.flush()
 
@@ -279,17 +269,10 @@ async def set_cover_photo(
         raise HTTPException(status_code=404, detail="Photo not found")
 
     all_photos_result = await db.execute(
-        select(Photo).where(Photo.trip_id == photo.trip_id, Photo.user_id == user_id)
+        select(Photo).where(Photo.transport_leg_id == photo.transport_leg_id, Photo.user_id == user_id)
     )
     for p in all_photos_result.scalars().all():
         p.is_cover = p.id == photo_id
-
-    trip_result = await db.execute(
-        select(Trip).where(Trip.id == photo.trip_id, Trip.user_id == user_id)
-    )
-    trip = trip_result.scalar_one_or_none()
-    if trip:
-        trip.cover_photo_id = photo_id
 
     await db.flush()
     return {"cover_photo_id": str(photo_id)}

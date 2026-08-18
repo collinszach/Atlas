@@ -13,46 +13,32 @@ from app.auth import CurrentUser
 from app.config import settings
 from app.database import get_db
 from app.models.transport import TransportLeg
-from app.models.trip import Trip
 from app.schemas.transport import TransportCreate, TransportRead, TransportUpdate, EnrichFlightRequest, EnrichFlightResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["transport"])
 
 
-async def _get_trip_or_404(trip_id: uuid.UUID, user_id: str, db: AsyncSession) -> Trip:
-    result = await db.execute(select(Trip).where(Trip.id == trip_id, Trip.user_id == user_id))
-    trip = result.scalar_one_or_none()
-    if trip is None:
-        raise HTTPException(status_code=404, detail="Trip not found")
-    return trip
-
-
-@router.get("/trips/{trip_id}/transport", response_model=list[TransportRead])
-async def list_transport(
-    trip_id: uuid.UUID,
+@router.get("/flights", response_model=list[TransportRead])
+async def list_flights(
     user_id: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ) -> list[TransportRead]:
-    await _get_trip_or_404(trip_id, user_id, db)
     result = await db.execute(
         select(TransportLeg)
-        .where(TransportLeg.trip_id == trip_id, TransportLeg.user_id == user_id)
+        .where(TransportLeg.user_id == user_id)
         .order_by(TransportLeg.departure_at.nullslast())
     )
     legs = result.scalars().all()
     return [TransportRead.from_orm_with_geo(leg) for leg in legs]
 
 
-@router.post("/trips/{trip_id}/transport", response_model=TransportRead, status_code=201)
-async def add_transport(
-    trip_id: uuid.UUID,
+@router.post("/flights", response_model=TransportRead, status_code=201)
+async def add_flight(
     body: TransportCreate,
     user_id: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ) -> TransportRead:
-    await _get_trip_or_404(trip_id, user_id, db)
-
     origin_geo = None
     dest_geo = None
     if body.origin_lat is not None:
@@ -61,9 +47,7 @@ async def add_transport(
         dest_geo = from_shape(Point(body.dest_lng, body.dest_lat), srid=4326)
 
     leg = TransportLeg(
-        trip_id=trip_id,
         user_id=user_id,
-        type=body.type,
         flight_number=body.flight_number,
         airline=body.airline,
         origin_iata=body.origin_iata,
@@ -147,8 +131,8 @@ async def enrich_flight(
     )
 
 
-@router.put("/transport/{leg_id}", response_model=TransportRead)
-async def update_transport(
+@router.put("/flights/{leg_id}", response_model=TransportRead)
+async def update_flight(
     leg_id: uuid.UUID,
     body: TransportUpdate,
     user_id: CurrentUser,
@@ -159,7 +143,7 @@ async def update_transport(
     )
     leg = result.scalar_one_or_none()
     if leg is None:
-        raise HTTPException(status_code=404, detail="Transport leg not found")
+        raise HTTPException(status_code=404, detail="Flight not found")
 
     update_data = body.model_dump(exclude_none=True)
     origin_lat = update_data.pop("origin_lat", None)
@@ -180,8 +164,8 @@ async def update_transport(
     return TransportRead.from_orm_with_geo(leg)
 
 
-@router.delete("/transport/{leg_id}", status_code=204)
-async def delete_transport(
+@router.delete("/flights/{leg_id}", status_code=204)
+async def delete_flight(
     leg_id: uuid.UUID,
     user_id: CurrentUser,
     db: AsyncSession = Depends(get_db),
@@ -191,6 +175,6 @@ async def delete_transport(
     )
     leg = result.scalar_one_or_none()
     if leg is None:
-        raise HTTPException(status_code=404, detail="Transport leg not found")
+        raise HTTPException(status_code=404, detail="Flight not found")
     await db.delete(leg)
     await db.flush()

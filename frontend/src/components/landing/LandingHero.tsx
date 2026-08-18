@@ -4,8 +4,8 @@ import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 
 const STATS = [
-  { label: "Countries", icon: "M3.5 21L14.5 3M9.5 21L20.5 3M3 7h18M3 17h18" },
   { label: "Flights", icon: "M17.8 3.8L21 3l-.8 3.2L16 10.4l.4 5.2-2.4.8-2-4-4-2 .8-2.4 5.2.4z" },
+  { label: "Routes", icon: "M3.5 21L14.5 3M9.5 21L20.5 3M3 7h18M3 17h18" },
   { label: "Photos", icon: "M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 17a5 5 0 100-10 5 5 0 000 10z" },
 ];
 
@@ -77,7 +77,7 @@ export function LandingHero() {
             </h1>
           </div>
           <p className="max-w-md text-lg text-atlas-ink-2">
-            Your personal travel intelligence platform. Archive the past, track the present, plan the future.
+            Your personal flight radar. Log every flight you've taken, watch the routes trace across the globe.
           </p>
         </motion.div>
 

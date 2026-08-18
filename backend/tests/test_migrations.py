@@ -30,16 +30,31 @@ def test_migration_003_imports():
 
 
 def test_migration_chain_is_sequential():
-    """Verify the revision chain: None -> 001 -> 002 -> 003"""
+    """Verify the full revision chain: None -> 001 -> ... -> 013"""
+    files = [
+        "001_core_tables.py",
+        "002_views_stubs.py",
+        "003_country_polygons.py",
+        "004_photos.py",
+        "005_transport_accommodations.py",
+        "006_bucket_list.py",
+        "007_bucket_list_ai_summary.py",
+        "008_skywatch.py",
+        "009_seed_skywatch.py",
+        "010_fix_notable_common_airliners.py",
+        "011_flights_only.py",
+        "012_repoint_photos.py",
+        "013_drop_travel_tables.py",
+    ]
     revisions = {}
-    for name, path in [
-        ("001", "migrations/versions/001_core_tables.py"),
-        ("002", "migrations/versions/002_views_stubs.py"),
-        ("003", "migrations/versions/003_country_polygons.py"),
-    ]:
-        mod = _load_migration(f"m{name}", path)
+    for f in files:
+        rev = f.split("_", 1)[0]
+        mod = _load_migration(f"m{rev}", f"migrations/versions/{f}")
         revisions[mod.revision] = mod.down_revision
 
     assert revisions["001"] is None
-    assert revisions["002"] == "001"
-    assert revisions["003"] == "002"
+    for prev, cur in zip(
+        ["001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012"],
+        ["002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012", "013"],
+    ):
+        assert revisions[cur] == prev

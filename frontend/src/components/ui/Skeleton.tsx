@@ -15,7 +15,7 @@ export function Skeleton({ className }: { className?: string }) {
   );
 }
 
-export function TripCardSkeleton() {
+export function FlightCardSkeleton() {
   return (
     <div className="rounded-lg border border-atlas-border bg-atlas-surface p-4 shadow-elev-1">
       <div className="mb-3 flex items-start justify-between gap-3">

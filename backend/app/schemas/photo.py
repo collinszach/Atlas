@@ -7,8 +7,7 @@ from pydantic import BaseModel, ConfigDict
 class PhotoRead(BaseModel):
     id: uuid.UUID
     user_id: str
-    trip_id: uuid.UUID
-    destination_id: uuid.UUID | None
+    transport_leg_id: uuid.UUID
     storage_key: str
     thumbnail_key: str | None
     original_filename: str | None

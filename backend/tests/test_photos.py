@@ -1,7 +1,7 @@
 """Integration tests for photo upload, list, delete, and cover endpoints.
 
 Run: docker compose exec atlas-backend pytest tests/test_photos.py -v -m integration
-Requires: running PostgreSQL with migration 004 applied.
+Requires: running PostgreSQL with migration 012 applied.
 MinIO is mocked — no real storage calls.
 """
 import io
@@ -31,10 +31,10 @@ async def authed_client(client, seed_test_users):
 
 
 @pytest.fixture
-async def trip_id(authed_client) -> str:
+async def leg_id(authed_client) -> str:
     resp = await authed_client.post(
-        "/api/v1/trips",
-        json={"title": "Photo Test Trip", "status": "past"},
+        "/api/v1/flights",
+        json={"flight_number": "AA100", "origin_city": "JFK", "dest_city": "LAX"},
     )
     assert resp.status_code == 201
     return resp.json()["id"]
@@ -50,7 +50,7 @@ def _mock_storage():
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_upload_photo(authed_client, trip_id):
+async def test_upload_photo(authed_client, leg_id):
     from app.main import app
     from app.services.storage import get_storage
 
@@ -59,7 +59,7 @@ async def test_upload_photo(authed_client, trip_id):
 
     with patch("app.routers.photos._generate_and_upload_thumbnail", new_callable=AsyncMock):
         response = await authed_client.post(
-            f"/api/v1/trips/{trip_id}/photos/upload",
+            f"/api/v1/flights/{leg_id}/photos/upload",
             files={"file": ("test.jpg", _make_jpeg(), "image/jpeg")},
             data={"caption": "Test photo"},
         )
@@ -68,7 +68,7 @@ async def test_upload_photo(authed_client, trip_id):
 
     assert response.status_code == 201
     body = response.json()
-    assert body["trip_id"] == trip_id
+    assert body["transport_leg_id"] == leg_id
     assert body["caption"] == "Test photo"
     assert body["width"] == 200
     assert body["height"] == 150
@@ -78,13 +78,13 @@ async def test_upload_photo(authed_client, trip_id):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_upload_rejects_unsupported_type(authed_client, trip_id):
+async def test_upload_rejects_unsupported_type(authed_client, leg_id):
     from app.main import app
     from app.services.storage import get_storage
 
     app.dependency_overrides[get_storage] = lambda: _mock_storage()
     response = await authed_client.post(
-        f"/api/v1/trips/{trip_id}/photos/upload",
+        f"/api/v1/flights/{leg_id}/photos/upload",
         files={"file": ("test.txt", b"not an image", "text/plain")},
     )
     app.dependency_overrides.pop(get_storage, None)
@@ -93,8 +93,8 @@ async def test_upload_rejects_unsupported_type(authed_client, trip_id):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_list_photos_empty(authed_client, trip_id):
-    response = await authed_client.get(f"/api/v1/trips/{trip_id}/photos")
+async def test_list_photos_empty(authed_client, leg_id):
+    response = await authed_client.get(f"/api/v1/flights/{leg_id}/photos")
     assert response.status_code == 200
     assert response.json()["items"] == []
     assert response.json()["total"] == 0
@@ -102,7 +102,7 @@ async def test_list_photos_empty(authed_client, trip_id):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_list_photos_after_upload(authed_client, trip_id):
+async def test_list_photos_after_upload(authed_client, leg_id):
     from app.main import app
     from app.services.storage import get_storage
 
@@ -111,15 +111,15 @@ async def test_list_photos_after_upload(authed_client, trip_id):
 
     with patch("app.routers.photos._generate_and_upload_thumbnail", new_callable=AsyncMock):
         await authed_client.post(
-            f"/api/v1/trips/{trip_id}/photos/upload",
+            f"/api/v1/flights/{leg_id}/photos/upload",
             files={"file": ("a.jpg", _make_jpeg(), "image/jpeg")},
         )
         await authed_client.post(
-            f"/api/v1/trips/{trip_id}/photos/upload",
+            f"/api/v1/flights/{leg_id}/photos/upload",
             files={"file": ("b.jpg", _make_jpeg(), "image/jpeg")},
         )
 
-    response = await authed_client.get(f"/api/v1/trips/{trip_id}/photos")
+    response = await authed_client.get(f"/api/v1/flights/{leg_id}/photos")
     app.dependency_overrides.pop(get_storage, None)
 
     assert response.status_code == 200
@@ -128,7 +128,7 @@ async def test_list_photos_after_upload(authed_client, trip_id):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_delete_photo(authed_client, trip_id):
+async def test_delete_photo(authed_client, leg_id):
     from app.main import app
     from app.services.storage import get_storage
 
@@ -137,7 +137,7 @@ async def test_delete_photo(authed_client, trip_id):
 
     with patch("app.routers.photos._generate_and_upload_thumbnail", new_callable=AsyncMock):
         upload_resp = await authed_client.post(
-            f"/api/v1/trips/{trip_id}/photos/upload",
+            f"/api/v1/flights/{leg_id}/photos/upload",
             files={"file": ("del.jpg", _make_jpeg(), "image/jpeg")},
         )
     photo_id = upload_resp.json()["id"]
@@ -151,7 +151,7 @@ async def test_delete_photo(authed_client, trip_id):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_set_cover_photo(authed_client, trip_id):
+async def test_set_cover_photo(authed_client, leg_id):
     from app.main import app
     from app.services.storage import get_storage
 
@@ -160,7 +160,7 @@ async def test_set_cover_photo(authed_client, trip_id):
 
     with patch("app.routers.photos._generate_and_upload_thumbnail", new_callable=AsyncMock):
         upload_resp = await authed_client.post(
-            f"/api/v1/trips/{trip_id}/photos/upload",
+            f"/api/v1/flights/{leg_id}/photos/upload",
             files={"file": ("cover.jpg", _make_jpeg(), "image/jpeg")},
         )
     photo_id = upload_resp.json()["id"]
@@ -174,7 +174,7 @@ async def test_set_cover_photo(authed_client, trip_id):
 
 @pytest.mark.asyncio
 @pytest.mark.integration
-async def test_cannot_upload_to_another_users_trip(authed_client, trip_id):
+async def test_cannot_upload_to_another_users_flight(authed_client, leg_id):
     from app.main import app
     from app.auth import get_current_user_id
     from app.services.storage import get_storage
@@ -183,7 +183,7 @@ async def test_cannot_upload_to_another_users_trip(authed_client, trip_id):
     app.dependency_overrides[get_storage] = lambda: _mock_storage()
 
     response = await authed_client.post(
-        f"/api/v1/trips/{trip_id}/photos/upload",
+        f"/api/v1/flights/{leg_id}/photos/upload",
         files={"file": ("x.jpg", _make_jpeg(), "image/jpeg")},
     )
     app.dependency_overrides[get_current_user_id] = lambda: TEST_USER_ID

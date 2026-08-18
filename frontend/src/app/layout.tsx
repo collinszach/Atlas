@@ -4,8 +4,8 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Atlas — Travel Intelligence",
-  description: "Your personal travel archive, journal, and planner.",
+  title: "Atlas — Flight Radar",
+  description: "Your personal flight log and route radar.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

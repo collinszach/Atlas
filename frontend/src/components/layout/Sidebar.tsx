@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe, MapPin, Calendar, Compass, BarChart2, Settings } from "lucide-react";
+import { Globe, Plane, BarChart2, Settings } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import type { Route } from "next";
@@ -16,9 +16,7 @@ interface NavLink {
 
 const NAV_ITEMS: NavLink[] = [
   { href: "/map", icon: Globe, label: "Map" },
-  { href: "/trips", icon: MapPin, label: "Trips" },
-  { href: "/plan", icon: Calendar, label: "Plan" },
-  { href: "/discover", icon: Compass, label: "Discover" },
+  { href: "/flights", icon: Plane, label: "Flights" },
   { href: "/stats", icon: BarChart2, label: "Stats" },
 ];
 
@@ -66,7 +64,7 @@ export function Sidebar() {
         <div className="leading-tight">
           <div className="font-display text-base font-semibold text-atlas-ink">Atlas</div>
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-atlas-ink-faint">
-            Travel Intel
+            Flight Radar
           </div>
         </div>
       </div>

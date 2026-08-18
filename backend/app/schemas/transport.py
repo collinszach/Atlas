@@ -5,11 +5,7 @@ from decimal import Decimal
 from pydantic import BaseModel, model_validator
 
 
-_VALID_TYPES = {"flight", "car", "train", "ferry", "bus", "walk", "other"}
-
-
 class TransportCreate(BaseModel):
-    type: str = "flight"
     flight_number: str | None = None
     airline: str | None = None
     origin_iata: str | None = None
@@ -31,12 +27,6 @@ class TransportCreate(BaseModel):
     dest_lng: float | None = None
 
     @model_validator(mode="after")
-    def validate_type(self) -> "TransportCreate":
-        if self.type not in _VALID_TYPES:
-            raise ValueError(f"type must be one of {sorted(_VALID_TYPES)}")
-        return self
-
-    @model_validator(mode="after")
     def validate_geo_pairs(self) -> "TransportCreate":
         if (self.origin_lat is None) != (self.origin_lng is None):
             raise ValueError("Provide both origin_lat and origin_lng, or neither")
@@ -46,7 +36,6 @@ class TransportCreate(BaseModel):
 
 
 class TransportUpdate(BaseModel):
-    type: str | None = None
     flight_number: str | None = None
     airline: str | None = None
     origin_iata: str | None = None
@@ -67,18 +56,10 @@ class TransportUpdate(BaseModel):
     dest_lat: float | None = None
     dest_lng: float | None = None
 
-    @model_validator(mode="after")
-    def validate_type(self) -> "TransportUpdate":
-        if self.type is not None and self.type not in _VALID_TYPES:
-            raise ValueError(f"type must be one of {sorted(_VALID_TYPES)}")
-        return self
-
 
 class TransportRead(BaseModel):
     id: uuid.UUID
-    trip_id: uuid.UUID
     user_id: str
-    type: str
     flight_number: str | None
     airline: str | None
     origin_iata: str | None

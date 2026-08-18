@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 
 MAX_RADIUS_NM = 250
 
+# airplanes.live requires requests to self-identify (blanket 403 on the default
+# httpx UA); see https://airplanes.live/api-guide/
+_USER_AGENT = "Atlas-Skywatch/1.0 (contact: zakslax@gmail.com)"
+
 
 class AdsbServiceError(Exception):
     """Raised when an ADS-B data source cannot be reached or returns invalid data."""
@@ -32,7 +36,7 @@ class AirplanesLiveClient:
         url = f"{self._base_url}/point/{lat}/{lon}/{radius_nm:.2f}"
 
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
+            async with httpx.AsyncClient(timeout=self._timeout, headers={"User-Agent": _USER_AGENT}) as client:
                 resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()

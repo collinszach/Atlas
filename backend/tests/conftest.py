@@ -93,7 +93,7 @@ async def seed_test_users(db_session):
         )
     await db_session.commit()
     yield
-    # Cascade deletes trips/destinations via FK ON DELETE CASCADE
+    # Cascade deletes transport_legs/photos via FK ON DELETE CASCADE
     for uid in (_TEST_USER_ID, _OTHER_USER_ID):
         await db_session.execute(text("DELETE FROM users WHERE id = :id"), {"id": uid})
     await db_session.commit()

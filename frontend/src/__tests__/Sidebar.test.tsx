@@ -16,9 +16,7 @@ describe("Sidebar", () => {
     const { Sidebar } = await import("../components/layout/Sidebar");
     render(<TooltipProvider><Sidebar /></TooltipProvider>);
     expect(screen.getByTitle("Map")).toBeInTheDocument();
-    expect(screen.getByTitle("Trips")).toBeInTheDocument();
-    expect(screen.getByTitle("Plan")).toBeInTheDocument();
-    expect(screen.getByTitle("Discover")).toBeInTheDocument();
+    expect(screen.getByTitle("Flights")).toBeInTheDocument();
     expect(screen.getByTitle("Stats")).toBeInTheDocument();
   });
 

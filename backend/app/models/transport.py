@@ -14,9 +14,7 @@ class TransportLeg(Base):
     __tablename__ = "transport_legs"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
-    trip_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("trips.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    type: Mapped[str] = mapped_column(String, nullable=False, server_default="flight")
 
     # Flight-specific
     flight_number: Mapped[str | None] = mapped_column(String, nullable=True)

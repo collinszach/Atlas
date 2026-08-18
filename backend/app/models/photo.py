@@ -25,13 +25,8 @@ class Photo(Base):
     user_id: Mapped[str] = mapped_column(
         String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    trip_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("trips.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    destination_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("destinations.id", ondelete="SET NULL"),
-        nullable=True,
+    transport_leg_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("transport_legs.id", ondelete="CASCADE"), nullable=False, index=True
     )
     storage_key: Mapped[str] = mapped_column(String, nullable=False)
     thumbnail_key: Mapped[str | None] = mapped_column(String, nullable=True)

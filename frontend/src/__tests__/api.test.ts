@@ -12,10 +12,10 @@ describe("API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await apiGet("/trips", "test-token-123");
+    await apiGet("/flights", "test-token-123");
 
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/trips"),
+      expect.stringContaining("/flights"),
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: "Bearer test-token-123",
@@ -29,6 +29,6 @@ describe("API client", () => {
       "fetch",
       vi.fn().mockResolvedValue(new Response("Not found", { status: 404 }))
     );
-    await expect(apiGet("/trips/bad-id", "token")).rejects.toThrow("404");
+    await expect(apiGet("/flights/bad-id", "token")).rejects.toThrow("404");
   });
 });

@@ -28,9 +28,6 @@ class Settings(BaseSettings):
     minio_public_url: str = "http://localhost:9000"
     storage_backend: str = "minio"
 
-    # AI
-    anthropic_api_key: str = ""
-
     # Local LLM (Ollama, per-task — opt-in)
     local_llm_base: str = ""
     local_llm_model: str = "qwen2.5:7b"

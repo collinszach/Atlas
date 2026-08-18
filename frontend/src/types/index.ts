@@ -1,70 +1,7 @@
-export interface Trip {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  status: "past" | "active" | "planned" | "dream";
-  start_date: string | null;
-  end_date: string | null;
-  tags: string[];
-  visibility: "private" | "shared" | "public";
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TripListResponse {
-  items: Trip[];
-  total: number;
-  page: number;
-  limit: number;
-}
-
-export interface Destination {
-  id: string;
-  trip_id: string;
-  user_id: string;
-  city: string;
-  country_code: string;
-  country_name: string;
-  region: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  arrival_date: string | null;
-  departure_date: string | null;
-  nights: number | null;
-  notes: string | null;
-  rating: number | null;
-  order_index: number;
-  created_at: string;
-}
-
-export interface MapCountry {
-  country_code: string;
-  country_name: string;
-  visit_count: number;
-  first_visit: string | null;
-  last_visit: string | null;
-  total_nights: number;
-  trip_ids: string[];
-}
-
-export interface MapCity {
-  id: string;
-  city: string;
-  country_code: string;
-  country_name: string;
-  latitude: number;
-  longitude: number;
-  arrival_date: string | null;
-  departure_date: string | null;
-  trip_id: string;
-}
-
 export interface Photo {
   id: string;
   user_id: string;
-  trip_id: string;
-  destination_id: string | null;
+  transport_leg_id: string;
   storage_key: string;
   thumbnail_key: string | null;
   original_filename: string | null;
@@ -85,15 +22,11 @@ export interface Photo {
 export interface PhotoListResponse {
   items: Photo[];
   total: number;
-  page: number;
-  limit: number;
 }
 
 export interface TransportLeg {
   id: string;
-  trip_id: string;
   user_id: string;
-  type: "flight" | "car" | "train" | "ferry" | "bus" | "walk" | "other";
   flight_number: string | null;
   airline: string | null;
   origin_iata: string | null;
@@ -116,29 +49,8 @@ export interface TransportLeg {
   created_at: string;
 }
 
-export interface Accommodation {
-  id: string;
-  trip_id: string;
-  user_id: string;
-  destination_id: string | null;
-  name: string;
-  type: string | null;
-  address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  check_in: string | null;
-  check_out: string | null;
-  confirmation: string | null;
-  cost_per_night: number | null;
-  currency: string;
-  rating: number | null;
-  notes: string | null;
-  created_at: string;
-}
-
 export interface MapArc {
   id: string;
-  trip_id: string;
   flight_number: string | null;
   origin_city: string | null;
   dest_city: string | null;
@@ -149,51 +61,6 @@ export interface MapArc {
   origin_lng: number;
   dest_lat: number;
   dest_lng: number;
-}
-
-export interface BucketListItem {
-  id: string;
-  user_id: string;
-  country_code: string | null;
-  country_name: string | null;
-  city: string | null;
-  priority: number;
-  reason: string | null;
-  ideal_season: string | null;
-  estimated_cost: number | null;
-  trip_id: string | null;
-  ai_summary: string | null;
-  created_at: string;
-}
-
-export interface BucketListCreate {
-  country_code?: string | null;
-  country_name?: string | null;
-  city?: string | null;
-  priority?: number;
-  reason?: string | null;
-  ideal_season?: string | null;
-  estimated_cost?: number | null;
-  trip_id?: string | null;
-}
-
-export type BucketListUpdate = BucketListCreate;
-
-export interface PlannedCity {
-  id: string;
-  city: string;
-  country_code: string;
-  country_name: string;
-  latitude: number;
-  longitude: number;
-  trip_id: string;
-  trip_title: string;
-}
-
-export interface MonthlyClimate {
-  month: number;
-  avg_max_temp_c: number;
-  avg_precipitation_mm: number;
 }
 
 export interface EnrichFlightResponse {
@@ -209,83 +76,11 @@ export interface EnrichFlightResponse {
   distance_km?: number;
 }
 
-export interface BestTimeResponse {
-  location: string;
-  latitude: number;
-  longitude: number;
-  monthly: MonthlyClimate[];
-  best_months: number[];
-}
-
-export interface RecommendationPreferences {
-  climate?: string;
-  duration_days?: number;
-  budget?: string;
-  interests?: string[];
-  avoid_crowds?: boolean;
-  departure_region?: string;
-  travel_month?: string;
-}
-
-export interface RecommendationRequest {
-  preferences: RecommendationPreferences;
-  already_visited: string[];
-}
-
-export interface Recommendation {
-  country: string;
-  country_code: string | null;
-  city: string | null;
-  why_youll_love_it: string;
-  best_time: string;
-  rough_cost: string;
-  getting_there: string;
-}
-
-export interface DestinationBriefRequest {
-  country: string;
-  country_code?: string | null;
-  city?: string | null;
-}
-
-export interface DestinationBriefResponse {
-  destination: string;
-  overview: string;
-  best_months: number[];
-  visa_notes: string;
-  rough_costs: string;
-  must_do: string[];
-  food_highlights: string[];
-  transport_within: string;
-}
-
 export interface UserStats {
-  countries_visited: number;
-  cities_visited: number;
-  trips_count: number;
-  nights_away: number;
+  flights_count: number;
   total_distance_km: number;
-  longest_trip_days: number | null;
-  longest_trip_title: string | null;
-  most_visited_country: string | null;
-  most_visited_country_code: string | null;
-  most_visited_country_count: number | null;
   co2_kg_estimate: number;
-}
-
-export interface HeatmapEntry {
-  country_code: string;
-  country_name: string;
-  visit_count: number;
-  total_nights: number;
-}
-
-export interface TimelineTrip {
-  id: string;
-  title: string;
-  status: "past" | "active" | "planned" | "dream";
-  start_date: string | null;
-  end_date: string | null;
-  destination_count: number;
-  transport_count: number;
+  hours_in_air: number | null;
+  top_airline: string | null;
+  most_flown_airport: string | null;
 }

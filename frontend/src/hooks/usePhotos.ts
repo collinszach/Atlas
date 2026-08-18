@@ -3,24 +3,24 @@ import { useAuth } from "@clerk/nextjs";
 import { apiDelete, apiPost } from "@/lib/api";
 import type { Photo, PhotoListResponse } from "@/types";
 
-export function usePhotos(tripId: string) {
+export function usePhotos(flightId: string) {
   const { getToken } = useAuth();
   return useQuery<PhotoListResponse>({
-    queryKey: ["photos", tripId],
+    queryKey: ["photos", flightId],
     queryFn: async () => {
       const token = await getToken();
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/api/v1/trips/${tripId}/photos`,
+        `${process.env.NEXT_PUBLIC_API_BASE}/api/v1/flights/${flightId}/photos`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) throw new Error("Failed to fetch photos");
       return res.json();
     },
-    enabled: !!tripId,
+    enabled: !!flightId,
   });
 }
 
-export function useUploadPhotos(tripId: string) {
+export function useUploadPhotos(flightId: string) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   return useMutation<Photo[], Error, File[]>({
@@ -31,7 +31,7 @@ export function useUploadPhotos(tripId: string) {
         const form = new FormData();
         form.append("file", file);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE}/api/v1/trips/${tripId}/photos/upload`,
+          `${process.env.NEXT_PUBLIC_API_BASE}/api/v1/flights/${flightId}/photos/upload`,
           { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: form }
         );
         if (!res.ok) throw new Error(`Upload failed for ${file.name}`);
@@ -40,12 +40,12 @@ export function useUploadPhotos(tripId: string) {
       return results;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["photos", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["photos", flightId] });
     },
   });
 }
 
-export function useDeletePhoto(tripId: string) {
+export function useDeletePhoto(flightId: string) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   return useMutation<void, Error, string>({
@@ -54,12 +54,12 @@ export function useDeletePhoto(tripId: string) {
       await apiDelete(`/photos/${photoId}`, token!);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["photos", tripId] });
+      queryClient.invalidateQueries({ queryKey: ["photos", flightId] });
     },
   });
 }
 
-export function useSetCoverPhoto(tripId: string) {
+export function useSetCoverPhoto(flightId: string) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   return useMutation<{ cover_photo_id: string }, Error, string>({
@@ -68,8 +68,8 @@ export function useSetCoverPhoto(tripId: string) {
       return apiPost(`/photos/${photoId}/set-cover`, token!, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["photos", tripId] });
-      queryClient.invalidateQueries({ queryKey: ["trips"] });
+      queryClient.invalidateQueries({ queryKey: ["photos", flightId] });
+      queryClient.invalidateQueries({ queryKey: ["flights"] });
     },
   });
 }

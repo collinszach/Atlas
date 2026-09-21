@@ -373,18 +373,19 @@ is preferred when available; `DataSourceResolver` merges both sources, preferrin
 
 ## Design System
 
-**Aesthetic:** Dark cartographic — deep navy/slate backgrounds, aged-map parchment accents, geographic texture. Not travel-blog pastel. Think mission control meets explorer's logbook.
+**Aesthetic:** Dark cartographic — deep navy/slate backgrounds, electric blue → cyan signal, functional glass, geographic texture. Not travel-blog pastel. Think mission control meets explorer's logbook. Full system in `DESIGN.md`.
 
 **Color tokens:**
 ```css
 --atlas-bg:          #0a0e1a;   /* deep navy */
 --atlas-surface:     #111827;   /* card backgrounds */
 --atlas-border:      #1e2d45;   /* subtle borders */
---atlas-accent:      #c9a84c;   /* antique gold */
---atlas-accent-cool: #4a90d9;   /* ocean blue for map */
+--atlas-accent:      #4F8DFF;   /* electric blue */
+--atlas-accent-hi:   #6FA6FF;   /* blue highlight */
+--atlas-cyan:        #26E0E0;   /* accent partner: hero stats, live state */
 --atlas-text:        #e2e8f0;
 --atlas-text-muted:  #64748b;
---atlas-arc:         #4a90d9;   /* great-circle arc: a flight you've flown */
+--atlas-arc:         #4F8DFF;   /* great-circle arc: a flight you've flown */
 ```
 
 **Typography:**

@@ -32,11 +32,12 @@ line on the map a flight that actually happened.
 - Instagram / travel-blog pastel grids. No bright gradients, no rounded-everything, no emoji-as-UI.
 - Ad-supported tracker clutter: banner strips, paywalled aircraft details, upsell interstitials,
   a map you can barely see under chrome. Atlas is free and shows the sky, not the store.
-- Generic SaaS dashboards: the hero-metric template (big number + gradient accent), identical card
-  grids, tiny uppercase tracked eyebrows over every section.
+- Generic SaaS dashboards: one big number floating in an otherwise empty card, identical card
+  grids at identical sizes, tiny uppercase tracked eyebrows over every section. (Atlas does use a
+  hero stat — but earned, in a bento of varied tiles, never as the whole design.)
 - Raw unresolved codes as the interface — `A320`, `JBU`, `7700` with no human reading.
-- Cream/sand/parchment "warm editorial" near-whites. The warmth here is antique gold on deep navy,
-  carried by accent and type, never by a beige body.
+- Cream/sand/parchment "warm editorial" near-whites. The charge here is electric blue → cyan on
+  deep navy, carried by accent, glass and type, never by a beige body.
 
 ## Design Principles
 1. **The map is the product.** The live sky and the arc map are the home surfaces and the
@@ -47,7 +48,8 @@ line on the map a flight that actually happened.
 3. **Surface what's interesting.** A sky full of identical airliners is noise; the military
    transport, the rare type and the 7700 squawk are the signal. Atlas ranks, it doesn't dump.
 4. **Atmosphere over ornament.** Depth, texture and motion come from cartographic materials
-   (graticules, contours, arcs, deep field) — not decorative gradients.
+   (graticules, contours, arcs, deep field) and glass used where it does work — never decoration
+   on flat chrome.
 5. **Restraint is the luxury.** Accent is rare and meaningful; most of the surface is deep navy
    and ink. Color marks signal (military / rare / emergency / your own flights), never decoration.
 6. **Legible under any light.** Dark cartographic, but body text always clears 4.5:1 —

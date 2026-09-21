@@ -1,7 +1,8 @@
 # Design
 
-Visual system for Atlas. Dark cartographic — deep navy field, antique gold as rare signal,
-instrument-grade typography. Register: product (with the map as one drenched, committed surface).
+Visual system for Atlas. Dark cartographic — deep navy field, electric blue → cyan as signal,
+functional glass, instrument-grade typography. Register: product (with the map as one drenched,
+committed surface).
 
 ## Theme
 
@@ -9,9 +10,9 @@ Dark, always. The physical scene: someone on a couch at night watching what's cr
 overhead, or at a desk reviewing everywhere they've flown. The interface is instrumentation in a
 dim cockpit — it glows, it never glares. Light mode is out of scope; it would betray the identity.
 
-Color strategy: **Restrained** across product chrome (navy field + gold accent ≤10% of surface),
-stepping to **Committed/Drenched** only on the map home, where the globe and deep field own the
-screen.
+Color strategy: **Restrained** across product chrome (navy field + blue/cyan accent ≤10% of
+surface), stepping to **Committed/Drenched** only on the map home, where the globe and deep field
+own the screen.
 
 ## Color (OKLCH)
 
@@ -34,10 +35,14 @@ Existing brand hexes are preserved as the anchor; the ramp is built around them.
 > a decorative / disabled tone. All readable secondary copy uses `--ink-2`.
 
 ### Signal (semantic — never decoration)
-- `--accent`        #c9a84c  — antique gold: primary action, current selection, focus
-- `--accent-hi`     #e3c673  — gold highlight (hover on gold)
-- `--cool`          #4a90d9  — ocean blue: the map, links
-- `--arc`           #4a90d9  — great-circle arcs for flights you've flown
+- `--accent`        #4F8DFF  — electric blue: primary action, current selection, focus
+- `--accent-hi`     #6FA6FF  — blue highlight (hover / pressed)
+- `--cyan`          #26E0E0  — the accent's partner; hero stats, live state, the brand gradient
+- `--violet`        #8B6CFF  — rare / notable aircraft
+- `--arc`           #4F8DFF  — great-circle arcs for flights you've flown
+
+The brand gradient is `--accent → --cyan` (topLeading → bottomTrailing), reserved for hero
+numerals and live indicators. Gradient **fills** only; never gradient text on body copy.
 
 > The old `--visited` / `--planned` / `--bucket` country fills are gone with the choropleth;
 > nothing fills countries any more.
@@ -65,29 +70,35 @@ Scale: fixed rem, product ratio ~1.2. `text-xs .75 / sm .875 / base 1 / lg 1.125
 2xl 1.75 / 3xl 2.25`. Display hero uses `clamp` only on the map/stats hero, max ≤ 4rem.
 Body prose capped 70ch. `text-wrap: balance` on display headings.
 
-## Materials (depth without glass/gradient)
+## Materials
 
-Atmosphere comes from cartography, not decoration:
+Glass is used **functionally** — over the live map, on floating sheets, and on modular cards —
+never as decoration on flat chrome. Atmosphere otherwise comes from cartography:
+
+- **Glass card** (the workhorse; `.atlasCard` on iOS): `ultraThinMaterial` over `--surface` at
+  60% opacity, a 1px hairline stroke fading white 10% → 2% topLeading → bottomTrailing, and a
+  `0 10px 18px rgba(0,0,0,.35)` ambient shadow. Optional accent glow (`--accent` at 28%, 24px)
+  on hero cards only — one per screen, and it must clip to the card's rounded shape.
 - **Graticule**: a faint lat/long grid (`--ink-faint` at 3–5% alpha) as a background texture on
   empty wells, the sidebar, auth, and behind hero numbers. The recurring brand texture.
 - **Deep field**: a radial darkening from center→edge on full-bleed surfaces (`--bg`→`--bg-deep`).
-- **Elevation**: borders + a soft ambient shadow (`0 1px 0 rgba(255,255,255,.02) inset, 0 8px
-  24px -12px rgba(0,0,0,.6)`), never glassmorphism.
-- **Arc/contour accents**: thin gold/cool great-circle strokes used sparingly as section dividers
-  or hero ornament.
+- **Elevation**: on non-glass chrome, borders + a soft ambient shadow (`0 1px 0
+  rgba(255,255,255,.02) inset, 0 8px 24px -12px rgba(0,0,0,.6)`).
+- **Arc/contour accents**: thin accent/cyan great-circle strokes used sparingly as section
+  dividers or hero ornament. A dashed great-circle with a plane glyph is the logbook's signature.
 
 ## Components
 
 Standard product vocabulary, one shape language. Radius scale: `sm 6px / md 8px / lg 12px /
-pill 999px`. Controls are 8px. All interactive elements ship every state: default, hover, focus
+xl 20px / pill 999px`. Controls are 8px; glass cards and sheets are `xl`. All interactive elements ship every state: default, hover, focus
 (2px accent ring, offset), active, disabled, loading, selected, error.
 
-- **Button**: primary (gold on navy), secondary (surface + border), ghost, danger. Mono-cased
+- **Button**: primary (accent on navy), secondary (surface + border), ghost, danger. Mono-cased
   labels never; sentence case, verb+object.
 - **Badge/Status pill**: status uses tint+text+a 1px dot, distinguishable without hue (dot shape
   + label) for color-blind safety.
-- **Card**: bordered surface with ambient elevation; no nested cards, no side-stripe borders.
-- **Input/Select**: navy well, hairline border, gold focus ring; labels are sentence-case
+- **Card**: glass surface per Materials; no nested cards, no side-stripe borders.
+- **Input/Select**: navy well, hairline border, accent focus ring; labels are sentence-case
   `text-xs` `--ink-2`, not uppercase-tracked eyebrows.
 - **Skeletons** for loading (not center spinners). **Empty states** teach the next action.
 - **Stat readout**: mono numeral, `--ink-2` label below, optional unit — instrument styling.
@@ -108,21 +119,22 @@ type.
 
 ## Platform conformance
 
-This document is the target system for **both** surfaces. The web frontend already conforms.
-iOS does not yet, and the gaps are tracked here rather than quietly tolerated:
+This document is the target system for **both** surfaces. Neither fully conforms yet; the gaps
+are tracked here rather than quietly tolerated:
 
-| Area | This system | iOS today (`Theme.swift`) | Status |
+| Area | This system | iOS (`Theme.swift`) | Web (`globals.css`) |
 |---|---|---|---|
-| Display type | Playfair Display | `.system(design: .rounded)` | **Migration owed** — decided 2026-09-20 |
-| Body / mono | IBM Plex Sans / Mono | system sans / system mono | **Migration owed** — same decision |
-| Accent | antique gold `#c9a84c` | electric blue `#4F8DFF` + cyan | **Open** — not yet decided |
-| Materials | borders + ambient shadow, *never* glassmorphism | `.atlasCard` glass, blur, accent glow | **Open** — not yet decided |
+| Display type | Playfair Display | `.system(design: .rounded)` — **owes migration** | ✅ conforms |
+| Body / mono | IBM Plex Sans / Mono | system sans / mono — **owes migration** | ✅ conforms |
+| Accent | electric blue `#4F8DFF` + cyan | ✅ canonical | gold `#c9a84c` — **owes migration** |
+| Materials | functional glass | ✅ canonical | non-glass cards — **owes migration** |
 
-The type migration needs Playfair Display and IBM Plex bundled into the iOS app (both are SIL
-OFL) and `AtlasFont` rewritten.
+Both decisions were made 2026-09-20. Accent and materials follow iOS, which was already built to
+`docs/SPEC-flight-ui.md`'s blue/cyan glass direction; typography follows the web. Each platform
+therefore owes the other half.
 
-The accent and material rows are a genuine fork, not drift: `docs/SPEC-flight-ui.md` deliberately
-specifies "dark, modular, glassy, flashy — electric blue → cyan" and "no serif anywhere" for the
-flight UI, and iOS is fully built that way. Resolving it means either reversing this document's
-gold/no-glass position or rebuilding the iOS surfaces. Until it's decided, treat the iOS
-accent and glass as intentional and this table as the record of the disagreement.
+- **iOS type migration**: bundle Playfair Display and IBM Plex (both SIL OFL), rewrite `AtlasFont`.
+  `atlasGold` is already dead and can go with it.
+- **Web accent + material migration**: repoint `--atlas-accent` / `--atlas-accent-hi` to the blue
+  ramp, add `--cyan` and the brand gradient, and move `Card` to the glass recipe above. The gold
+  focus outline in `globals.css` goes with it.

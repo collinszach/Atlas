@@ -73,7 +73,8 @@ class AircraftAlert(Base):
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id", ondelete="CASCADE"),
                                           nullable=False, index=True)
 
-    hex: Mapped[str] = mapped_column(String(6), nullable=False, index=True)
+    # 12, not 6: feeds prefix non-ICAO (TIS-B/ADS-R) addresses with "~".
+    hex: Mapped[str] = mapped_column(String(12), nullable=False, index=True)
     callsign: Mapped[str | None] = mapped_column(String, nullable=True)
     type: Mapped[str | None] = mapped_column(String, nullable=True)
     registration: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -125,7 +126,8 @@ class AircraftTrack(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
-    hex: Mapped[str] = mapped_column(String(6), nullable=False)
+    # 12, not 6: feeds prefix non-ICAO (TIS-B/ADS-R) addresses with "~".
+    hex: Mapped[str] = mapped_column(String(12), nullable=False)
     # Quantized to the start of the watch cycle so concurrent observers collapse
     # to one row via the (hex, seen_at) unique constraint.
     seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

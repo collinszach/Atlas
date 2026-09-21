@@ -20,6 +20,11 @@ from app.models.skywatch import AircraftTrack
 
 logger = logging.getLogger(__name__)
 
+# Matches aircraft_tracks.hex. Observations are written as one multi-row INSERT,
+# so an over-long identifier used to discard the entire cycle rather than itself
+# (migration 015). Guard the batch instead of trusting the feed.
+MAX_HEX_LEN = 12
+
 
 def cycle_timestamp(now: datetime | None = None) -> datetime:
     """Quantize to the poll interval so concurrent observers agree on `seen_at`.
@@ -60,8 +65,16 @@ async def record_observations(
             "is_military": bool(ac.is_military),
         }
         for ac in aircraft
-        if ac.hex and ac.lat is not None and ac.lon is not None
+        if ac.hex and len(ac.hex) <= MAX_HEX_LEN and ac.lat is not None and ac.lon is not None
     ]
+
+    skipped = sum(
+        1 for ac in aircraft if ac.hex and len(ac.hex) > MAX_HEX_LEN
+    )
+    if skipped:
+        logger.warning(
+            "Skipped %s observation(s) with an over-long hex identifier", skipped
+        )
     if not rows:
         return 0
 

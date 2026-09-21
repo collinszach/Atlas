@@ -248,3 +248,55 @@ async def test_rejects_unknown_action(authed_client):
         f"/api/v1/skywatch/alerts/{uuid.uuid4()}/interaction", json={"action": "ignored"}
     )
     assert resp.status_code == 422
+
+
+# --- non-ICAO (TIS-B) identifiers ---------------------------------------
+
+def test_tisb_hex_fits_the_column():
+    """Feeds prefix non-ICAO addresses with "~", making them 7 chars.
+
+    A VARCHAR(6) column rejected these, and because observations go in as one
+    multi-row INSERT the bad row discarded the whole cycle — collection sat at
+    zero rows over busy airspace while looking healthy.
+    """
+    from app.models.skywatch import AircraftTrack
+    assert AircraftTrack.__table__.c.hex.type.length >= 7
+
+
+def test_alert_hex_fits_the_same_identifiers():
+    from app.models.skywatch import AircraftAlert
+    assert AircraftAlert.__table__.c.hex.type.length >= 7
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_tisb_contact_is_recorded(db_session, clean_tracks):
+    from app.services.skywatch.tracks import record_observations
+    from app.models.skywatch import AircraftTrack
+
+    seen = datetime(2026, 9, 21, 12, 0, tzinfo=timezone.utc)
+    written = await record_observations(
+        db_session, [Aircraft(hex="~tst050", lat=38.9, lon=-77.0)], seen
+    )
+    await db_session.commit()
+    assert written == 1
+
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_one_overlong_identifier_does_not_discard_the_batch(db_session, clean_tracks):
+    """The failure mode migration 015 fixed: lose one row, not the cycle."""
+    from app.services.skywatch.tracks import record_observations
+
+    seen = datetime(2026, 9, 21, 12, 1, tzinfo=timezone.utc)
+    written = await record_observations(
+        db_session,
+        [
+            Aircraft(hex="tst060", lat=38.9, lon=-77.0),
+            Aircraft(hex="x" * 40, lat=38.9, lon=-77.0),
+            Aircraft(hex="tst061", lat=38.8, lon=-77.1),
+        ],
+        seen,
+    )
+    await db_session.commit()
+    assert written == 2

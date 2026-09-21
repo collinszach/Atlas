@@ -19,19 +19,19 @@ private struct WideStatTile: View {
             }
             if isHero {
                 Text(value)
-                    .font(.system(size: 44, weight: .heavy, design: .rounded))
+                    .font(AtlasFont.mono(44, weight: .heavy))
                     .foregroundStyle(AtlasGradient.accentBright)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
             } else {
                 Text(value)
-                    .font(.system(size: 38, weight: .heavy, design: .rounded))
+                    .font(AtlasFont.mono(38, weight: .heavy))
                     .foregroundStyle(tone == .neutral ? Color.atlasText : tone.color)
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
             }
             Text(label)
-                .font(.system(size: 13, weight: .semibold))
+                .font(AtlasFont.body(13, weight: .semibold))
                 .foregroundStyle(Color.atlasInk2)
             if let sub = subLabel {
                 Text(sub)
@@ -61,11 +61,11 @@ private struct DualWideTile: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color.atlasAccent)
                 Text(leftValue)
-                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .font(AtlasFont.mono(22, weight: .heavy))
                     .foregroundStyle(Color.atlasText)
                     .minimumScaleFactor(0.6).lineLimit(1)
                 Text(leftLabel.uppercased())
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(AtlasFont.mono(10, weight: .bold))
                     .tracking(1.0).foregroundStyle(Color.atlasInkFaint)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -77,11 +77,11 @@ private struct DualWideTile: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color.atlasWarning)
                 Text(rightValue)
-                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .font(AtlasFont.mono(22, weight: .heavy))
                     .foregroundStyle(Color.atlasText)
                     .minimumScaleFactor(0.6).lineLimit(1)
                 Text(rightLabel.uppercased())
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(AtlasFont.mono(10, weight: .bold))
                     .tracking(1.0).foregroundStyle(Color.atlasInkFaint)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

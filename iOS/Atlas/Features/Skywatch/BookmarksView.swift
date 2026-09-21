@@ -84,7 +84,7 @@ struct BookmarksView: View {
                 AtlasSectionHeader(title: "Life list")
                 Spacer()
                 Text("\(spottedStore.entries.count) SEEN · \(spottedStore.uniqueTypeCount) TYPES")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(AtlasFont.mono(10, weight: .bold))
                     .tracking(0.4)
                     .foregroundStyle(Color.atlasInkFaint)
             }

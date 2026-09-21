@@ -66,6 +66,10 @@ Three families, each with a strict job. Display is a *moment* font, never a labe
   distances, counts, altitudes, registrations, IATA/ICAO codes, any earned number. This is the
   brand's signature tell.
 
+**SF Symbols keep the system font.** Icon glyphs are rendered by SF Symbols and must stay on
+`.system(size:weight:)` — routing them through a text face breaks symbol metrics and optical
+weight. Only *text* uses the three families above.
+
 Scale: fixed rem, product ratio ~1.2. `text-xs .75 / sm .875 / base 1 / lg 1.125 / xl 1.375 /
 2xl 1.75 / 3xl 2.25`. Display hero uses `clamp` only on the map/stats hero, max ≤ 4rem.
 Body prose capped 70ch. `text-wrap: balance` on display headings.
@@ -124,17 +128,19 @@ are tracked here rather than quietly tolerated:
 
 | Area | This system | iOS (`Theme.swift`) | Web (`globals.css`) |
 |---|---|---|---|
-| Display type | Playfair Display | `.system(design: .rounded)` — **owes migration** | ✅ conforms |
-| Body / mono | IBM Plex Sans / Mono | system sans / mono — **owes migration** | ✅ conforms |
+| Display type | Playfair Display | ✅ conforms (migrated 2026-09-20) | ✅ conforms |
+| Body / mono | IBM Plex Sans / Mono | ✅ conforms (migrated 2026-09-20) | ✅ conforms |
 | Accent | electric blue `#4F8DFF` + cyan | ✅ canonical | ✅ conforms (migrated 2026-09-20) |
 | Materials | functional glass | ✅ canonical | ✅ conforms (migrated 2026-09-20) |
 
-Both decisions were made 2026-09-20. Accent and materials follow iOS, which was already built to
-`docs/SPEC-flight-ui.md`'s blue/cyan glass direction; typography follows the web.
+Both surfaces now conform. Accent and materials followed iOS, which was already built to
+`docs/SPEC-flight-ui.md`'s blue/cyan glass direction; typography followed the web.
 
-The **web accent + material migration is done**: tokens repointed to the blue ramp with `--cyan`,
-`--violet` and `--arc` added, `Card` moved to the `.glass` recipe, and the dead
-`--visited`/`--planned`/`--bucket` fills removed.
-
-Outstanding: the **iOS type migration** — bundle Playfair Display and IBM Plex (both SIL OFL) and
-rewrite `AtlasFont`. `atlasGold` is already dead and can go with it.
+**iOS font bundling notes.** The four `.ttf` files live in `Atlas/Resources/Fonts` and are
+registered via `UIAppFonts`. Playfair Display and IBM Plex Sans ship as *variable* fonts —
+google/fonts publishes no statics for either — and CoreText exposes their named instances by
+PostScript name, which is how `AtlasFont` addresses weights. One trap: Playfair's instances carry
+a **`Roman` infix** (`PlayfairDisplayRoman-Bold`, not `PlayfairDisplay-Bold`). A wrong name makes
+`Font.custom` fall back to the system face *silently*, so `AtlasFont` checks registration via
+`UIFont(name:)` and `AtlasTests/TypographyTests` asserts every expected face resolves to its real
+family.

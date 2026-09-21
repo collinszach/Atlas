@@ -35,7 +35,7 @@ struct TypePill: View {
 
     private var label: some View {
         Text(typeCode.uppercased())
-            .font(.system(size: 10, weight: .heavy, design: .monospaced))
+            .font(AtlasFont.mono(10, weight: .heavy))
             .tracking(0.3)
             .foregroundStyle(color)
             .padding(.horizontal, 6).padding(.vertical, 2)

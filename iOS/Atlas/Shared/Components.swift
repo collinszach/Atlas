@@ -30,7 +30,7 @@ struct Pill: View {
         HStack(spacing: 5) {
             if dot { Circle().fill(tone.color).frame(width: 6, height: 6) }
             Text(text.uppercased())
-                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .font(AtlasFont.body(10, weight: .bold))
                 .tracking(0.4)
         }
         .padding(.horizontal, 8).padding(.vertical, 4)
@@ -46,7 +46,7 @@ struct AirlineBadge: View {
     var tone: AtlasTone = .accent
     var body: some View {
         Text(code.prefix(3))
-            .font(.system(size: 12, weight: .heavy, design: .rounded))
+            .font(AtlasFont.mono(12, weight: .heavy))
             .foregroundStyle(tone.color)
             .frame(width: 36, height: 36)
             .background(tone.tint, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
@@ -71,7 +71,7 @@ struct FlightRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(AtlasFont.body(15, weight: .semibold))
                         .foregroundStyle(Color.atlasText)
                         .lineLimit(1)
                     if let typeCode, !typeCode.isEmpty {
@@ -119,15 +119,15 @@ struct StatTile: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(value)
-                    .font(.system(size: 30, weight: .heavy, design: .rounded))
+                    .font(AtlasFont.mono(30, weight: .heavy))
                     .foregroundStyle(tone == .neutral ? Color.atlasText : tone.color)
                     .minimumScaleFactor(0.6).lineLimit(1)
                 if let unit {
-                    Text(unit).font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.atlasInk2)
+                    Text(unit).font(AtlasFont.body(13, weight: .semibold)).foregroundStyle(Color.atlasInk2)
                 }
             }
             Text(label)
-                .font(.system(size: 12, weight: .medium))
+                .font(AtlasFont.body(12, weight: .medium))
                 .foregroundStyle(Color.atlasInk2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,7 +142,7 @@ struct AtlasSectionHeader: View {
     let title: String
     var body: some View {
         Text(title.uppercased())
-            .font(.system(size: 11, weight: .bold, design: .monospaced))
+            .font(AtlasFont.mono(11, weight: .bold))
             .tracking(1.6)
             .foregroundStyle(Color.atlasInkFaint)
     }

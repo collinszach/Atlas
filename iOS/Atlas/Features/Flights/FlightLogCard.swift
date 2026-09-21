@@ -69,7 +69,7 @@ struct RouteLine: View {
     var body: some View {
         HStack(spacing: 8) {
             Text(origin)
-                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                .font(AtlasFont.display(17, weight: .heavy))
                 .foregroundStyle(Color.atlasText)
             ZStack(alignment: .trailing) {
                 GeometryReader { geo in
@@ -90,7 +90,7 @@ struct RouteLine: View {
             }
             .frame(maxWidth: .infinity)
             Text(destination)
-                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                .font(AtlasFont.display(17, weight: .heavy))
                 .foregroundStyle(Color.atlasText)
         }
         .accessibilityElement(children: .ignore)

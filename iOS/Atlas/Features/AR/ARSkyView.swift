@@ -233,7 +233,7 @@ struct ARSkyView: View {
                         }
                     } label: {
                         Text("Open Settings")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(AtlasFont.body(16, weight: .semibold))
                             .foregroundStyle(.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -297,7 +297,7 @@ struct ARLabel: View {
             VStack(alignment: .leading, spacing: 2) {
                 // Callsign / display name
                 Text(ac.displayName)
-                    .font(.system(size: isHighlighted ? 13 : 12, weight: .bold, design: .monospaced))
+                    .font(AtlasFont.mono(isHighlighted ? 13 : 12, weight: .bold))
                     .foregroundStyle(isHighlighted ? tone.color : Color.atlasText)
                     .lineLimit(1)
 

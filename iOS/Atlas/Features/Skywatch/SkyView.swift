@@ -557,7 +557,7 @@ private struct SpecialCard: View {
             Pill(text: pillLabel, tone: tone, dot: true)
 
             Text(aircraft.displayName)
-                .font(.system(size: 15, weight: .semibold))
+                .font(AtlasFont.body(15, weight: .semibold))
                 .foregroundStyle(Color.atlasText)
                 .lineLimit(1)
 

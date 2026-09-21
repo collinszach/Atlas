@@ -59,11 +59,11 @@ struct SignInView: View {
 
             VStack(spacing: 8) {
                 Text("Atlas")
-                    .font(.system(size: 44, weight: .heavy, design: .rounded))
+                    .font(AtlasFont.display(44, weight: .heavy))
                     .foregroundStyle(Color.atlasText)
 
                 Text("EYES ON THE SKY")
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .font(AtlasFont.mono(11, weight: .semibold))
                     .tracking(3)
                     .foregroundStyle(Color.atlasInk2)
             }
@@ -80,7 +80,7 @@ struct SignInView: View {
             HStack(spacing: 12) {
                 Rectangle().fill(Color.atlasBorder).frame(height: 1)
                 Text("or")
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(AtlasFont.mono(12))
                     .foregroundStyle(Color.atlasInkFaint)
                 Rectangle().fill(Color.atlasBorder).frame(height: 1)
             }
@@ -148,10 +148,10 @@ struct SignInView: View {
         } label: {
             HStack(spacing: 9) {
                 Text("G")
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(AtlasFont.body(17, weight: .bold))
                     .foregroundStyle(Color(red: 0.26, green: 0.52, blue: 0.96))
                 Text("Continue with Google")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(AtlasFont.body(16, weight: .semibold))
                     .foregroundStyle(Color.atlasInk2)
             }
             .frame(maxWidth: .infinity)
@@ -176,7 +176,7 @@ struct SignInView: View {
                 } else {
                     HStack(spacing: 8) {
                         Text("Sign in")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(AtlasFont.body(16, weight: .semibold))
                         Image(systemName: "arrow.right")
                             .font(.system(size: 14, weight: .semibold))
                     }
@@ -242,7 +242,7 @@ private struct FieldRow: View {
                     TextField("", text: $text, prompt: prompt)
                 }
             }
-            .font(.system(size: 16))
+            .font(AtlasFont.body(16))
             .foregroundStyle(Color.atlasText)
             .tint(Color.atlasAccent)
         }

@@ -178,7 +178,7 @@ struct AircraftDetailSheet: View {
                 HStack(spacing: 8) {
                     if let code = display.type {
                         Text(code)
-                            .font(.system(size: 13, weight: .heavy, design: .monospaced))
+                            .font(AtlasFont.mono(13, weight: .heavy))
                             .foregroundStyle(Color.atlasCyan)
                             .padding(.horizontal, 9).padding(.vertical, 4)
                             .background(Color.atlasCyan.opacity(0.14), in: Capsule())
@@ -432,7 +432,7 @@ struct AircraftDetailSheet: View {
     private func telemetryCell(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label.uppercased())
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .font(AtlasFont.mono(9, weight: .bold))
                 .tracking(0.6)
                 .foregroundStyle(Color.atlasInkFaint)
             Text(value)
@@ -461,7 +461,7 @@ struct AircraftDetailSheet: View {
                             .padding(.top, 5)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(match.trigger.uppercased())
-                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .font(AtlasFont.mono(9, weight: .bold))
                                 .tracking(0.4)
                                 .foregroundStyle(Color.atlasViolet)
                             Text(match.message)

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 extension Color {
     // MARK: Surfaces (dark, modern)
@@ -66,18 +67,85 @@ enum AtlasGradient {
     )
 }
 
-// MARK: - Typography (modern: SF Pro Rounded display, mono for data)
+// MARK: - Typography (DESIGN.md: Playfair Display / IBM Plex Sans / IBM Plex Mono)
 
 enum AtlasFont {
-    /// Big, bold, modern — rounded sans (NOT serif).
+    /// PostScript names as they appear in the bundled files' name tables. Playfair's
+    /// variable named instances carry a "Roman" infix — `PlayfairDisplay-Bold` does NOT
+    /// exist and would silently fall back to the system face.
+    private enum PS {
+        static let displaySemibold = "PlayfairDisplayRoman-SemiBold"
+        static let displayBold     = "PlayfairDisplayRoman-Bold"
+        static let sansRegular     = "IBMPlexSans-Regular"
+        static let sansMedium      = "IBMPlexSans-Medium"
+        static let sansSemibold    = "IBMPlexSans-SemiBold"
+        static let monoRegular     = "IBMPlexMono-Regular"
+        static let monoMedium      = "IBMPlexMono-Medium"
+    }
+
+    /// A *moment* font — route headers, airport names, hero numeral companions.
+    /// Never on buttons, labels or data (DESIGN.md → Typography).
     static func display(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        .system(size: size, weight: weight, design: .rounded)
+        let name: String
+        switch weight {
+        case .bold, .heavy, .black: name = PS.displayBold
+        default:                    name = PS.displaySemibold
+        }
+        return custom(name, size: size, fallback: weight, design: .serif)
     }
+
+    /// The instrument voice — flight numbers, distances, altitudes, dates, codes.
     static func mono(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
+        let name: String
+        switch weight {
+        case .ultraLight, .thin, .light, .regular: name = PS.monoRegular
+        default:                                   name = PS.monoMedium
+        }
+        return custom(name, size: size, fallback: weight, design: .monospaced)
     }
+
     static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .default)
+        let name: String
+        switch weight {
+        case .semibold, .bold, .heavy, .black: name = PS.sansSemibold
+        case .medium:                          name = PS.sansMedium
+        default:                               name = PS.sansRegular
+        }
+        return custom(name, size: size, fallback: weight, design: .default)
+    }
+
+    /// Resolves a bundled face, falling back to the system equivalent if it is missing.
+    /// `UIFont(name:)` returns nil for an unregistered name, whereas `Font.custom` would
+    /// silently substitute — so the check is explicit and the fallback is deliberate.
+    private static func custom(
+        _ name: String,
+        size: CGFloat,
+        fallback weight: Font.Weight,
+        design: Font.Design
+    ) -> Font {
+        guard isRegistered(name) else {
+            return .system(size: size, weight: weight, design: design)
+        }
+        return .custom(name, size: size)
+    }
+
+    private static var registeredCache: [String: Bool] = [:]
+
+    static func isRegistered(_ name: String) -> Bool {
+        if let cached = registeredCache[name] { return cached }
+        let found = UIFont(name: name, size: 12) != nil
+        registeredCache[name] = found
+        if !found {
+            assertionFailure("Atlas font not registered: \(name) — check UIAppFonts and the bundled file.")
+        }
+        return found
+    }
+
+    /// Every face this app expects to find; used by the startup check and tests.
+    static var expectedFaces: [String] {
+        [PS.displaySemibold, PS.displayBold,
+         PS.sansRegular, PS.sansMedium, PS.sansSemibold,
+         PS.monoRegular, PS.monoMedium]
     }
 }
 

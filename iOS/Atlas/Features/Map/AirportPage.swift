@@ -111,7 +111,7 @@ struct AirportPage: View {
 
     private func codeChip(_ text: String, tone: AtlasTone) -> some View {
         Text(text)
-            .font(.system(size: 13, weight: .heavy, design: .monospaced))
+            .font(AtlasFont.mono(13, weight: .heavy))
             .foregroundStyle(tone.color)
             .padding(.horizontal, 10).padding(.vertical, 5)
             .background(tone.tint, in: Capsule())
@@ -124,7 +124,7 @@ struct AirportPage: View {
                     Text(context.date, format: Date.FormatStyle(timeZone: tz).hour().minute())
                         .font(AtlasFont.mono(15, weight: .semibold))
                         .foregroundStyle(Color.atlasText)
-                    Text("local").font(.system(size: 9, weight: .bold, design: .monospaced))
+                    Text("local").font(AtlasFont.mono(9, weight: .bold))
                         .tracking(0.6).foregroundStyle(Color.atlasInkFaint)
                 }
             }
@@ -150,7 +150,7 @@ struct AirportPage: View {
                     .padding(.horizontal, 4)
             }
             Text("Audio via LiveATC.net")
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .font(AtlasFont.mono(10, weight: .medium))
                 .foregroundStyle(Color.atlasInkFaint)
                 .padding(.horizontal, 4)
         }
@@ -289,7 +289,7 @@ struct AirportPage: View {
             }
         }()
         return Text((status ?? "scheduled").capitalized)
-            .font(.system(size: 9, weight: .bold, design: .monospaced))
+            .font(AtlasFont.mono(9, weight: .bold))
             .tracking(0.4)
             .foregroundStyle(color)
             .padding(.horizontal, 6).padding(.vertical, 2)
@@ -332,7 +332,7 @@ struct AirportPage: View {
         VStack(spacing: 3) {
             Text(value).font(AtlasFont.mono(16, weight: .bold)).foregroundStyle(Color.atlasText)
                 .lineLimit(1).minimumScaleFactor(0.7)
-            Text(label).font(.system(size: 9, weight: .bold, design: .monospaced))
+            Text(label).font(AtlasFont.mono(9, weight: .bold))
                 .tracking(0.5).foregroundStyle(Color.atlasInkFaint)
         }
         .frame(maxWidth: .infinity)

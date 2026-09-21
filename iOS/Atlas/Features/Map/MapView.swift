@@ -126,7 +126,7 @@ struct MapView: View {
             }
             HStack(spacing: 5) {
                 Circle().fill(Color.atlasCyan).frame(width: 6, height: 6)
-                Text("LIVE").font(.system(size: 10, weight: .bold, design: .rounded))
+                Text("LIVE").font(AtlasFont.body(10, weight: .bold))
             }
             .foregroundStyle(Color.atlasCyan)
             .padding(.horizontal, 9).padding(.vertical, 5)

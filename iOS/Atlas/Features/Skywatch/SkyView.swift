@@ -137,6 +137,9 @@ struct SkyView: View {
                         Text("\(vm.aircraft.count) in range")
                             .font(AtlasFont.mono(11))
                             .foregroundStyle(Color.atlasInkFaint)
+                            // Four trailing toolbar buttons squeeze this item;
+                            // without fixedSize it truncates to "79 i…".
+                            .fixedSize()
                     }
                 }
             }

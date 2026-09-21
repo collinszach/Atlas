@@ -16,11 +16,6 @@ extension TransportLeg {
 
     var departureDate: Date? { TransportLeg.parseDate(departureAt) }
 
-    var year: String {
-        guard let d = departureDate else { return "Undated" }
-        return TransportLeg.yearFormatter.string(from: d)
-    }
-
     var departureDisplay: String {
         guard let d = departureDate else { return "—" }
         return TransportLeg.mediumDate.string(from: d)
@@ -62,13 +57,6 @@ extension TransportLeg {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
-
-    private static let yearFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "yyyy"
         return f
     }()
 

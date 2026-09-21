@@ -9,7 +9,7 @@ struct FlightListView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.atlasBackground.ignoresSafeArea()
+                AtlasGradient.backdrop.ignoresSafeArea()
                 content
             }
             .navigationTitle("Flights")
@@ -58,9 +58,17 @@ struct FlightListView: View {
     @ViewBuilder
     private var content: some View {
         if vm.isLoading && vm.flights.isEmpty {
-            List { ForEach(0..<6, id: \.self) { _ in SkeletonRow() } }
-                .listStyle(.insetGrouped)
-                .scrollContentBackground(.hidden)
+            ScrollView {
+                VStack(spacing: 11) {
+                    ForEach(0..<5, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .fill(Color.atlasSurface)
+                            .frame(height: 104)
+                    }
+                }
+                .padding(16)
+                .redacted(reason: .placeholder)
+            }
         } else if let err = vm.error, vm.flights.isEmpty {
             VStack {
                 ErrorBanner(message: err) {
@@ -75,73 +83,55 @@ struct FlightListView: View {
                 message: "Tap + to log a flight. Enter a flight number and Atlas can look up the route for you."
             )
         } else {
-            List {
-                if !vm.flights.isEmpty {
-                    summaryHeader
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 8, trailing: 4))
-                }
-                ForEach(vm.grouped, id: \.year) { group in
-                    Section {
-                        ForEach(group.legs) { leg in
-                            NavigationLink(value: leg) {
-                                FlightRow(
-                                    badge: leg.airline ?? leg.flightNumber ?? "✈",
-                                    title: leg.routeLabel,
-                                    subtitle: subtitle(for: leg),
-                                    trailing: leg.distanceDisplay
-                                )
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 11) {
+                    Text(subtitle)
+                        .font(AtlasFont.body(13))
+                        .foregroundStyle(Color.atlasInk2)
+                        .padding(.bottom, 2)
+
+                    if vm.filtered.isEmpty {
+                        Text("No flights match “\(vm.searchText)”.")
+                            .font(AtlasFont.body(13))
+                            .foregroundStyle(Color.atlasInkFaint)
+                            .padding(.top, 24)
+                            .frame(maxWidth: .infinity)
+                    }
+
+                    ForEach(Array(vm.filtered.enumerated()), id: \.element.id) { index, leg in
+                        NavigationLink(value: leg) {
+                            FlightLogCard(flight: leg, showGlow: index == 0)
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                pendingDelete = leg
+                            } label: {
+                                Label("Delete flight", systemImage: "trash")
                             }
-                            .listRowBackground(Color.atlasSurface)
-                            .listRowSeparatorTint(Color.atlasBorder)
                         }
-                        .onDelete { idx in
-                            guard let i = idx.first else { return }
-                            pendingDelete = group.legs[i]
-                        }
-                    } header: {
-                        AtlasSectionHeader(title: group.year)
                     }
                 }
+                .padding(16)
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
             .searchable(text: $vm.searchText, prompt: "Search flights")
             .refreshable { await vm.load(api: auth.api) }
         }
     }
 
-    private var summaryHeader: some View {
-        HStack(spacing: 16) {
-            metric("\(vm.flights.count)", "flights")
-            Rectangle().fill(Color.atlasBorder).frame(width: 1, height: 28)
-            metric(
-                vm.totalDistanceKm >= 1_000
-                    ? String(format: "%.0fk", vm.totalDistanceKm / 1_000)
-                    : String(format: "%.0f", vm.totalDistanceKm),
-                "km flown"
-            )
+    /// "Your logbook · 112 flights · 389,402 km" — the mockup's hero subtitle stat.
+    private var subtitle: String {
+        var parts = ["Your logbook", "\(vm.flights.count) flight\(vm.flights.count == 1 ? "" : "s")"]
+        let km = vm.totalDistanceKm
+        if km > 0 {
+            parts.append("\(Self.kmFormatter.string(from: NSNumber(value: Int(km))) ?? "\(Int(km))") km")
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(Color.atlasSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        return parts.joined(separator: " · ")
     }
 
-    private func metric(_ value: String, _ label: String) -> some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.system(size: 22, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color.atlasText)
-            Text(label.uppercased())
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .tracking(1.0)
-                .foregroundStyle(Color.atlasInkFaint)
-        }
-    }
-
-    private func subtitle(for leg: TransportLeg) -> String {
-        [leg.flightNumber, leg.departureDisplay, leg.durationDisplay]
-            .compactMap { $0 }
-            .joined(separator: " · ")
-    }
+    private static let kmFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        return f
+    }()
 }

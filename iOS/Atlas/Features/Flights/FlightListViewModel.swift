@@ -18,17 +18,6 @@ final class FlightListViewModel {
         }
     }
 
-    /// Newest year first, preserving the API's newest-first ordering within each group.
-    var grouped: [(year: String, legs: [TransportLeg])] {
-        var order: [String] = []
-        var buckets: [String: [TransportLeg]] = [:]
-        for leg in filtered {
-            if buckets[leg.year] == nil { order.append(leg.year) }
-            buckets[leg.year, default: []].append(leg)
-        }
-        return order.map { ($0, buckets[$0] ?? []) }
-    }
-
     var totalDistanceKm: Double {
         flights.compactMap(\.distanceKm).reduce(0, +)
     }

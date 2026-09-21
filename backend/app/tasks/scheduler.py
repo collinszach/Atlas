@@ -7,6 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.config import settings
 from app.database import async_session_factory
 from app.services.skywatch.apns import ApnsClient
+from app.services.skywatch.collector import configured_sites, run_collection_cycle
 from app.services.skywatch.tracks import prune_tracks
 from app.services.skywatch.watcher import run_watch_cycle
 
@@ -33,6 +34,15 @@ async def _prune_tracks_tick() -> None:
         logger.exception("Aircraft track prune failed")
 
 
+async def _collect_tick() -> None:
+    """One device-independent observation pass. Never raises."""
+    try:
+        async with async_session_factory() as session:
+            await run_collection_cycle(session)
+    except Exception:
+        logger.exception("Aircraft collection tick failed")
+
+
 def start_scheduler() -> AsyncIOScheduler:
     """Start the background scheduler (idempotent)."""
     global _scheduler
@@ -49,6 +59,18 @@ def start_scheduler() -> AsyncIOScheduler:
         coalesce=True,
         replace_existing=True,
     )
+    sites = configured_sites()
+    if sites:
+        scheduler.add_job(
+            _collect_tick,
+            trigger="interval",
+            seconds=settings.skywatch_collect_seconds,
+            id="aircraft_collection",
+            max_instances=1,
+            coalesce=True,
+            replace_existing=True,
+        )
+
     scheduler.add_job(
         _prune_tracks_tick,
         trigger="cron",
@@ -62,9 +84,10 @@ def start_scheduler() -> AsyncIOScheduler:
     _scheduler = scheduler
     apns_state = "configured" if ApnsClient().is_configured else "NOT configured (push disabled)"
     logger.info(
-        "Skywatch scheduler started (every %ss) — APNs %s",
+        "Skywatch scheduler started (every %ss) — APNs %s; collection sites: %s",
         settings.skywatch_poll_seconds,
         apns_state,
+        len(sites) or "none (history only accrues while a device reports)",
     )
     return scheduler
 

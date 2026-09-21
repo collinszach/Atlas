@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     # only low helicopters. History for route/ETA work needs a wide net, and
     # alerting still filters to the user's own radius afterwards.
     skywatch_track_radius_km: float = 120.0
+    # Fixed sites polled for history regardless of whether anyone has the app
+    # open: "lat,lon; lat,lon". Empty disables collection entirely. At 120km over
+    # busy airspace expect ~300 aircraft per pass, so ~430k rows/day per site at
+    # the default interval — tune the interval or retention before adding sites.
+    skywatch_collect_sites: str = ""
+    skywatch_collect_seconds: int = 60
     skywatch_track_retention_days: int = 30
     skywatch_track_prune_hour: int = 4
 

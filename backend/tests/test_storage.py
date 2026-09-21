@@ -39,4 +39,4 @@ async def test_upload_file_calls_put_object():
 def test_photo_schema_has_url_fields():
     from app.schemas.photo import PhotoRead
     fields = set(PhotoRead.model_fields.keys())
-    assert {"id", "trip_id", "storage_key", "url", "thumbnail_url", "is_cover"}.issubset(fields)
+    assert {"id", "transport_leg_id", "storage_key", "url", "thumbnail_url", "is_cover"}.issubset(fields)

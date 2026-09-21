@@ -145,8 +145,13 @@ async def _process_device(
     lon = float(device.last_lng)
     radius_km = float(preference.radius_km)
 
+    # Scan the wider of the two: alerting filters back down to the user's radius
+    # inside evaluate_aircraft, so a wide scan costs one request and gives the
+    # track history something to learn from.
+    scan_radius_km = max(radius_km, settings.skywatch_track_radius_km)
+
     try:
-        aircraft_list = await resolver.get_aircraft(lat, lon, radius_km)
+        aircraft_list = await resolver.get_aircraft(lat, lon, scan_radius_km)
     except AdsbServiceError as exc:
         logger.warning("ADS-B lookup failed for device %s: %s", device.id, exc)
         return

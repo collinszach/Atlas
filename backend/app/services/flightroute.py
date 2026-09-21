@@ -139,18 +139,32 @@ def validate_route(
 
     d_dest = haversine_km(ac_lat, ac_lon, route.dest_lat, route.dest_lon)
     d_orig = haversine_km(ac_lat, ac_lon, route.origin_lat, route.origin_lon)
+    near_endpoint = d_dest < _NEAR_ENDPOINT_KM or d_orig < _NEAR_ENDPOINT_KM
 
-    # Departing or arriving — trust it.
-    if d_dest < _NEAR_ENDPOINT_KM or d_orig < _NEAR_ENDPOINT_KM:
-        return route
     if track is None:
+        # Nothing to disambiguate direction with; proximity is all we have.
         return route
 
     to_dest = _bearing(ac_lat, ac_lon, route.dest_lat, route.dest_lon)
     to_orig = _bearing(ac_lat, ac_lon, route.origin_lat, route.origin_lon)
-    if _ang_diff(track, to_dest) <= _HEADING_TOLERANCE_DEG:
+    toward_dest = _ang_diff(track, to_dest) <= _HEADING_TOLERANCE_DEG
+    toward_orig = _ang_diff(track, to_orig) <= _HEADING_TOLERANCE_DEG
+
+    # Heading decides direction, including near an endpoint. Proximity alone used
+    # to short-circuit here, which read a departure as an arrival: an aircraft
+    # climbing out of LGA on an (adsbdb-recorded) X->LGA leg sat inside
+    # _NEAR_ENDPOINT_KM of its "destination" and was reported as landing there in
+    # minutes. Near one endpoint the bearing to *that* endpoint is unstable while
+    # the aircraft manoeuvres, but the bearing to the far one is steady, so the
+    # heading test is strictly better informed than proximity.
+    if toward_dest and not toward_orig:
         return route
-    if _ang_diff(track, to_orig) <= _HEADING_TOLERANCE_DEG:
+    if toward_orig and not toward_dest:
         return route.swapped()
-    # Heading toward neither endpoint — the route is stale/wrong for this flight.
+
+    # Ambiguous: pointed at both (endpoints roughly aligned from here) or neither
+    # (turning, holding, or on the ground). Near an endpoint that is expected, so
+    # keep the scheduled route; far from both it means the route is stale.
+    if near_endpoint:
+        return route
     return None

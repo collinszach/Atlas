@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     # Observation retention. At a 20s poll with ~30 aircraft in radius this is
     # roughly 130k rows/day per distinct observed area; 30 days keeps enough
     # history for route inference without unbounded growth on the NUC.
+    # Collection radius for aircraft_tracks, deliberately independent of the
+    # per-user alert radius. That radius is tuned for "how often do I want to be
+    # interrupted" and is often small — one user had it at 5km, which recorded
+    # only low helicopters. History for route/ETA work needs a wide net, and
+    # alerting still filters to the user's own radius afterwards.
+    skywatch_track_radius_km: float = 120.0
     skywatch_track_retention_days: int = 30
     skywatch_track_prune_hour: int = 4
 

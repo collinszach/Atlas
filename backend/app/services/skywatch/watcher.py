@@ -22,6 +22,7 @@ from app.services.llm import LocalLLMError, is_enabled
 from app.services.skywatch.apns import ApnsClient
 from app.services.skywatch.copy import alert_copy
 from app.services.skywatch.rules import Match, evaluate_aircraft
+from app.services.skywatch.tracks import cycle_timestamp, record_observations
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,7 @@ async def _process_device(
     mil_prefixes: dict[str, MilCallsignPrefix],
     resolver: DataSourceResolver,
     apns: ApnsClient,
+    cycle_seen_at: datetime,
 ) -> None:
     if _is_quiet_hours(preference.quiet_hours):
         logger.debug("Skipping device %s — quiet hours", device.id)
@@ -148,6 +150,18 @@ async def _process_device(
     except AdsbServiceError as exc:
         logger.warning("ADS-B lookup failed for device %s: %s", device.id, exc)
         return
+
+    # Record before evaluating: the history must cover quiet skies too, or it
+    # only ever contains aircraft that happened to be notable to someone.
+    try:
+        await record_observations(session, aircraft_list, cycle_seen_at)
+        # Commit here rather than at the end: the `not fired` path below returns
+        # early, and the scheduler's session context manager closes without
+        # committing, so anything left pending would be discarded.
+        await session.commit()
+    except Exception:
+        logger.exception("Failed to record aircraft observations for device %s", device.id)
+        await session.rollback()
 
     # Pre-evaluate matches per aircraft, then batch the cooldown check.
     fired: list[tuple[Any, Match]] = []
@@ -195,6 +209,10 @@ async def _process_device(
         # Prevent duplicate alerts for the same hex within this cycle.
         on_cooldown.add(aircraft.hex)
 
+    # `get_db()` commits for request-path writes, but this runs under the
+    # scheduler, whose session context manager closes without committing.
+    await session.commit()
+
 
 async def run_watch_cycle(
     session: AsyncSession,
@@ -210,6 +228,7 @@ async def run_watch_cycle(
     """
     resolver = resolver or DataSourceResolver()
     apns = apns or ApnsClient()
+    cycle_seen_at = cycle_timestamp()
 
     notable_result = await session.execute(select(NotableType))
     notable_types = {nt.type_code.upper(): nt for nt in notable_result.scalars().all()}
@@ -243,7 +262,10 @@ async def run_watch_cycle(
 
     for index, (device, preference) in enumerate(rows):
         try:
-            await _process_device(session, device, preference, notable_types, mil_prefixes, resolver, apns)
+            await _process_device(
+                session, device, preference, notable_types,
+                mil_prefixes, resolver, apns, cycle_seen_at,
+            )
         except Exception:
             logger.exception("Skywatch watch cycle failed for device %s", device.id)
 

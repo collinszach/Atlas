@@ -7,6 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.config import settings
 from app.database import async_session_factory
 from app.services.skywatch.apns import ApnsClient
+from app.services.skywatch.tracks import prune_tracks
 from app.services.skywatch.watcher import run_watch_cycle
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,15 @@ async def _skywatch_tick() -> None:
         logger.exception("Skywatch tick failed")
 
 
+async def _prune_tracks_tick() -> None:
+    """Nightly retention pass over aircraft_tracks. Never raises."""
+    try:
+        async with async_session_factory() as session:
+            await prune_tracks(session)
+    except Exception:
+        logger.exception("Aircraft track prune failed")
+
+
 def start_scheduler() -> AsyncIOScheduler:
     """Start the background scheduler (idempotent)."""
     global _scheduler
@@ -35,6 +45,15 @@ def start_scheduler() -> AsyncIOScheduler:
         trigger="interval",
         seconds=settings.skywatch_poll_seconds,
         id="skywatch_watch_cycle",
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        _prune_tracks_tick,
+        trigger="cron",
+        hour=settings.skywatch_track_prune_hour,
+        id="aircraft_track_prune",
         max_instances=1,
         coalesce=True,
         replace_existing=True,

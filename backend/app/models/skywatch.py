@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -88,6 +89,11 @@ class AircraftAlert(Base):
 
     sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    # Engagement feedback. Both null means the alert was neither opened nor
+    # explicitly dismissed — absence of signal, not a negative signal.
+    opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    dismissed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
 
 class NotableType(Base):
     __tablename__ = "notable_types"
@@ -102,3 +108,36 @@ class MilCallsignPrefix(Base):
 
     prefix: Mapped[str] = mapped_column(String(10), primary_key=True)
     description: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class AircraftTrack(Base):
+    """One observation of one aircraft at one instant.
+
+    Deliberately **not** user-scoped, unlike every other Atlas table. These are
+    public ADS-B broadcasts, not personal data, and they are deduplicated across
+    users who observe the same aircraft in the same cycle. Recording which user's
+    poll produced an observation would turn a table of public aircraft positions
+    into a location history of the user, which is exactly what we don't want.
+    Precedent: `notable_types` and `mil_callsign_prefixes` are global too.
+    """
+
+    __tablename__ = "aircraft_tracks"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+
+    hex: Mapped[str] = mapped_column(String(6), nullable=False)
+    # Quantized to the start of the watch cycle so concurrent observers collapse
+    # to one row via the (hex, seen_at) unique constraint.
+    seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    callsign: Mapped[str | None] = mapped_column(String, nullable=True)
+    registration: Mapped[str | None] = mapped_column(String, nullable=True)
+    type: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    lat: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
+    lng: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
+    alt_baro: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ground_speed: Mapped[Decimal | None] = mapped_column(Numeric(7, 2), nullable=True)
+    track_deg: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    squawk: Mapped[str | None] = mapped_column(String(4), nullable=True)
+    is_military: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("false"))

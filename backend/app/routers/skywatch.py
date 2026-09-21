@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import uuid
+from datetime import datetime, timezone
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,6 +19,7 @@ from app.models.skywatch import (
 )
 from app.schemas.skywatch import (
     AircraftAlertRead,
+    AlertInteraction,
     AircraftMatch,
     AirportScheduleResponse,
     DeviceCreate,
@@ -375,6 +378,40 @@ async def list_alerts(
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+@router.post("/alerts/{alert_id}/interaction", response_model=AircraftAlertRead)
+async def record_alert_interaction(
+    alert_id: uuid.UUID,
+    body: AlertInteraction,
+    user_id: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+) -> AircraftAlert:
+    """Record that an alert was opened or dismissed.
+
+    This is the fitness signal behind rule tuning: which alerts were worth the
+    interruption. Idempotent — re-posting the same action keeps the first
+    timestamp, so a double-tap doesn't skew the record.
+    """
+    result = await db.execute(
+        select(AircraftAlert).where(
+            AircraftAlert.id == alert_id,
+            AircraftAlert.user_id == user_id,
+        )
+    )
+    alert = result.scalar_one_or_none()
+    if alert is None:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    now = datetime.now(timezone.utc)
+    if body.action == "opened":
+        alert.opened_at = alert.opened_at or now
+    else:
+        alert.dismissed_at = alert.dismissed_at or now
+
+    await db.commit()
+    await db.refresh(alert)
+    return alert
 
 
 @router.get("/airports/{iata}/departures", response_model=AirportScheduleResponse)

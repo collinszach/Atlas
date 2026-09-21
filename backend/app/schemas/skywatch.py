@@ -2,7 +2,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 from pydantic import BaseModel, model_validator
 
 _VALID_PLATFORMS = {"ios", "android"}
@@ -172,8 +172,16 @@ class AircraftAlertRead(BaseModel):
     alt_baro: int | None
     distance_km: Decimal | None
     sent_at: datetime
+    opened_at: datetime | None = None
+    dismissed_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+
+class AlertInteraction(BaseModel):
+    """Engagement feedback on a fired alert — the fitness signal for rule tuning."""
+
+    action: Literal["opened", "dismissed"]
 
 
 # --- Airport schedule ---

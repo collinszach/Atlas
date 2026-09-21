@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     skywatch_default_radius_km: float = 30.0
     skywatch_poll_seconds: int = 20
     skywatch_location_freshness_minutes: int = 15
+    # Observation retention. At a 20s poll with ~30 aircraft in radius this is
+    # roughly 130k rows/day per distinct observed area; 30 days keeps enough
+    # history for route inference without unbounded growth on the NUC.
+    skywatch_track_retention_days: int = 30
+    skywatch_track_prune_hour: int = 4
 
     # Flight enrichment (optional)
     aviationstack_api_key: str = ""

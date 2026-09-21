@@ -21,10 +21,10 @@ const config: Config = {
           "ink-faint": "var(--atlas-ink-faint)",
           accent: "var(--atlas-accent)",
           "accent-hi": "var(--atlas-accent-hi)",
+          cyan: "var(--atlas-cyan)",
+          violet: "var(--atlas-violet)",
           cool: "var(--atlas-cool)",
-          visited: "var(--atlas-visited)",
-          planned: "var(--atlas-planned)",
-          bucket: "var(--atlas-bucket)",
+          arc: "var(--atlas-arc)",
           success: "var(--atlas-success)",
           warning: "var(--atlas-warning)",
           danger: "var(--atlas-danger)",
@@ -54,12 +54,12 @@ const config: Config = {
         DEFAULT: "8px",
         md: "8px",
         lg: "12px",
-        xl: "16px",
+        xl: "20px",
       },
       boxShadow: {
         "elev-1": "0 1px 0 rgba(255,255,255,0.02) inset, 0 6px 18px -10px rgba(0,0,0,0.6)",
         "elev-2": "0 1px 0 rgba(255,255,255,0.03) inset, 0 14px 36px -14px rgba(0,0,0,0.7)",
-        "glow-accent": "0 0 0 1px rgba(201,168,76,0.25), 0 8px 28px -10px rgba(201,168,76,0.25)",
+        "glow-accent": "0 0 0 1px rgba(79,141,255,0.25), 0 8px 28px -10px rgba(79,141,255,0.25)",
       },
       keyframes: {
         "fade-up": {

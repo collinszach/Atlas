@@ -1,14 +1,13 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
-type Tone = "neutral" | "visited" | "planned" | "dream" | "active" | "accent" | "cool";
+type Tone = "neutral" | "active" | "accent" | "cyan" | "violet" | "cool";
 
 const tones: Record<Tone, { wrap: string; dot: string }> = {
   neutral: { wrap: "bg-atlas-surface-2 text-atlas-ink-2 border-atlas-border", dot: "bg-atlas-ink-faint" },
-  visited: { wrap: "bg-atlas-visited/12 text-atlas-visited border-atlas-visited/25", dot: "bg-atlas-visited" },
-  planned: { wrap: "bg-atlas-accent/12 text-atlas-accent border-atlas-accent/25", dot: "bg-atlas-accent" },
   active: { wrap: "bg-atlas-success/12 text-atlas-success border-atlas-success/25", dot: "bg-atlas-success" },
-  dream: { wrap: "bg-atlas-bucket/15 text-atlas-ink-2 border-atlas-bucket/30", dot: "bg-atlas-bucket" },
+  cyan: { wrap: "bg-atlas-cyan/12 text-atlas-cyan border-atlas-cyan/25", dot: "bg-atlas-cyan" },
+  violet: { wrap: "bg-atlas-violet/12 text-atlas-violet border-atlas-violet/25", dot: "bg-atlas-violet" },
   accent: { wrap: "bg-atlas-accent/12 text-atlas-accent border-atlas-accent/25", dot: "bg-atlas-accent" },
   cool: { wrap: "bg-atlas-cool/12 text-atlas-cool border-atlas-cool/25", dot: "bg-atlas-cool" },
 };

@@ -68,7 +68,7 @@ export function WorldMap() {
         type: "line",
         source: "flight-arcs",
         paint: {
-          "line-color": "#4a90d9",
+          "line-color": "#4f8dff",
           "line-width": 1,
           "line-opacity": 0.5,
         },

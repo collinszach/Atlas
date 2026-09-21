@@ -126,15 +126,15 @@ are tracked here rather than quietly tolerated:
 |---|---|---|---|
 | Display type | Playfair Display | `.system(design: .rounded)` — **owes migration** | ✅ conforms |
 | Body / mono | IBM Plex Sans / Mono | system sans / mono — **owes migration** | ✅ conforms |
-| Accent | electric blue `#4F8DFF` + cyan | ✅ canonical | gold `#c9a84c` — **owes migration** |
-| Materials | functional glass | ✅ canonical | non-glass cards — **owes migration** |
+| Accent | electric blue `#4F8DFF` + cyan | ✅ canonical | ✅ conforms (migrated 2026-09-20) |
+| Materials | functional glass | ✅ canonical | ✅ conforms (migrated 2026-09-20) |
 
 Both decisions were made 2026-09-20. Accent and materials follow iOS, which was already built to
-`docs/SPEC-flight-ui.md`'s blue/cyan glass direction; typography follows the web. Each platform
-therefore owes the other half.
+`docs/SPEC-flight-ui.md`'s blue/cyan glass direction; typography follows the web.
 
-- **iOS type migration**: bundle Playfair Display and IBM Plex (both SIL OFL), rewrite `AtlasFont`.
-  `atlasGold` is already dead and can go with it.
-- **Web accent + material migration**: repoint `--atlas-accent` / `--atlas-accent-hi` to the blue
-  ramp, add `--cyan` and the brand gradient, and move `Card` to the glass recipe above. The gold
-  focus outline in `globals.css` goes with it.
+The **web accent + material migration is done**: tokens repointed to the blue ramp with `--cyan`,
+`--violet` and `--arc` added, `Card` moved to the `.glass` recipe, and the dead
+`--visited`/`--planned`/`--bucket` fills removed.
+
+Outstanding: the **iOS type migration** — bundle Playfair Display and IBM Plex (both SIL OFL) and
+rewrite `AtlasFont`. `atlasGold` is already dead and can go with it.

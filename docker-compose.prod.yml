@@ -1,0 +1,147 @@
+# Production stack for the NUC. The root docker-compose.yml is the dev variant
+# (npm run dev, shifted ports so it can run beside other projects on a laptop);
+# this is what actually runs the deployment and is the file scripts/deploy.sh uses.
+#
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# `name:` is pinned so the compose project — and therefore the named volumes
+# holding Postgres and MinIO data — never depends on the directory name. Renaming
+# the checkout without this would silently create empty volumes.
+name: atlas
+
+services:
+  atlas-db:
+    image: postgis/postgis:16-3.4
+    container_name: atlas-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - atlas-network
+
+  atlas-redis:
+    image: redis:7-alpine
+    container_name: atlas-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - atlas-network
+
+  atlas-minio:
+    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    container_name: atlas-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    # Host 9000 is taken by another service on this box; binding it is why MinIO
+    # never came up. MINIO_PUBLIC_URL must match the published API port.
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - atlas-network
+
+  atlas-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: atlas-backend
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      atlas-db:
+        condition: service_healthy
+      atlas-redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    # --reload is deliberate here: the source is bind-mounted, so `git pull`
+    # alone applies code changes. Drop it and deploy.sh's restart becomes load-bearing.
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - atlas-network
+
+  # Not started by default — this has never run on the NUC and the web app is
+  # not yet pointed at a host. Bring it up explicitly when that changes:
+  #     docker compose -f docker-compose.prod.yml --profile web up -d atlas-frontend
+  atlas-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: atlas-frontend
+    profiles: ["web"]
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - atlas-backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - atlas-network
+
+  # Local ADS-B receiver; needs an RTL-SDR dongle attached to the host.
+  #     docker compose -f docker-compose.prod.yml --profile sdr up -d atlas-dump1090
+  # Blacklist the kernel DVB driver first or it claims the dongle:
+  #     echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/no-rtl.conf
+  atlas-dump1090:
+    image: ghcr.io/sdr-enthusiasts/docker-dump1090-fa:latest
+    container_name: atlas-dump1090
+    profiles: ["sdr"]
+    restart: unless-stopped
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    environment:
+      TZ: ${TZ:-UTC}
+      READSB_DEVICE_TYPE: rtlsdr
+      READSB_GAIN: ${SDR_GAIN:-autogain}
+      READSB_LAT: ${SDR_LAT}
+      READSB_LON: ${SDR_LON}
+      READSB_RX_LOCATION_ACCURACY: "2"
+      READSB_STATS_RANGE: "true"
+    ports:
+      - "8078:8080"
+    tmpfs:
+      - /run:exec,size=64M
+      - /var/log
+    networks:
+      - atlas-network
+
+networks:
+  atlas-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

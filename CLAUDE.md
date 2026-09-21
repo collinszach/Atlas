@@ -384,13 +384,12 @@ is preferred when available; `DataSourceResolver` merges both sources, preferrin
 --atlas-accent-cool: #4a90d9;   /* ocean blue for map */
 --atlas-text:        #e2e8f0;
 --atlas-text-muted:  #64748b;
---atlas-visited:     #4a90d9;   /* country fill: visited */
---atlas-planned:     #c9a84c;   /* country fill: planned */
---atlas-bucket:      #374151;   /* country fill: on bucket list */
+--atlas-arc:         #4a90d9;   /* great-circle arc: a flight you've flown */
 ```
 
 **Typography:**
-- Display: `Playfair Display` (flight routes, headings)
+- Display: `Playfair Display` (flight routes, headings) — see `DESIGN.md` for the
+  cross-platform type system and the iOS migration still owed
 - Body: `IBM Plex Sans` (UI copy, stats)
 - Mono: `IBM Plex Mono` (flight numbers, dates, coordinates)
 

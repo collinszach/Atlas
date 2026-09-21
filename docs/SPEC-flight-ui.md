@@ -5,10 +5,15 @@ _Owner: PM/Architect (Opus) · designed via impeccable · mockups: `docs/mockups
 ## Direction
 Atlas pivots from travel journal to **flight tracker** (Skywatch + FR24/Plane-Finder-class).
 Visual language: **dark, modular, glassy, flashy** — electric **blue → cyan** accent, bold
-**SF Pro Rounded** headings, **mono** for all flight data (callsigns, FL, distances, dates),
+rounded headings, **mono** for all flight data (callsigns, FL, distances, dates),
 glass used *functionally* (over the live map, floating sheets), **bento/varied** modules (never
 identical card grids), solid type (no gradient text). Design system already in `Theme.swift`
-(`AtlasGradient`, `.atlasCard`, rounded `AtlasFont.display`). No serif anywhere.
+(`AtlasGradient`, `.atlasCard`, rounded `AtlasFont.display`).
+
+> **Superseded (2026-09-20):** this spec's original "no serif anywhere" rule no longer holds.
+> `DESIGN.md` is the cross-platform type system and specifies Playfair Display / IBM Plex on both
+> surfaces; iOS owes that migration. The accent and glass direction below is *not* superseded —
+> see the conformance table in `DESIGN.md` for what is decided and what is still open.
 
 Four tabs: **Map · Sky · Flights · Stats** (trip planning removed). Mockup is the visual contract.
 
@@ -26,8 +31,9 @@ Four tabs: **Map · Sky · Flights · Stats** (trip planning removed). Mockup is
 ## Epics & stories (build order)
 
 ### EPIC A — Design system finish (foundation)
-- **A1** As a user, every screen uses the new dark/glass/rounded system. _AC:_ no serif; `AtlasFont.display`
-  is rounded; accent is blue→cyan; `.atlasCard` glass modifier used for modules. ✅ (shipped: Theme, shell, sign-in, map)
+- **A1** As a user, every screen uses the new dark/glass system. _AC:_ accent is blue→cyan;
+  `.atlasCard` glass modifier used for modules. ✅ (shipped: Theme, shell, sign-in, map)
+  _(The original "no serif / rounded display" clause is superseded — see the note above.)_
 - **A2** Reusable SwiftUI components: `GlassCard`, `StatTile`, `AirlineBadge`, `AircraftRow`, `Pill`,
   `BentoGrid`. _AC:_ each has loading + empty + pressed states; used across all four screens.
 
@@ -49,6 +55,7 @@ Four tabs: **Map · Sky · Flights · Stats** (trip planning removed). Mockup is
 ### EPIC D — Flights logbook revamp
 - **D1** Replace Trips list with **flight-centric logbook cards** (route, airline, aircraft, date, duration).
   _AC:_ data from transport legs; newest first; airline resolved (reuse backend airline map).
+  ✅ (shipped 2026-09-20, `99803f0`) — aircraft type/registration omitted: `transport_legs` stores neither.
 - **D2** Flight detail: full leg info + map route arc + aircraft photo (planespotters, free).
 - **D3** "Log a flight" stays (flight form already exists); restyle to glass.
 
@@ -100,4 +107,4 @@ Four tabs: **Map · Sky · Flights · Stats** (trip planning removed). Mockup is
 
 ## Definition of done (per screen)
 Matches the mockup's composition + density; all states (loading skeleton, empty, error); mono for
-data; glass only where functional; reduced-motion paths; builds + runs on device; no serif.
+data; glass only where functional; reduced-motion paths; builds + runs on device.

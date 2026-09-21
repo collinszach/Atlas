@@ -5,9 +5,9 @@ instrument-grade typography. Register: product (with the map as one drenched, co
 
 ## Theme
 
-Dark, always. The physical scene: a traveler at a desk at night, or on a couch with the lights
-low, reviewing the map of their life. The interface is instrumentation in a dim cockpit — it
-glows, it never glares. Light mode is out of scope; it would betray the identity.
+Dark, always. The physical scene: someone on a couch at night watching what's crossing the sky
+overhead, or at a desk reviewing everywhere they've flown. The interface is instrumentation in a
+dim cockpit — it glows, it never glares. Light mode is out of scope; it would betray the identity.
 
 Color strategy: **Restrained** across product chrome (navy field + gold accent ≤10% of surface),
 stepping to **Committed/Drenched** only on the map home, where the globe and deep field own the
@@ -36,10 +36,15 @@ Existing brand hexes are preserved as the anchor; the ramp is built around them.
 ### Signal (semantic — never decoration)
 - `--accent`        #c9a84c  — antique gold: primary action, current selection, focus
 - `--accent-hi`     #e3c673  — gold highlight (hover on gold)
-- `--cool`          #4a90d9  — ocean blue: the map, links, "visited"
-- `--visited`       #4a90d9  — country fill: visited
-- `--planned`       #c9a84c  — country fill: planned
-- `--bucket`        #5b6b86  — country fill: bucket (lifted from #374151 for visibility)
+- `--cool`          #4a90d9  — ocean blue: the map, links
+- `--arc`           #4a90d9  — great-circle arcs for flights you've flown
+
+> The old `--visited` / `--planned` / `--bucket` country fills are gone with the choropleth;
+> nothing fills countries any more.
+
+### Aircraft classification (live map / Skywatch)
+Semantic, and always paired with a glyph or label so hue is never the only carrier:
+- military  amber · rare  violet · emergency  red · normal  cyan
 
 ### Status
 - success #4ca87a · warning #c99a4c · danger #d36b6b · info #4a90d9
@@ -49,11 +54,12 @@ Existing brand hexes are preserved as the anchor; the ramp is built around them.
 
 Three families, each with a strict job. Display is a *moment* font, never a label font.
 
-- **Display — Playfair Display** (600/700): trip titles, big country/place names, the stat
-  hero numerals' companions. Letter-spacing ≥ -0.02em. Never on buttons, labels, or data.
+- **Display — Playfair Display** (600/700): route headers (`BOS → FLL`), airport and city names,
+  the stat hero numerals' companions. Letter-spacing ≥ -0.02em. Never on buttons, labels, or data.
 - **Body/UI — IBM Plex Sans** (400/500/600): all interface text, headings in chrome, body copy.
 - **Mono — IBM Plex Mono** (400/500): the instrument voice — coordinates, dates, flight numbers,
-  distances, counts, country codes, any earned number. This is the brand's signature tell.
+  distances, counts, altitudes, registrations, IATA/ICAO codes, any earned number. This is the
+  brand's signature tell.
 
 Scale: fixed rem, product ratio ~1.2. `text-xs .75 / sm .875 / base 1 / lg 1.125 / xl 1.375 /
 2xl 1.75 / 3xl 2.25`. Display hero uses `clamp` only on the map/stats hero, max ≤ 4rem.
@@ -94,6 +100,29 @@ No page-load choreography on product screens. Library: CSS for chrome; `maplibre
 
 ## Layout
 
-App shell: a labeled left rail (icon + label, ~210px, collapsible to 56px icon-rail on narrow
-viewports), content fills the rest. The map is full-bleed under floating panels. Responsive is
-structural (rail collapse, grid breakpoints), never fluid type.
+**Web** app shell: a labeled left rail (icon + label, ~210px, collapsible to 56px icon-rail on narrow
+viewports), content fills the rest. **iOS** uses a bottom tab bar (Map · Sky · Flights · Stats)
+instead of the rail; everything else in this system applies unchanged. The map is full-bleed
+under floating panels. Responsive is structural (rail collapse, grid breakpoints), never fluid
+type.
+
+## Platform conformance
+
+This document is the target system for **both** surfaces. The web frontend already conforms.
+iOS does not yet, and the gaps are tracked here rather than quietly tolerated:
+
+| Area | This system | iOS today (`Theme.swift`) | Status |
+|---|---|---|---|
+| Display type | Playfair Display | `.system(design: .rounded)` | **Migration owed** — decided 2026-09-20 |
+| Body / mono | IBM Plex Sans / Mono | system sans / system mono | **Migration owed** — same decision |
+| Accent | antique gold `#c9a84c` | electric blue `#4F8DFF` + cyan | **Open** — not yet decided |
+| Materials | borders + ambient shadow, *never* glassmorphism | `.atlasCard` glass, blur, accent glow | **Open** — not yet decided |
+
+The type migration needs Playfair Display and IBM Plex bundled into the iOS app (both are SIL
+OFL) and `AtlasFont` rewritten.
+
+The accent and material rows are a genuine fork, not drift: `docs/SPEC-flight-ui.md` deliberately
+specifies "dark, modular, glassy, flashy — electric blue → cyan" and "no serif anywhere" for the
+flight UI, and iOS is fully built that way. Resolving it means either reversing this document's
+gold/no-glass position or rebuilding the iOS surfaces. Until it's decided, treat the iOS
+accent and glass as intentional and this table as the record of the disagreement.

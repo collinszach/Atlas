@@ -47,6 +47,11 @@ struct SkyView: View {
                             specialStrip
                         }
 
+                        // Inbound — projected arrivals, not live contacts
+                        if !vm.forecast.isEmpty {
+                            inboundSection
+                        }
+
                         // Nearby list
                         if vm.isLoading && vm.aircraft.isEmpty {
                             skeletonBlock
@@ -209,6 +214,40 @@ struct SkyView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 6)
             }
+        }
+    }
+
+    private var inboundSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 6) {
+                AtlasSectionHeader(title: "Inbound")
+                Text("projected")
+                    .font(AtlasFont.mono(9))
+                    .foregroundStyle(Color.atlasInkFaint)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 10)
+
+            VStack(spacing: 0) {
+                ForEach(Array(vm.forecast.enumerated()), id: \.element.id) { idx, ac in
+                    Button {
+                        selectedAircraft = ac.asOverhead
+                    } label: {
+                        InboundRow(aircraft: ac)
+                            .padding(.horizontal, 16)
+                    }
+                    .buttonStyle(.plain)
+
+                    if idx < vm.forecast.count - 1 {
+                        Divider()
+                            .background(Color.atlasBorder)
+                            .padding(.horizontal, 16)
+                    }
+                }
+            }
+            .atlasCard(radius: 16)
+            .padding(.horizontal, 16)
         }
     }
 
@@ -598,5 +637,69 @@ private struct SpecialCard: View {
         if aircraft.isMilitary { return "MILITARY" }
         if let trigger = aircraft.matches.first?.trigger { return trigger }
         return "SPECIAL"
+    }
+}
+
+
+/// A projected arrival. Deliberately not `FlightRow`: there the trailing slot is
+/// a faint distance, but here the lead time is the entire reason the row exists,
+/// so it gets the accent and the weight. Keeping FlightRow untouched also leaves
+/// Nearby, Search and Bookmarks alone.
+private struct InboundRow: View {
+    let aircraft: ForecastAircraft
+
+    var body: some View {
+        HStack(spacing: 11) {
+            AirlineBadge(code: aircraft.badgeCode, tone: aircraft.tone)
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(aircraft.displayName)
+                        .font(AtlasFont.body(15, weight: .semibold))
+                        .foregroundStyle(Color.atlasText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                    if let type = aircraft.type, !type.isEmpty {
+                        TypePill(typeCode: type)
+                    }
+                }
+                // Closest approach and altitude only — the current distance is
+                // the least useful number once you know where it ends up.
+                Text(detail)
+                    .font(AtlasFont.mono(11))
+                    .foregroundStyle(Color.atlasInk2)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 6)
+
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(aircraft.etaLabel)
+                    .font(AtlasFont.mono(13, weight: .semibold))
+                    .foregroundStyle(Color.atlasAccent)
+                if let trigger = aircraft.matches.first?.trigger {
+                    Text(trigger.uppercased())
+                        .font(AtlasFont.mono(9, weight: .bold))
+                        .foregroundStyle(aircraft.tone.color)
+                        .lineLimit(1)
+                }
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.atlasInkFaint)
+        }
+        .padding(.vertical, 9)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "\(aircraft.displayName), \(aircraft.etaLabel), closest \(aircraft.closestLabel)"
+        )
+    }
+
+    private var detail: String {
+        var parts = ["closest \(aircraft.closestLabel)"]
+        if let fl = aircraft.flightLevelString { parts.append(fl) }
+        return parts.joined(separator: " · ")
     }
 }

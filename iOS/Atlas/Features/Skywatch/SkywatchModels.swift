@@ -245,3 +245,95 @@ struct AirportSchedule: Codable {
     let flights: [ScheduledFlight]
     let configured: Bool
 }
+
+// MARK: - Forecast
+
+/// An aircraft projected to enter your radius, from `/skywatch/forecast`.
+///
+/// The backend deliberately reports no confidence value: the projection assumes
+/// the aircraft holds its heading and speed, so `etaSeconds` and
+/// `closestDistanceKm` are the honest outputs. Treat them as "pointed this way
+/// now", not a promise — accuracy degrades once an aircraft is under vectors.
+struct ForecastAircraft: Codable, Identifiable, Hashable {
+    let hex: String
+    let callsign: String?
+    let registration: String?
+    let type: String?
+    let airline: String?
+    let lat: Double?
+    let lon: Double?
+    let altitude: Int?
+    let groundSpeed: Double?
+    let track: Double?
+    let squawk: String?
+    let isMilitary: Bool
+    let distanceKm: Double?
+
+    let etaSeconds: Int
+    let closestDistanceKm: Double
+    let closestLat: Double
+    let closestLon: Double
+    let matches: [SkywatchMatch]
+
+    var id: String { hex }
+
+    enum CodingKeys: String, CodingKey {
+        case hex, lat, lon, type, squawk, matches, track, airline, registration
+        case callsign = "flight"
+        case altitude = "alt_baro"
+        case groundSpeed = "ground_speed"
+        case isMilitary = "is_military"
+        case distanceKm = "distance_km"
+        case etaSeconds = "eta_seconds"
+        case closestDistanceKm = "closest_distance_km"
+        case closestLat = "closest_lat"
+        case closestLon = "closest_lon"
+    }
+
+    /// "in 4m" / "in 45s" — the lead time is the whole point of this feature.
+    var etaLabel: String {
+        if etaSeconds < 60 { return "in \(etaSeconds)s" }
+        let minutes = etaSeconds / 60
+        return "in \(minutes)m"
+    }
+
+    var closestLabel: String {
+        String(format: "%.0f km", closestDistanceKm)
+    }
+
+    /// Lets a forecast row open the same detail sheet as a live contact.
+    /// Enrichment fields are absent here; the sheet fetches them by hex.
+    var asOverhead: OverheadAircraft {
+        OverheadAircraft(
+            hex: hex, callsign: callsign, registration: registration, type: type,
+            airline: airline, lat: lat, lon: lon, altitude: altitude,
+            groundSpeed: groundSpeed, track: track, squawk: squawk,
+            isMilitary: isMilitary, distanceKm: distanceKm, matches: matches,
+            originIata: nil, originName: nil, destIata: nil, destName: nil,
+            photoUrl: nil, photoLink: nil, photoCredit: nil, trail: nil,
+            manufacturer: nil, aircraftTypeLong: nil, owner: nil, ownerCountry: nil
+        )
+    }
+}
+
+struct ForecastResponse: Codable {
+    let aircraft: [ForecastAircraft]
+    let horizonMinutes: Int
+    let radiusKm: Double
+    let source: String
+
+    enum CodingKeys: String, CodingKey {
+        case aircraft, source
+        case horizonMinutes = "horizon_minutes"
+        case radiusKm = "radius_km"
+    }
+}
+
+/// Display helpers delegate to the live-contact versions so an inbound row and
+/// a nearby row can never disagree about how the same aircraft is labelled.
+extension ForecastAircraft {
+    var displayName: String { asOverhead.displayName }
+    var badgeCode: String { asOverhead.badgeCode }
+    var tone: AtlasTone { asOverhead.tone }
+    var flightLevelString: String? { asOverhead.flightLevelString }
+}

@@ -110,6 +110,19 @@ final class APIClient {
         return response.aircraft
     }
 
+    /// Aircraft projected to enter the radius within `horizonMinutes`, soonest first.
+    func fetchForecast(
+        lat: Double,
+        lon: Double,
+        horizonMinutes: Int = 30,
+        notableOnly: Bool = true
+    ) async throws -> [ForecastAircraft] {
+        let path = "/api/v1/skywatch/forecast?lat=\(lat)&lon=\(lon)"
+            + "&horizon_minutes=\(horizonMinutes)&notable_only=\(notableOnly)"
+        let response: ForecastResponse = try await get(path)
+        return response.aircraft
+    }
+
     func getSkywatchPreferences() async throws -> SkywatchPreference {
         try await get("/api/v1/skywatch/preferences")
     }

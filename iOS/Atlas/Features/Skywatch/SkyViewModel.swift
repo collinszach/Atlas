@@ -10,6 +10,9 @@ final class SkyViewModel {
     var lastSource: String? = nil
     var radiusKm: Double = 30
 
+    /// Notable aircraft projected to arrive within the horizon, soonest first.
+    var forecast: [ForecastAircraft] = []
+
     /// Hexes the user has tapped "Watch" on — persisted in UserDefaults.
     var followedHexes: Set<String> = {
         let stored = UserDefaults.standard.stringArray(forKey: "skywatch_followed_hexes") ?? []
@@ -30,6 +33,20 @@ final class SkyViewModel {
             aircraft = result.sorted { ($0.distanceKm ?? .greatestFiniteMagnitude) < ($1.distanceKm ?? .greatestFiniteMagnitude) }
         } catch {
             self.error = error.localizedDescription
+        }
+        await loadForecast(api: api, coordinate: coordinate)
+    }
+
+    /// Loaded after the live sweep and failing quietly: the forecast is an
+    /// addition to the radar, and losing it must not blank out what is overhead.
+    func loadForecast(api: APIClient, coordinate: CLLocationCoordinate2D) async {
+        do {
+            forecast = try await api.fetchForecast(
+                lat: coordinate.latitude,
+                lon: coordinate.longitude
+            )
+        } catch {
+            forecast = []
         }
     }
 

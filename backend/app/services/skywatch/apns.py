@@ -71,11 +71,33 @@ class ApnsClient:
         for alt in (backend_root / value, backend_root / "secrets" / candidate.name):
             if alt.is_file():
                 return alt.read_text()
-        return value
+
+        # The value looked like a path but nothing resolved. Returning it as if
+        # it were PEM used to make `is_configured` report True for a key that
+        # does not exist, so push failed at send time with a confusing signing
+        # error instead of at startup. Fail loudly and stay unconfigured.
+        logger.error(
+            "APNS_AUTH_KEY points at %r, which is not a readable file and is not PEM "
+            "contents — APNs push is disabled until this resolves.",
+            value,
+        )
+        return ""
 
     @property
     def is_configured(self) -> bool:
-        return bool(self._key_id and self._team_id and self._auth_key)
+        """True only when the credentials could actually sign a provider token.
+
+        Deliberately checks the key *material*, not just that the env vars are
+        non-empty: a missing or malformed key must not report as configured.
+        This says nothing about whether Apple will accept the key — a revoked
+        key still parses, and only APNs can tell you that (InvalidProviderToken).
+        """
+        return bool(
+            self._key_id
+            and self._team_id
+            and self._auth_key
+            and "PRIVATE KEY" in self._auth_key
+        )
 
     def _build_provider_token(self) -> str:
         if not self.is_configured:

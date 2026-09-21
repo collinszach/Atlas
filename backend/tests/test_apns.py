@@ -27,9 +27,13 @@ def test_resolve_auth_key_resolves_backend_relative_path(tmp_path, monkeypatch):
     assert ApnsClient._resolve_auth_key("backend/secrets/AuthKey_REL.p8") == PEM
 
 
-def test_resolve_auth_key_passthrough_for_unknown_value():
-    # Not a PEM, not an existing file → returned as-is (lets is_configured stay truthy)
-    assert ApnsClient._resolve_auth_key("not-a-real-path") == "not-a-real-path"
+def test_resolve_auth_key_rejects_unresolvable_value():
+    # This previously returned the value as-is, specifically so is_configured
+    # would stay truthy. That is what let production run for months with
+    # APNS_AUTH_KEY pointing at a file that did not exist: startup logged "APNs
+    # configured" and push failed only at send time. An unresolvable value is
+    # now empty, so the client reports itself unconfigured instead.
+    assert ApnsClient._resolve_auth_key("not-a-real-path") == ""
 
 
 def test_resolve_auth_key_empty():

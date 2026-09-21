@@ -30,21 +30,39 @@ class DataSourceResolver:
     async def get_aircraft(self, lat: float, lon: float, radius_km: float) -> list[Aircraft]:
         """Return aircraft within `radius_km` of (lat, lon), merged and deduped by hex.
 
-        Raises AdsbServiceError only if the network source fails — local data is
-        best-effort and silently skipped on failure.
+        Either source alone is enough. Raises AdsbServiceError only when every
+        configured source fails — a local receiver is the whole point of owning
+        one, so a gated or rate-limited network source must not take the sky
+        down with it.
         """
-        network_aircraft = await self._network.get_point(lat, lon, radius_km)
-        merged: dict[str, Aircraft] = {ac.hex: ac for ac in network_aircraft}
+        merged: dict[str, Aircraft] = {}
+        network_error: AdsbServiceError | None = None
 
+        try:
+            for ac in await self._network.get_point(lat, lon, radius_km):
+                merged[ac.hex] = ac
+        except AdsbServiceError as exc:
+            network_error = exc
+            if not self._local.is_configured:
+                raise
+            logger.warning("Network ADS-B source unavailable, using local only: %s", exc)
+
+        local_error: AdsbServiceError | None = None
         if self._local.is_configured:
             try:
                 local_aircraft = await self._local.get_aircraft(lat, lon)
             except AdsbServiceError as exc:
-                logger.warning("Local ADS-B receiver unavailable, using network only: %s", exc)
+                local_error = exc
+                logger.warning("Local ADS-B receiver unavailable: %s", exc)
             else:
                 for ac in local_aircraft:
                     if ac.distance_km is not None and ac.distance_km > radius_km:
                         continue
                     merged[ac.hex] = ac  # local preferred — overwrites network entry
+
+        if network_error is not None and local_error is not None:
+            raise AdsbServiceError(
+                f"all ADS-B sources failed (network: {network_error}; local: {local_error})"
+            )
 
         return list(merged.values())

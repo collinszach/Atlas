@@ -364,10 +364,19 @@ NEXT_PUBLIC_API_BASE=http://localhost:8000
 NEXT_PUBLIC_MAPTILER_KEY=...     # or use Protomaps (free, preferred)
 ```
 
-**airplanes.live note:** the free API now gates access behind manual approval — email them your
-project description before requests will succeed (a User-Agent header alone is not sufficient).
-A local `dump1090`/`readsb` receiver (RTL-SDR) via `DUMP1090_URL` avoids this gate entirely and
-is preferred when available; `DataSourceResolver` merges both sources, preferring local data.
+**ADS-B sources.** airplanes.live gates its free API behind manual approval and returns **403**
+without it — a User-Agent header is not sufficient. Two ways around it:
+
+- **`api.adsb.lol/v2`** (current default): open, no key, and serves the identical
+  `{"ac": [...]}` schema, so it is a drop-in `AIRPLANES_LIVE_BASE` swap with no code change.
+- **A local receiver** via `DUMP1090_URL`, preferred when available — first-hand data, no gate,
+  no rate limit. Needs an RTL-SDR dongle physically attached; run it with
+  `docker compose --profile sdr up -d atlas-dump1090` and set
+  `DUMP1090_URL=http://atlas-dump1090:8080/data/aircraft.json`.
+
+`DataSourceResolver` merges both, preferring local on a hex collision, and raises only when
+**every** configured source fails — a gated network source must not take the sky down when a
+local receiver is healthy.
 
 ---
 

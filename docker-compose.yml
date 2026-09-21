@@ -102,6 +102,36 @@ services:
     networks:
       - atlas-network
 
+  # Local ADS-B receiver. Requires an RTL-SDR dongle physically attached to the
+  # host; it decodes 1090MHz itself and serves aircraft.json. Opt-in so the
+  # stack still comes up on hosts with no SDR:
+  #     docker compose --profile sdr up -d atlas-dump1090
+  # Find the device first with `lsusb` (RTL-SDR shows as RTL2838/RTL2832U), and
+  # blacklist the kernel DVB driver or it will claim the dongle:
+  #     echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/no-rtl.conf
+  atlas-dump1090:
+    image: ghcr.io/sdr-enthusiasts/docker-dump1090-fa:latest
+    container_name: atlas-dump1090
+    profiles: ["sdr"]
+    restart: unless-stopped
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    environment:
+      TZ: ${TZ:-UTC}
+      READSB_DEVICE_TYPE: rtlsdr
+      READSB_GAIN: ${SDR_GAIN:-autogain}
+      READSB_LAT: ${SDR_LAT}
+      READSB_LON: ${SDR_LON}
+      READSB_RX_LOCATION_ACCURACY: "2"
+      READSB_STATS_RANGE: "true"
+    ports:
+      - "8078:8080"
+    tmpfs:
+      - /run:exec,size=64M
+      - /var/log
+    networks:
+      - atlas-network
+
 networks:
   atlas-network:
     driver: bridge

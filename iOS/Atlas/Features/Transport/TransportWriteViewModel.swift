@@ -21,14 +21,14 @@ final class TransportWriteViewModel {
         }
     }
 
-    func createTransportLeg(tripId: String, body: TransportCreate, api: APIClient) async throws -> TransportLeg {
+    func createFlight(body: TransportCreate, api: APIClient) async throws -> TransportLeg {
         isSubmitting = true
         error = nil
         defer { isSubmitting = false }
-        return try await api.createTransportLeg(tripId: tripId, body: body)
+        return try await api.createFlight(body: body)
     }
 
-    func deleteTransportLeg(id: String, api: APIClient) async throws {
-        try await api.deleteTransportLeg(id: id)
+    func deleteFlight(id: String, api: APIClient) async throws {
+        try await api.deleteFlight(id: id)
     }
 }

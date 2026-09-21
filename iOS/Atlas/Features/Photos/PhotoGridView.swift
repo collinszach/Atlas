@@ -1,15 +1,15 @@
 import SwiftUI
 import PhotosUI
 
-// Shared token for fullScreenCover(item:) — used by both PhotoGridView and TripDetailView
+// Shared token for fullScreenCover(item:) — used by both PhotoGridView and the flight detail view
 struct PhotoViewerToken: Identifiable {
     let id = UUID()
     let photoId: String
 }
 
 struct PhotoGridView: View {
-    let tripId: String
-    let tripTitle: String
+    let flightId: String
+    let flightTitle: String
     let vm: PhotosViewModel   // reference — @Observable tracks changes automatically
 
     @Environment(AuthManager.self) private var auth
@@ -38,7 +38,7 @@ struct PhotoGridView: View {
                         }
                         if let err = vm.error {
                             ErrorBanner(message: err) {
-                                Task { await vm.load(tripId: tripId, api: auth.api) }
+                                Task { await vm.load(flightId: flightId, api: auth.api) }
                             }
                             .padding(16)
                         }
@@ -74,10 +74,10 @@ struct PhotoGridView: View {
                         }
                     }
                 }
-                .refreshable { await vm.load(tripId: tripId, api: auth.api) }
+                .refreshable { await vm.load(flightId: flightId, api: auth.api) }
             }
         }
-        .navigationTitle(tripTitle)
+        .navigationTitle(flightTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -92,7 +92,7 @@ struct PhotoGridView: View {
             Task {
                 let uploads = await loadPickerItems(items)
                 pickerItems = []
-                await vm.upload(tripId: tripId, uploads: uploads, api: auth.api)
+                await vm.upload(flightId: flightId, uploads: uploads, api: auth.api)
             }
         }
         .fullScreenCover(item: $viewerToken) { token in
@@ -108,7 +108,7 @@ struct PhotoGridView: View {
             Text("This photo will be permanently deleted.")
         }
         .task {
-            if vm.photos.isEmpty { await vm.load(tripId: tripId, api: auth.api) }
+            if vm.photos.isEmpty { await vm.load(flightId: flightId, api: auth.api) }
         }
     }
 

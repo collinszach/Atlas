@@ -9,12 +9,12 @@ final class PhotosViewModel {
     var uploadProgress: Double = 0
     var error: String? = nil
 
-    func load(tripId: String, api: APIClient) async {
+    func load(flightId: String, api: APIClient) async {
         isLoading = true
         error = nil
         defer { isLoading = false }
         do {
-            photos = try await api.listPhotos(tripId: tripId)
+            photos = try await api.listPhotos(flightId: flightId)
         } catch {
             self.error = error.localizedDescription
         }
@@ -22,7 +22,7 @@ final class PhotosViewModel {
 
     /// `uploads` is pre-loaded by the view layer from PHPicker items.
     func upload(
-        tripId: String,
+        flightId: String,
         uploads: [(data: Data, filename: String, mimeType: String)],
         api: APIClient
     ) async {
@@ -34,7 +34,7 @@ final class PhotosViewModel {
         for (index, item) in uploads.enumerated() {
             do {
                 let photo = try await api.uploadPhoto(
-                    tripId: tripId,
+                    flightId: flightId,
                     data: item.data,
                     filename: item.filename,
                     mimeType: item.mimeType
@@ -64,7 +64,7 @@ final class PhotosViewModel {
             try await api.setCoverPhoto(photoId: photoId)
             photos = photos.map {
                 Photo(
-                    id: $0.id, tripId: $0.tripId, destinationId: $0.destinationId,
+                    id: $0.id, transportLegId: $0.transportLegId,
                     originalFilename: $0.originalFilename, caption: $0.caption,
                     takenAt: $0.takenAt, latitude: $0.latitude, longitude: $0.longitude,
                     width: $0.width, height: $0.height, sizeBytes: $0.sizeBytes,

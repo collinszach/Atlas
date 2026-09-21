@@ -3,7 +3,7 @@ import PhotosUI
 import UniformTypeIdentifiers
 
 /// Loads PHPicker selection items as raw Data tuples for upload.
-/// Defined here (not inside a view file) so TripDetailView can call it
+/// Defined here (not inside a view file) so the flight detail view can call it
 /// without importing PhotoGridView.
 func loadPickerItems(
     _ items: [PhotosPickerItem]

@@ -81,46 +81,22 @@ final class APIClient {
 
     // MARK: - Convenience API wrappers
 
-    func trips(page: Int = 1, status: TripStatus? = nil) async throws -> TripListResponse {
-        var path = "/api/v1/trips?page=\(page)&limit=20"
-        if let s = status { path += "&status=\(s.rawValue)" }
-        return try await get(path)
+    /// The user's flight logbook, newest-first by departure.
+    func flights() async throws -> [TransportLeg] {
+        let legs: [TransportLeg] = try await get("/api/v1/flights")
+        return legs.sorted { ($0.departureAt ?? "") > ($1.departureAt ?? "") }
     }
 
-    func trip(id: String) async throws -> Trip {
-        try await get("/api/v1/trips/\(id)")
-    }
-
-    func destinations(tripId: String) async throws -> [Destination] {
-        try await get("/api/v1/trips/\(tripId)/destinations")
-    }
-
-    func transportLegs(tripId: String) async throws -> [TransportLeg] {
-        try await get("/api/v1/trips/\(tripId)/transport")
-    }
-
-    func mapCountries() async throws -> [MapCountry] {
-        try await get("/api/v1/map/countries")
-    }
-
-    func mapCities() async throws -> [MapCity] {
-        try await get("/api/v1/map/cities")
+    func flight(id: String) async throws -> TransportLeg {
+        try await get("/api/v1/flights/\(id)")
     }
 
     func mapArcs() async throws -> [MapArc] {
         try await get("/api/v1/map/arcs")
     }
 
-    func bucketList() async throws -> [BucketListItem] {
-        try await get("/api/v1/bucket-list")
-    }
-
     func stats() async throws -> StatsResponse {
         try await get("/api/v1/stats")
-    }
-
-    func statsTimeline() async throws -> [TimelineTrip] {
-        try await get("/api/v1/stats/timeline")
     }
 
     // MARK: - Skywatch
@@ -179,20 +155,20 @@ final class APIClient {
 
     static let deviceIdKey = "atlas_skywatch_device_id"
 
-    func listPhotos(tripId: String) async throws -> [Photo] {
-        let response: PhotoListResponse = try await get("/api/v1/trips/\(tripId)/photos")
+    func listPhotos(flightId: String) async throws -> [Photo] {
+        let response: PhotoListResponse = try await get("/api/v1/flights/\(flightId)/photos")
         return response.items
     }
 
     func uploadPhoto(
-        tripId: String,
+        flightId: String,
         data: Data,
         filename: String,
         mimeType: String,
         caption: String? = nil
     ) async throws -> Photo {
         let boundary = UUID().uuidString
-        var req = await makeRequest("POST", path: "/api/v1/trips/\(tripId)/photos/upload")
+        var req = await makeRequest("POST", path: "/api/v1/flights/\(flightId)/photos/upload")
         req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         req.timeoutInterval = 120
         var body = Data()
@@ -220,38 +196,18 @@ final class APIClient {
         try await postVoid("/api/v1/photos/\(photoId)/set-cover")
     }
 
-    // MARK: - Trip write operations
+    // MARK: - Flight write operations
 
-    func createTrip(body: TripCreate) async throws -> Trip {
-        try await post("/api/v1/trips", body: body)
+    func createFlight(body: TransportCreate) async throws -> TransportLeg {
+        try await post("/api/v1/flights", body: body)
     }
 
-    func updateTrip(id: String, body: TripUpdate) async throws -> Trip {
-        try await put("/api/v1/trips/\(id)", body: body)
+    func updateFlight(id: String, body: TransportCreate) async throws -> TransportLeg {
+        try await put("/api/v1/flights/\(id)", body: body)
     }
 
-    func deleteTrip(id: String) async throws {
-        try await delete("/api/v1/trips/\(id)")
-    }
-
-    // MARK: - Destination write operations
-
-    func addDestination(tripId: String, body: DestinationCreate) async throws -> Destination {
-        try await post("/api/v1/trips/\(tripId)/destinations", body: body)
-    }
-
-    func deleteDestination(id: String) async throws {
-        try await delete("/api/v1/destinations/\(id)")
-    }
-
-    // MARK: - Transport write operations
-
-    func createTransportLeg(tripId: String, body: TransportCreate) async throws -> TransportLeg {
-        try await post("/api/v1/trips/\(tripId)/transport", body: body)
-    }
-
-    func deleteTransportLeg(id: String) async throws {
-        try await delete("/api/v1/transport/\(id)")
+    func deleteFlight(id: String) async throws {
+        try await delete("/api/v1/flights/\(id)")
     }
 
     func enrichFlight(flightNumber: String, date: String) async throws -> FlightEnrichResponse {

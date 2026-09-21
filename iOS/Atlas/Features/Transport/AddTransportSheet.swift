@@ -1,32 +1,12 @@
 import SwiftUI
 
-private enum TransportType: String, CaseIterable {
-    case flight, train, car, ferry, bus, walk, other
-
-    var label: String { rawValue.capitalized }
-
-    var systemImage: String {
-        switch self {
-        case .flight: return "airplane"
-        case .train:  return "tram.fill"
-        case .car:    return "car.fill"
-        case .ferry:  return "ferry.fill"
-        case .bus:    return "bus.fill"
-        case .walk:   return "figure.walk"
-        case .other:  return "arrow.right.circle"
-        }
-    }
-}
-
 struct AddTransportSheet: View {
-    let tripId: String
     let api: APIClient
     var onAdded: (TransportLeg) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var vm = TransportWriteViewModel()
 
-    @State private var type: TransportType = .flight
     @State private var flightNumber = ""
     @State private var originIata = ""
     @State private var destIata = ""
@@ -43,75 +23,55 @@ struct AddTransportSheet: View {
     @State private var enrichedDistanceKm: Double? = nil
 
     private var isValid: Bool {
-        if type == .flight {
-            return !originIata.trimmingCharacters(in: .whitespaces).isEmpty ||
-                   !destIata.trimmingCharacters(in: .whitespaces).isEmpty
-        }
-        return !originCity.trimmingCharacters(in: .whitespaces).isEmpty ||
-               !destCity.trimmingCharacters(in: .whitespaces).isEmpty
+        !originIata.trimmingCharacters(in: .whitespaces).isEmpty ||
+        !destIata.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Picker("Type", selection: $type) {
-                        ForEach(TransportType.allCases, id: \.rawValue) { t in
-                            Label(t.label, systemImage: t.systemImage).tag(t)
+                Section("Flight") {
+                    HStack {
+                        TextField("Flight number (e.g. AA123)", text: $flightNumber)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                        if vm.isEnriching {
+                            ProgressView().scaleEffect(0.8)
+                        } else {
+                            Button("Lookup") {
+                                Task { await lookupFlight() }
+                            }
+                            .foregroundStyle(flightNumber.isEmpty ? Color.atlasMuted : Color.atlasAccent)
+                            .disabled(flightNumber.isEmpty)
                         }
                     }
-                    .pickerStyle(.menu)
+                    if let err = vm.enrichError {
+                        Text(err)
+                            .font(AtlasFont.body(12))
+                            .foregroundStyle(.red)
+                    }
                 }
 
-                if type == .flight {
-                    Section("Flight") {
-                        HStack {
-                            TextField("Flight number (e.g. AA123)", text: $flightNumber)
-                                .textInputAutocapitalization(.characters)
-                                .autocorrectionDisabled()
-                            if vm.isEnriching {
-                                ProgressView().scaleEffect(0.8)
-                            } else {
-                                Button("Lookup") {
-                                    Task { await lookupFlight() }
-                                }
-                                .foregroundStyle(flightNumber.isEmpty ? Color.atlasMuted : Color.atlasAccent)
-                                .disabled(flightNumber.isEmpty)
-                            }
-                        }
-                        if let err = vm.enrichError {
-                            Text(err)
-                                .font(AtlasFont.body(12))
-                                .foregroundStyle(.red)
-                        }
+                Section("Route") {
+                    HStack(spacing: 12) {
+                        TextField("Origin IATA", text: $originIata)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.atlasMuted)
+                        TextField("Dest IATA", text: $destIata)
+                            .textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled()
                     }
-
-                    Section("Route") {
-                        HStack(spacing: 12) {
-                            TextField("Origin IATA", text: $originIata)
-                                .textInputAutocapitalization(.characters)
-                                .autocorrectionDisabled()
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.atlasMuted)
-                            TextField("Dest IATA", text: $destIata)
-                                .textInputAutocapitalization(.characters)
-                                .autocorrectionDisabled()
-                        }
-                        TextField("Airline", text: $airline)
-                        Picker("Seat class", selection: $seatClass) {
-                            Text("None").tag("")
-                            Text("Economy").tag("economy")
-                            Text("Business").tag("business")
-                            Text("First").tag("first")
-                        }
-                        .pickerStyle(.menu)
+                    TextField("Airline", text: $airline)
+                    Picker("Seat class", selection: $seatClass) {
+                        Text("None").tag("")
+                        Text("Economy").tag("economy")
+                        Text("Business").tag("business")
+                        Text("First").tag("first")
                     }
-                } else {
-                    Section("Route") {
-                        TextField("From", text: $originCity)
-                        TextField("To", text: $destCity)
-                    }
+                    .pickerStyle(.menu)
                 }
 
                 Section("Departure") {
@@ -149,14 +109,8 @@ struct AddTransportSheet: View {
                     }
                 }
             }
-            .navigationTitle("Add Transport")
+            .navigationTitle("Log Flight")
             .navigationBarTitleDisplayMode(.inline)
-            .onChange(of: type) { _, newType in
-                if newType != .flight {
-                    enrichedDurationMin = nil
-                    enrichedDistanceKm = nil
-                }
-            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
@@ -208,22 +162,21 @@ struct AddTransportSheet: View {
         }
 
         let body = TransportCreate(
-            type: type.rawValue,
-            flightNumber: type == .flight ? (flightNumber.isEmpty ? nil : flightNumber.uppercased()) : nil,
-            airline: type == .flight ? (airline.isEmpty ? nil : airline) : nil,
-            originIata: type == .flight ? (originIata.isEmpty ? nil : originIata.uppercased()) : nil,
-            destIata: type == .flight ? (destIata.isEmpty ? nil : destIata.uppercased()) : nil,
+            flightNumber: flightNumber.isEmpty ? nil : flightNumber.uppercased(),
+            airline: airline.isEmpty ? nil : airline,
+            originIata: originIata.isEmpty ? nil : originIata.uppercased(),
+            destIata: destIata.isEmpty ? nil : destIata.uppercased(),
             originCity: originCity.isEmpty ? nil : originCity,
             destCity: destCity.isEmpty ? nil : destCity,
             departureAt: fmt(departureDate, includeTime: includeDepartureTime),
             arrivalAt: hasArrival ? fmt(arrivalDate, includeTime: includeArrivalTime) : nil,
             durationMin: enrichedDurationMin,
             distanceKm: enrichedDistanceKm,
-            seatClass: type == .flight ? (seatClass.isEmpty ? nil : seatClass) : nil
+            seatClass: seatClass.isEmpty ? nil : seatClass
         )
 
         do {
-            let leg = try await vm.createTransportLeg(tripId: tripId, body: body, api: api)
+            let leg = try await vm.createFlight(body: body, api: api)
             onAdded(leg)
             dismiss()
         } catch {

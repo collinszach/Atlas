@@ -4,7 +4,6 @@ import Foundation
 @Observable
 final class StatsViewModel {
     var stats: StatsResponse? = nil
-    var timeline: [TimelineTrip] = []
     var isLoading = true
     var error: String? = nil
 
@@ -13,9 +12,7 @@ final class StatsViewModel {
         error = nil
         defer { isLoading = false }
         do {
-            async let s = api.stats()
-            async let t = api.statsTimeline()
-            (stats, timeline) = try await (s, t)
+            stats = try await api.stats()
         } catch {
             self.error = error.localizedDescription
         }

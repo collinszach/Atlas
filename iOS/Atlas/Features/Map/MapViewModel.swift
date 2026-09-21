@@ -4,8 +4,6 @@ import MapKit
 @MainActor
 @Observable
 final class MapViewModel {
-    var countries: [MapCountry] = []
-    var cities: [MapCity] = []
     var arcs: [MapArc] = []
     var liveAircraft: [OverheadAircraft] = []
     var isLoading = false
@@ -22,10 +20,7 @@ final class MapViewModel {
         error = nil
         defer { isLoading = false }
         do {
-            async let c = api.mapCountries()
-            async let ci = api.mapCities()
-            async let a = api.mapArcs()
-            (countries, cities, arcs) = try await (c, ci, a)
+            arcs = try await api.mapArcs()
         } catch {
             self.error = error.localizedDescription
         }
@@ -46,12 +41,6 @@ final class MapViewModel {
         } catch {
             self.error = error.localizedDescription
         }
-    }
-}
-
-extension MapCity {
-    var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 }
 

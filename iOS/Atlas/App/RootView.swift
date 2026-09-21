@@ -50,13 +50,9 @@ struct MainTabView: View {
                 .tabItem { Label("Sky", systemImage: "dot.radiowaves.up.forward") }
                 .tag(AppTab.sky)
 
-            TripListView()
-                .tabItem { Label("Trips", systemImage: "mappin.circle") }
-                .tag(AppTab.trips)
-
-            PlanView()
-                .tabItem { Label("Plan", systemImage: "calendar") }
-                .tag(AppTab.plan)
+            FlightListView()
+                .tabItem { Label("Flights", systemImage: "list.bullet.rectangle") }
+                .tag(AppTab.flights)
 
             StatsView()
                 .tabItem { Label("Stats", systemImage: "chart.bar.fill") }

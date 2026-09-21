@@ -2,9 +2,8 @@ import Foundation
 
 enum AppTab: Hashable {
     case map
-    case trips
     case sky
-    case plan
+    case flights
     case stats
 }
 

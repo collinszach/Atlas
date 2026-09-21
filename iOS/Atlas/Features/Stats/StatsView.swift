@@ -127,7 +127,7 @@ struct StatsView: View {
                     AtlasEmptyState(
                         icon: "chart.bar",
                         title: "No stats yet",
-                        message: "Log some flights and trips to see your stats here."
+                        message: "Log some flights to see your stats here."
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
@@ -166,16 +166,10 @@ struct StatsView: View {
             let cols = [GridItem(.flexible()), GridItem(.flexible())]
             LazyVGrid(columns: cols, spacing: 12) {
                 StatTile(
-                    value: "\(stats.countriesVisited)",
-                    label: "Countries",
+                    value: "\(stats.flightsCount)",
+                    label: "Flights",
                     tone: .accent,
-                    icon: "globe"
-                )
-                StatTile(
-                    value: "\(stats.tripsCount)",
-                    label: "Trips",
-                    tone: .violet,
-                    icon: "map"
+                    icon: "airplane.departure"
                 )
                 StatTile(
                     value: stats.hoursInAir.map { String(format: "%.0f", $0) } ?? "—",
@@ -183,12 +177,6 @@ struct StatsView: View {
                     unit: stats.hoursInAir != nil ? "h" : nil,
                     tone: .cyan,
                     icon: "clock"
-                )
-                StatTile(
-                    value: "\(stats.nightsAway)",
-                    label: "Nights away",
-                    tone: .neutral,
-                    icon: "moon.stars"
                 )
             }
 
@@ -200,26 +188,13 @@ struct StatsView: View {
                 rightValue: stats.topAirline ?? "—"
             )
 
-            // Bonus: most visited country (if present)
-            if let country = stats.mostVisitedCountry {
-                WideStatTile(
-                    value: country,
-                    label: "Most visited country",
-                    icon: "mappin.circle",
-                    tone: .success
-                )
-            }
-
-            // Bonus: longest trip
-            if let days = stats.longestTripDays, let title = stats.longestTripTitle {
-                WideStatTile(
-                    value: "\(days) days",
-                    label: "Longest trip",
-                    subLabel: title,
-                    icon: "calendar",
-                    tone: .neutral
-                )
-            }
+            let co2 = stats.co2KgEstimate
+            WideStatTile(
+                value: co2 >= 1_000 ? String(format: "%.1f t", co2 / 1_000) : String(format: "%.0f kg", co2),
+                label: "CO2 estimate",
+                icon: "leaf",
+                tone: .neutral
+            )
         }
     }
 

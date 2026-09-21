@@ -44,7 +44,9 @@ services:
       - atlas-network
 
   atlas-minio:
-    image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+    # MinIO removed its Docker Hub repo (minio/minio now 404s on pull); quay.io
+    # is the publisher's own registry and carries the identical release tags.
+    image: quay.io/minio/minio:RELEASE.2024-11-07T00-52-20Z
     container_name: atlas-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"

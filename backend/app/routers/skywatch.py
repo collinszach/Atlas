@@ -20,6 +20,8 @@ from app.models.skywatch import (
 from app.schemas.skywatch import (
     AircraftAlertRead,
     AlertInteraction,
+    ForecastAircraft,
+    ForecastResponse,
     AircraftMatch,
     AirportScheduleResponse,
     DeviceCreate,
@@ -42,6 +44,8 @@ from app.services.search import search_aircraft
 from app.services.llm import LocalLLMError
 from app.services.skywatch.airlines import resolve_airline
 from app.services.skywatch.nl_prefs import compile_preferences
+from app.services.adsb.geo import knots_to_kmh
+from app.services.skywatch.forecast import forecast_overhead
 from app.services.skywatch.rules import evaluate_aircraft
 
 logger = logging.getLogger(__name__)
@@ -363,6 +367,83 @@ async def update_preferences_from_text(
     await db.flush()
     await db.refresh(preference)
     return preference
+
+
+@router.get("/forecast", response_model=ForecastResponse)
+async def get_forecast(
+    user_id: CurrentUser,
+    lat: float = Query(..., ge=-90.0, le=90.0),
+    lon: float = Query(..., ge=-180.0, le=180.0),
+    radius: float | None = Query(None, gt=0, le=463, description="Radius in km (max 463 ~ 250nm)"),
+    horizon_minutes: int = Query(30, ge=1, le=120, description="How far ahead to project"),
+    notable_only: bool = Query(True, description="Only aircraft that would trigger an alert"),
+    db: AsyncSession = Depends(get_db),
+) -> ForecastResponse:
+    """Aircraft projected to enter the radius within the horizon, soonest first.
+
+    Scans a wider area than the alert radius, because the interesting aircraft
+    are the ones not here yet. Dead reckoning only — see services/skywatch/forecast.py.
+    """
+    preference = await _get_or_create_preference(db, user_id)
+    radius_km = radius if radius is not None else float(preference.radius_km)
+
+    # A target at 500kt covers ~460km in 30 minutes, so the scan has to reach
+    # well beyond the alert radius or the forecast only ever sees what is
+    # already nearly overhead. Capped at the source's 250nm limit.
+    reach_km = knots_to_kmh(500.0) * (horizon_minutes / 60.0)
+    scan_radius_km = min(463.0, radius_km + reach_km)
+
+    notable_result = await db.execute(select(NotableType))
+    notable_types = {nt.type_code.upper(): nt for nt in notable_result.scalars().all()}
+    mil_result = await db.execute(select(MilCallsignPrefix))
+    mil_prefixes = {mp.prefix.upper(): mp for mp in mil_result.scalars().all()}
+
+    resolver = DataSourceResolver()
+    try:
+        aircraft = await resolver.get_aircraft(lat, lon, scan_radius_km)
+    except AdsbServiceError as exc:
+        raise HTTPException(status_code=502, detail=f"ADS-B service unavailable: {exc}") from exc
+
+    entries = forecast_overhead(
+        aircraft,
+        lat,
+        lon,
+        preference,
+        notable_types,
+        mil_prefixes,
+        horizon_minutes=horizon_minutes,
+        radius_km=radius_km,
+        notable_only=notable_only,
+    )
+
+    return ForecastResponse(
+        aircraft=[
+            ForecastAircraft(
+                hex=e.aircraft.hex,
+                flight=e.aircraft.flight,
+                registration=e.aircraft.registration,
+                type=e.aircraft.type,
+                airline=resolve_airline(e.aircraft.flight),
+                lat=e.aircraft.lat,
+                lon=e.aircraft.lon,
+                alt_baro=e.aircraft.alt_baro,
+                ground_speed=e.aircraft.ground_speed,
+                track=e.aircraft.track,
+                squawk=e.aircraft.squawk,
+                is_military=e.aircraft.is_military,
+                distance_km=e.aircraft.distance_km,
+                eta_seconds=e.approach.eta_seconds,
+                closest_distance_km=round(e.approach.closest_distance_km, 2),
+                closest_lat=e.approach.closest_lat,
+                closest_lon=e.approach.closest_lon,
+                matches=[AircraftMatch(trigger=m.trigger, score=m.score, message=m.message) for m in e.matches],
+            )
+            for e in entries
+        ],
+        horizon_minutes=horizon_minutes,
+        radius_km=radius_km,
+        source="forecast",
+    )
 
 
 @router.get("/alerts", response_model=list[AircraftAlertRead])

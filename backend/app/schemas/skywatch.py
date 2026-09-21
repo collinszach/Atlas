@@ -155,6 +155,45 @@ class OverheadResponse(BaseModel):
     source: str
 
 
+# --- Forecast ---
+
+class ForecastAircraft(BaseModel):
+    """An aircraft projected to enter the radius, and when.
+
+    `eta_seconds` and `closest_distance_km` come from dead reckoning on the
+    current track. There is deliberately no confidence field: the projection
+    assumes the aircraft holds heading and speed, and inventing a number would
+    imply a model that does not exist.
+    """
+
+    hex: str
+    flight: str | None = None
+    registration: str | None = None
+    type: str | None = None
+    airline: str | None = None
+    lat: float | None = None
+    lon: float | None = None
+    alt_baro: int | None = None
+    ground_speed: float | None = None
+    track: float | None = None
+    squawk: str | None = None
+    is_military: bool = False
+    distance_km: float | None = None
+
+    eta_seconds: int
+    closest_distance_km: float
+    closest_lat: float
+    closest_lon: float
+    matches: list[AircraftMatch] = []
+
+
+class ForecastResponse(BaseModel):
+    aircraft: list[ForecastAircraft]
+    horizon_minutes: int
+    radius_km: float
+    source: str
+
+
 # --- Alerts ---
 
 class AircraftAlertRead(BaseModel):

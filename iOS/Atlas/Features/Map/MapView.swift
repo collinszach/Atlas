@@ -99,7 +99,7 @@ struct MapView: View {
                 .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(AtlasGradient.accent)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Live map").font(AtlasFont.display(18, weight: .heavy)).foregroundStyle(Color.atlasText)
+                Text("Live map").font(AtlasFont.body(18, weight: .heavy)).foregroundStyle(Color.atlasText)
                 Text("\(visibleAircraft.count) of \(vm.liveAircraft.count) aircraft")
                     .font(AtlasFont.mono(11)).foregroundStyle(Color.atlasInk2)
             }

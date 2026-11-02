@@ -17,7 +17,7 @@ export function Card({
         "glass rounded-xl",
         hero && "glass-glow",
         interactive &&
-          "transition-all duration-200 ease-out-quart hover:-translate-y-0.5 hover:shadow-elev-2",
+          "transition-[transform,box-shadow] duration-200 ease-out-quart hover:-translate-y-0.5 hover:shadow-elev-2",
         className
       )}
       {...props}

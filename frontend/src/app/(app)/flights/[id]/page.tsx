@@ -83,7 +83,7 @@ export default function FlightDetailPage() {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs uppercase tracking-widest text-atlas-muted mb-1">{label}</dt>
+      <dt className="text-xs text-atlas-ink-2 mb-1">{label}</dt>
       <dd className="font-mono text-atlas-text">{value}</dd>
     </div>
   );

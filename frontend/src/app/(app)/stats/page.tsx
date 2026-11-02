@@ -9,7 +9,7 @@ function fmt(n: number, decimals = 0): string {
 function StatCard({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <div className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-4 flex flex-col gap-1">
-      <p className="text-xs text-atlas-muted uppercase tracking-widest">{label}</p>
+      <p className="text-xs text-atlas-ink-2">{label}</p>
       <p className="text-2xl font-mono font-semibold text-atlas-accent">{value}</p>
       {unit && <p className="text-xs text-atlas-muted">{unit}</p>}
     </div>
@@ -45,7 +45,7 @@ export default function StatsPage() {
 
             {stats.most_flown_airport && (
               <div className="rounded-lg border border-atlas-border bg-atlas-surface px-4 py-3 max-w-xs">
-                <p className="text-xs text-atlas-muted uppercase tracking-widest mb-1">
+                <p className="text-xs text-atlas-ink-2 mb-1">
                   Most flown airport
                 </p>
                 <p className="text-sm font-mono font-medium text-atlas-text">{stats.most_flown_airport}</p>

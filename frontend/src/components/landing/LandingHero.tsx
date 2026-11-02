@@ -102,7 +102,7 @@ export function LandingHero() {
               >
                 <path d={stat.icon} />
               </svg>
-              <span className="font-mono text-xs uppercase tracking-widest text-atlas-ink-2">
+              <span className="font-mono text-xs text-atlas-ink-2">
                 {stat.label}
               </span>
             </motion.div>
@@ -114,7 +114,7 @@ export function LandingHero() {
           <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
             <Link
               href="/sign-in"
-              className="inline-block cursor-pointer rounded-lg bg-atlas-accent px-8 py-3 text-sm font-semibold text-atlas-bg transition-all duration-200 hover:bg-atlas-accent-hi hover:shadow-glow-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-atlas-accent"
+              className="inline-block cursor-pointer rounded-lg bg-atlas-accent px-8 py-3 text-sm font-semibold text-atlas-bg transition-[background-color,box-shadow] duration-200 hover:bg-atlas-accent-hi hover:shadow-glow-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-atlas-accent"
             >
               Sign In
             </Link>
@@ -128,10 +128,6 @@ export function LandingHero() {
         </motion.div>
       </motion.div>
 
-      {/* Coordinate decoration */}
-      <div className="absolute bottom-6 font-mono text-[10px] tracking-widest text-atlas-ink-faint/60">
-        40.7128&deg; N &middot; 74.0060&deg; W
-      </div>
     </div>
   );
 }

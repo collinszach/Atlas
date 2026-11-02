@@ -41,7 +41,7 @@ export function FlightListClient() {
         </div>
         <h3 className="font-display text-xl font-semibold text-atlas-ink">No flights logged yet</h3>
         <p className="mt-1.5 max-w-sm text-sm text-atlas-ink-2">
-          Start the logbook with your first flight — route, airline, and aircraft.
+          Start the logbook with your first flight: route, airline, and aircraft.
         </p>
         <Link
           href="/flights/new"

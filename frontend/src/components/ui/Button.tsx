@@ -40,7 +40,7 @@ export function Button({
       disabled={props.disabled ?? loading}
       aria-busy={loading || undefined}
       className={cn(
-        "inline-flex items-center justify-center rounded-md font-medium transition-all duration-150 ease-out-quart",
+        "inline-flex items-center justify-center rounded-md font-medium transition-[color,background-color,border-color,transform,opacity] duration-150 ease-out-quart",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-atlas-accent focus-visible:ring-offset-2 focus-visible:ring-offset-atlas-bg",
         "disabled:opacity-50 disabled:pointer-events-none",
         variants[variant],

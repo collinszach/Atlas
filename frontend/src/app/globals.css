@@ -43,6 +43,17 @@
     --elev-1: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 6px 18px -10px rgba(0, 0, 0, 0.6);
     --elev-2: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 14px 36px -14px rgba(0, 0, 0, 0.7);
 
+    /* Cartographic washes & glass internals (gate 48: no literals outside this block) */
+    --atlas-selection: rgba(79, 141, 255, 0.28);
+    --atlas-graticule: rgba(107, 122, 148, 0.05);
+    --atlas-graticule-fine: rgba(107, 122, 148, 0.04);
+    --atlas-field-bloom: rgba(79, 141, 255, 0.06);
+    --glass-hairline-from: rgba(255, 255, 255, 0.1);
+    --glass-hairline-to: rgba(255, 255, 255, 0.02);
+    --glass-mask: #000;
+    --glass-glow: rgba(79, 141, 255, 0.28);
+    --glass-bg-opaque: rgba(17, 24, 39, 0.92);
+
     /* z-scale */
     --z-dropdown: 1000;
     --z-sticky: 1100;
@@ -56,9 +67,19 @@
   body {
     @apply bg-atlas-bg text-atlas-ink font-sans antialiased;
     height: 100%;
-    overflow: hidden;
+    overflow-x: clip;
+    overscroll-behavior: none;
     font-feature-settings: "ss01", "cv05";
   }
+
+  /*
+   * No `overflow: hidden` on html/body. It used to live here and made every
+   * public page (landing, shared flights, profiles) unscrollable, since the app
+   * shell is the only surface that wants to be fixed — and (app)/layout.tsx
+   * already clips itself with `h-screen overflow-hidden`. Locking the document
+   * also breaks `position: sticky` in descendants. Rubber-banding is handled by
+   * overscroll-behavior above, which is the tool for it.
+   */
 
   .font-mono,
   .tabular {
@@ -72,7 +93,7 @@
   }
 
   ::selection {
-    background: rgba(79, 141, 255, 0.28);
+    background: var(--atlas-selection);
     color: var(--atlas-ink);
   }
 
@@ -106,21 +127,21 @@
   /* Faint lat/long graticule — the recurring brand texture */
   .bg-graticule {
     background-image:
-      linear-gradient(to right, rgba(107, 122, 148, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(107, 122, 148, 0.05) 1px, transparent 1px);
+      linear-gradient(to right, var(--atlas-graticule) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--atlas-graticule) 1px, transparent 1px);
     background-size: 48px 48px;
   }
   .bg-graticule-fine {
     background-image:
-      linear-gradient(to right, rgba(107, 122, 148, 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(107, 122, 148, 0.04) 1px, transparent 1px);
+      linear-gradient(to right, var(--atlas-graticule-fine) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--atlas-graticule-fine) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
   /* Deep field — radial darkening center→edge */
   .bg-deep-field {
     background:
-      radial-gradient(120% 120% at 50% 0%, rgba(79, 141, 255, 0.06), transparent 55%),
+      radial-gradient(120% 120% at 50% 0%, var(--atlas-field-bloom), transparent 55%),
       radial-gradient(100% 100% at 50% 100%, var(--atlas-bg-deep), var(--atlas-bg) 70%);
   }
 
@@ -139,10 +160,10 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+    background: linear-gradient(135deg, var(--glass-hairline-from), var(--glass-hairline-to));
     -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
+      linear-gradient(var(--glass-mask) 0 0) content-box,
+      linear-gradient(var(--glass-mask) 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -151,12 +172,12 @@
   .glass-glow {
     box-shadow:
       var(--glass-shadow),
-      0 8px 24px -4px rgba(79, 141, 255, 0.28);
+      0 8px 24px -4px var(--glass-glow);
   }
 
   @supports not (backdrop-filter: blur(1px)) {
     .glass {
-      background: rgba(17, 24, 39, 0.92);
+      background: var(--glass-bg-opaque);
     }
   }
 

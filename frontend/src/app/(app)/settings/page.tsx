@@ -38,7 +38,7 @@ export default function SettingsPage() {
         <form onSubmit={handleSave} className="flex flex-col gap-6">
           {/* Read-only email */}
           <div>
-            <label className="text-xs text-atlas-muted uppercase tracking-widest mb-1.5 block">
+            <label className="text-xs text-atlas-ink-2 mb-1.5 block">
               Email
             </label>
             <p className="text-sm text-atlas-text font-mono bg-atlas-surface border border-atlas-border rounded px-3 py-2">
@@ -50,7 +50,7 @@ export default function SettingsPage() {
           <div>
             <label
               htmlFor="display_name"
-              className="text-xs text-atlas-muted uppercase tracking-widest mb-1.5 block"
+              className="text-xs text-atlas-ink-2 mb-1.5 block"
             >
               Display name
             </label>
@@ -67,7 +67,7 @@ export default function SettingsPage() {
           <div>
             <label
               htmlFor="home_country"
-              className="text-xs text-atlas-muted uppercase tracking-widest mb-1.5 block"
+              className="text-xs text-atlas-ink-2 mb-1.5 block"
             >
               Home country
             </label>
@@ -77,7 +77,7 @@ export default function SettingsPage() {
               onChange={(e) => setHomeCountry(e.target.value.toUpperCase().slice(0, 2))}
               placeholder="US"
               maxLength={2}
-              className="w-24 rounded border border-atlas-border bg-atlas-surface px-3 py-2 text-sm text-atlas-text font-mono placeholder:text-atlas-muted focus:outline-none focus:border-atlas-accent uppercase"
+              className="w-24 rounded border border-atlas-border bg-atlas-surface px-3 py-2 text-sm text-atlas-text font-mono placeholder:text-atlas-muted focus:outline-none focus:border-atlas-accent"
             />
             <p className="text-xs text-atlas-muted mt-1">ISO 3166-1 alpha-2 code (e.g. US, GB, JP)</p>
           </div>

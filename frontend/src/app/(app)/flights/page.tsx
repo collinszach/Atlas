@@ -9,7 +9,6 @@ export default function FlightsPage() {
     <div className="h-full overflow-y-auto px-6 py-7 sm:px-8">
       <div className="mx-auto max-w-5xl">
         <PageHeader
-          eyebrow="The Logbook"
           title="Flights"
           description="Every flight you've flown, logged with its route, aircraft, and details."
           actions={

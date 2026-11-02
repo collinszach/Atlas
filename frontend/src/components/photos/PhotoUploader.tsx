@@ -63,7 +63,7 @@ export default function PhotoUploader({ uploadMutation }: Props) {
       ) : (
         <>
           <p className="text-sm text-atlas-text">Drag & drop photos here</p>
-          <p className="text-xs text-atlas-muted">or click to select — JPEG, PNG, WEBP, HEIC</p>
+          <p className="text-xs text-atlas-muted">or click to select: JPEG, PNG, WEBP, HEIC</p>
         </>
       )}
       {uploadMutation.isError && (

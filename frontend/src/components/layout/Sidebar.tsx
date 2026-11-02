@@ -39,7 +39,7 @@ function NavItem({ href, icon: Icon, label }: NavLink) {
       {/* active meridian tick */}
       <span
         className={cn(
-          "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-atlas-accent transition-all duration-200",
+          "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-atlas-accent transition-opacity duration-200",
           isActive ? "opacity-100" : "opacity-0"
         )}
       />
@@ -63,7 +63,7 @@ export function Sidebar() {
         </div>
         <div className="leading-tight">
           <div className="font-display text-base font-semibold text-atlas-ink">Atlas</div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-atlas-ink-faint">
+          <div className="font-mono text-[11px] text-atlas-ink-faint">
             Flight Radar
           </div>
         </div>

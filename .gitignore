@@ -61,3 +61,8 @@ tsconfig.tsbuildinfo
 
 # Claude Code worktrees / local agent state
 .claude/
+
+# Vendored agent skills — 8.6M, mostly theme screenshots.
+# Reinstall reproducibly from the tracked lockfile: npx skills add nutlope/hallmark
+.agents/
+.hallmark/

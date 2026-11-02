@@ -83,3 +83,6 @@ iOS-only and has not been ported here.
 - `docs/FEATURE-RESEARCH.md`, `docs/STRATEGY-competitive.md` — competitive research.
 - `docs/SPEC-app-pages.md` — older page-by-page spec; superseded in places by
   `SPEC-planefinder-gap.md`.
+- `docs/SPEC-AVIATION-PARADISE.md` — **the current build-out spec** (2026-11-01): the life-list
+  schema that joins the logbook to Skywatch, the web surface's job, and the Hallmark design
+  toolchain. Absorbs the "Next moves" list above as its EPIC A.

@@ -131,6 +131,13 @@ atlas/
 ### Core Principle
 **All data is user-scoped.** Every table has `user_id` (Clerk user ID string). No row-level data is accessible without a matching JWT. Enforce at the FastAPI middleware layer, not just the query layer.
 
+**One carve-out: reference data.** Tables describing real objects in the world — airports, aircraft
+types, and `airframes` (see `docs/SPEC-AVIATION-PARADISE.md` § 1) — are shared, not user-scoped,
+because an airframe is a fact about a Boeing, not about a person. The *encounter* tables that point
+at them (`airframe_encounters`) carry `user_id` and are where the mandatory filter applies. A read
+path that joins reference data must still scope the encounter side; a shared reference table is
+never a licence to return another user's rows.
+
 ### Schema
 
 ```sql
@@ -322,6 +329,23 @@ thumbnails/{user_id}/{flight_id}/{photo_id}_thumb.webp
 - [ ] Data export (JSON + CSV)
 - [ ] Public profile + shared flight-log links
 
+### Phase 6 — The life list
+_Spec: `docs/SPEC-AVIATION-PARADISE.md`. The spine of the build-out: an airframe becomes a
+first-class entity, and every encounter with one — flown or spotted — is an entry against it.
+This is what joins the logbook to Skywatch, and it is the thing no competitor can do._
+- [ ] Unblock what is built: MinIO up, reproducible backend deploy, web frontend hosted (EPIC A)
+- [ ] Migration: `airframes`, `airframe_encounters`, `transport_legs.{airframe_id,registration,type_icao}`
+- [ ] `/lifelist` routes + airframe upsert over `aircraft_db.py` / the ADS-B resolver
+- [ ] Import the iOS-local life list (`SpottedStore.swift`, UserDefaults) into `airframe_encounters`
+- [ ] Flight cards finally render `A320 · N834JB` on both clients
+- [ ] `/lifelist/crossovers` — the tail you spotted and later flew, as a push
+
+### Phase 7 — Capture + the public face
+- [ ] Wallet boarding-pass scan and flight-number entry → logbook + live tracking (EPIC C)
+- [ ] ADS-B-derived status push: delay, diversion, ETA, in-air, landed
+- [ ] Landing page authored with Hallmark; `/f/[token]` shared flight, `/u/[handle]` spotter profile
+- [ ] OKLCH token conversion + `sloplint` gate in CI
+
 ---
 
 ## Environment Variables
@@ -383,6 +407,23 @@ local receiver is healthy.
 ## Design System
 
 **Aesthetic:** Dark cartographic — deep navy/slate backgrounds, electric blue → cyan signal, functional glass, geographic texture. Not travel-blog pastel. Think mission control meets explorer's logbook. Full system in `DESIGN.md`.
+
+**Design toolchain (web only).** Hallmark is installed at `.agents/skills/hallmark/` (MIT,
+symlinked into `.claude/skills/`). It is a design *skill*, not a library: it authors self-contained
+HTML/CSS pages and lints them. Its scope here is bounded —
+
+- **Authors** the landing page and the public shared pages (`/f/[token]`, `/u/[handle]`).
+- **Audits** the authenticated React app:
+  `node .agents/skills/hallmark/scripts/sloplint.mjs <path> --render`, or `--url` against a running
+  dev server. Record `--before` and check `--kept` on any redesign so a handler or heading cannot
+  silently vanish.
+- **Does not** author React app shells, and does not apply to iOS — `DESIGN.md` § Platform
+  conformance stays the contract there.
+
+`DESIGN.md` is the locked system and Hallmark defers to it; its `## Exports` section holds the
+role→token map, the theme pick (`vantage`) and the reflexes Atlas waives on the record. Fail a build
+on Hallmark's **Floor** only (contrast, focus, reduced motion, invented facts, broken phone layout);
+treat `REFLEX` findings as advisory and waive them in `DESIGN.md`, not per page.
 
 **Color tokens:**
 ```css

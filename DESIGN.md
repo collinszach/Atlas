@@ -144,3 +144,64 @@ a **`Roman` infix** (`PlayfairDisplayRoman-Bold`, not `PlayfairDisplay-Bold`). A
 `Font.custom` fall back to the system face *silently*, so `AtlasFont` checks registration via
 `UIFont(name:)` and `AtlasTests/TypographyTests` asserts every expected face resolves to its real
 family.
+
+## Exports
+
+The locked system is this file. Hallmark (`.agents/skills/hallmark/`) reads it on every run and
+defers to it; it refreshes this section only. Its gates, flags and themes are expressed in **role**
+names, so builds and `sloplint` runs resolve them through the map below.
+
+| Hallmark role | Atlas token | Value |
+|---|---|---|
+| `--color-paper` | `--atlas-bg` | `#0a0e1a` |
+| `--color-paper-2` | `--atlas-surface` | `#111827` |
+| `--color-paper-3` | `--atlas-surface-2` | `#16203a` |
+| `--color-ink` | `--atlas-ink` | `#e8eef7` |
+| `--color-ink-2` | `--atlas-ink-2` | `#aebbd0` |
+| `--color-muted` | `--atlas-ink-faint` | `#6b7a94` — non-text only |
+| `--color-rule` | `--atlas-border` | `#1e2d45` |
+| `--color-accent` | `--atlas-accent` | `#4F8DFF` |
+| `--color-accent-ink` | `--atlas-ink` | on accent fills |
+| `--color-focus` | `--atlas-accent` | focus ring |
+| `--font-display` | Playfair Display | moment font; never labels |
+| `--font-body` | IBM Plex Sans | all interface text |
+| `--font-outlier` | IBM Plex Mono | the instrument voice |
+
+- **Genre:** atmospheric · **posture:** committed · **axes:** dark paper / serif display / cool accent
+- **Material:** `vantage` for the landing page (blue-black ground, a radar sweep as the hero's light,
+  hairline frames with corner ticks — its lime signal swapped for `--atlas-cyan`). `console` is the
+  reference material when auditing authenticated app routes; `midnight` is the fallback.
+- **Known defect:** this section is headed OKLCH above but `frontend/src/app/globals.css` ships hex.
+  Hallmark's colour gates are written in oklch. Converting the stylesheet is EPIC D5 in
+  `docs/SPEC-AVIATION-PARADISE.md`.
+
+### Waived reflexes
+
+Atlas is an instrument, and some Hallmark *Reflex* defaults conflict with that on purpose. These
+are waived here, on the record, so no build re-litigates them page by page:
+
+- **Dense mono figures.** Rows of coordinates, altitudes and registrations are the product, not
+  clutter (§ Typography; PRODUCT.md principle 2).
+- **Mono on short labels** (gate 64). A label attached to an instrument reading takes the mono
+  voice even when it is one word.
+- **A number as the hero.** The stats hero is a figure with its unit and its source, which is the
+  carve-out gate 46b already allows — but it appears on more than one surface here.
+
+**Floor gates are never waived — a waiver naming one is rejected and the gate fires anyway.** So
+contrast, focus, reduced motion, invented facts and a broken phone layout are fixed, not argued
+with. Body text clears 4.5:1 on the navy field, per § Color. Notably this means tracked caps
+(gate 67) are *not* waivable: the small-caps labels were removed from forms, stat captions and the
+sidebar wordmark rather than excused.
+
+### The one standing exclusion
+
+Gate 20 requires a Hallmark stamp on line 1 of every CSS file, carrying that build's picks,
+critique and waivers. `frontend/src/app/globals.css` was written by hand, not built by Hallmark, so
+a stamp there would assert a build that never happened. The gate is **excluded in CI** rather than
+satisfied by a forged stamp. It is the only exclusion; everything else is fixed.
+
+```bash
+# the CI gate: fail on Floor findings, minus the one inapplicable gate
+node .agents/skills/hallmark/scripts/sloplint.mjs frontend/src --scope app --genre atmospheric --json \
+  | python3 -c "import json,sys; f=[x for x in json.load(sys.stdin)['findings'] if x['grade']=='FAIL' and str(x['gate'])!='20']; print(*(('%s %s:%s %s'%(x['gate'],x['file'],x['line'],x['evidence'])) for x in f), sep='\n'); sys.exit(1 if f else 0)"
+```

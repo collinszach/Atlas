@@ -50,7 +50,11 @@ Tabs: **Map · Sky · Flights · Stats**.
   `transport_legs` stores neither.
 - Photo upload will fail until MinIO is up.
 - No offline cache; every screen hits the network.
-- 401s don't trigger `AuthManager.refreshToken()` and retry.
+- ~~401s don't trigger a refresh and retry.~~ **Fixed 2026-11-02.** `APIClient` now sends every
+  request through one path that retries a 401 once with a force-refreshed token. The subtlety:
+  wiring in `refreshToken()` alone would have been a no-op, because it and `tokenProvider` both
+  call the same cached `Clerk…getToken()` — the retry only means anything with
+  `GetTokenOptions(skipCache: true)`. Covered by `AtlasTests/APIClientRetryTests.swift`.
 
 ### Web frontend (Next.js) — built, not deployed
 Flights list/detail/new, map (MapLibre globe + arcs), stats, settings, photo grid/uploader/

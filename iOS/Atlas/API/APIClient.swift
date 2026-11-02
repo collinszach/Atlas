@@ -26,10 +26,13 @@ final class APIClient {
     var token: String?
 
     /// Supplies a fresh, unexpired token per request (Clerk tokens live ~60s).
-    /// Set by AuthManager to call `Clerk.shared.session?.getToken()`.
-    @ObservationIgnored var tokenProvider: (() async -> String?)?
+    /// Set by AuthManager to call `Clerk.shared.session?.getToken()`. The flag asks
+    /// it to bypass Clerk's token cache, which is what makes a 401 retry meaningful:
+    /// without it a retry re-sends the same cached token and 401s again.
+    @ObservationIgnored var tokenProvider: ((_ forceRefresh: Bool) async -> String?)?
 
     private let base: URL
+    private let session: URLSession
     private let keychain = KeychainSwift()
     private let keychainKey = "atlas_jwt"
     private let decoder: JSONDecoder = {
@@ -37,8 +40,10 @@ final class APIClient {
         return d
     }()
 
-    init(token: String? = nil) {
+    /// `session` is injectable so tests can stub transport via `URLProtocol`.
+    init(token: String? = nil, session: URLSession = .shared) {
         self.base = Config.apiBase
+        self.session = session
         let keychain = KeychainSwift()
         self.token = token ?? keychain.get("atlas_jwt")
     }
@@ -55,28 +60,32 @@ final class APIClient {
     // MARK: - HTTP methods
 
     func get<T: Decodable>(_ path: String) async throws -> T {
-        try await perform(await makeRequest("GET", path: path))
+        let data = try await send { await self.makeRequest("GET", path: path, forceRefresh: $0) }
+        return try decode(data)
     }
 
     func post<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        var req = await makeRequest("POST", path: path)
-        req.httpBody = try JSONEncoder().encode(body)
-        return try await perform(req)
+        let encoded = try JSONEncoder().encode(body)
+        let data = try await send {
+            var req = await self.makeRequest("POST", path: path, forceRefresh: $0)
+            req.httpBody = encoded
+            return req
+        }
+        return try decode(data)
     }
 
     func put<T: Decodable, B: Encodable>(_ path: String, body: B) async throws -> T {
-        var req = await makeRequest("PUT", path: path)
-        req.httpBody = try JSONEncoder().encode(body)
-        return try await perform(req)
+        let encoded = try JSONEncoder().encode(body)
+        let data = try await send {
+            var req = await self.makeRequest("PUT", path: path, forceRefresh: $0)
+            req.httpBody = encoded
+            return req
+        }
+        return try decode(data)
     }
 
     func delete(_ path: String) async throws {
-        let req = await makeRequest("DELETE", path: path)
-        let (_, response) = try await URLSession.shared.data(for: req)
-        guard let http = response as? HTTPURLResponse else { return }
-        if !(200..<300).contains(http.statusCode) {
-            throw APIError.httpError(http.statusCode, "")
-        }
+        _ = try await send { await self.makeRequest("DELETE", path: path, forceRefresh: $0) }
     }
 
     // MARK: - Convenience API wrappers
@@ -181,9 +190,6 @@ final class APIClient {
         caption: String? = nil
     ) async throws -> Photo {
         let boundary = UUID().uuidString
-        var req = await makeRequest("POST", path: "/api/v1/flights/\(flightId)/photos/upload")
-        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        req.timeoutInterval = 120
         var body = Data()
         body.appendString("--\(boundary)\r\n")
         body.appendString("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
@@ -197,8 +203,17 @@ final class APIClient {
             body.appendString("\r\n")
         }
         body.appendString("--\(boundary)--\r\n")
-        req.httpBody = body
-        return try await perform(req)
+        let payload = body
+        let responseData = try await send {
+            var req = await self.makeRequest(
+                "POST", path: "/api/v1/flights/\(flightId)/photos/upload", forceRefresh: $0
+            )
+            req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            req.timeoutInterval = 120
+            req.httpBody = payload
+            return req
+        }
+        return try decode(responseData)
     }
 
     func deletePhoto(photoId: String) async throws {
@@ -232,45 +247,70 @@ final class APIClient {
 
     // MARK: - Private
 
-    /// Fetches a fresh token (refreshing via Clerk if needed) and caches it.
-    private func freshToken() async -> String? {
-        if let provider = tokenProvider, let t = await provider() {
+    /// Fetches a token and caches it. `forceRefresh` asks the provider to bypass
+    /// Clerk's cache; see `tokenProvider`.
+    private func freshToken(forceRefresh: Bool = false) async -> String? {
+        if let provider = tokenProvider, let t = await provider(forceRefresh) {
             persistToken(t)
             return t
         }
         return token
     }
 
-    private func makeRequest(_ method: String, path: String) async -> URLRequest {
+    private func makeRequest(
+        _ method: String,
+        path: String,
+        forceRefresh: Bool = false
+    ) async -> URLRequest {
         let url = URL(string: path, relativeTo: base)?.absoluteURL ?? base
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let t = await freshToken() {
+        if let t = await freshToken(forceRefresh: forceRefresh) {
             req.setValue("Bearer \(t)", forHTTPHeaderField: "Authorization")
         }
         req.timeoutInterval = 15
         return req
     }
 
-    private func perform<T: Decodable>(_ request: URLRequest) async throws -> T {
+    /// The one place a request is sent and its status read.
+    ///
+    /// Clerk session tokens live about 60 seconds, so one expiring between being
+    /// minted and being validated is routine rather than exceptional. On a 401 this
+    /// rebuilds the request with a force-refreshed token and sends it once more;
+    /// `makeReq` takes the flag so the retry carries the new Authorization header.
+    /// A second 401 is a real authentication failure and surfaces as such.
+    ///
+    /// Retrying only on 401, and only once, is deliberate: anything else risks
+    /// replaying a non-idempotent write (a logged flight, a photo upload) against a
+    /// server that already accepted it.
+    private func send(_ makeReq: @escaping (Bool) async -> URLRequest) async throws -> Data {
+        var (data, http) = try await roundTrip(makeReq(false))
+        if http.statusCode == 401 {
+            (data, http) = try await roundTrip(makeReq(true))
+            if http.statusCode == 401 { throw APIError.notAuthenticated }
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            throw APIError.httpError(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+        }
+        return data
+    }
+
+    private func roundTrip(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await URLSession.shared.data(for: request)
+            (data, response) = try await session.data(for: request)
         } catch {
             throw APIError.networkError(error)
         }
         guard let http = response as? HTTPURLResponse else {
             throw APIError.httpError(0, "No HTTP response")
         }
-        if http.statusCode == 401 {
-            throw APIError.notAuthenticated
-        }
-        guard (200..<300).contains(http.statusCode) else {
-            let body = String(data: data, encoding: .utf8) ?? ""
-            throw APIError.httpError(http.statusCode, body)
-        }
+        return (data, http)
+    }
+
+    private func decode<T: Decodable>(_ data: Data) throws -> T {
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
@@ -279,22 +319,10 @@ final class APIClient {
     }
 
     private func postVoid(_ path: String) async throws {
-        var req = await makeRequest("POST", path: path)
-        req.httpBody = "{}".data(using: .utf8)
-        let data: Data
-        let response: URLResponse
-        do {
-            (data, response) = try await URLSession.shared.data(for: req)
-        } catch {
-            throw APIError.networkError(error)
-        }
-        guard let http = response as? HTTPURLResponse else {
-            throw APIError.httpError(0, "No HTTP response")
-        }
-        if http.statusCode == 401 { throw APIError.notAuthenticated }
-        if !(200..<300).contains(http.statusCode) {
-            let body = String(data: data, encoding: .utf8) ?? ""
-            throw APIError.httpError(http.statusCode, body)
+        _ = try await send {
+            var req = await self.makeRequest("POST", path: path, forceRefresh: $0)
+            req.httpBody = "{}".data(using: .utf8)
+            return req
         }
     }
 }

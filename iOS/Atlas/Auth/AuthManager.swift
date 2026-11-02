@@ -13,11 +13,15 @@ final class AuthManager {
     init() {
         // Always hand the API client a fresh Clerk token; session tokens expire ~60s,
         // and Clerk.getToken() returns a cached one or transparently refreshes.
-        api.tokenProvider = {
-            if let token = try? await Clerk.shared.session?.getToken() {
-                return token
-            }
-            return nil
+        //
+        // The default 10s expiration buffer is thin against a ~60s token, so widen it:
+        // a token with 15s left is handed out, spends some of that in flight, and can
+        // reach the server expired. On a 401 the client calls back with forceRefresh,
+        // and skipCache is what makes that retry mean anything — without it Clerk
+        // returns the same cached token and the retry 401s identically.
+        api.tokenProvider = { forceRefresh in
+            let options = Session.GetTokenOptions(expirationBuffer: 30, skipCache: forceRefresh)
+            return try? await Clerk.shared.session?.getToken(options)
         }
     }
 
@@ -143,9 +147,10 @@ final class AuthManager {
         }
     }
 
-    /// Refresh the JWT from Clerk before API calls if needed.
+    /// Force a new JWT from Clerk, bypassing its token cache.
     func refreshToken() async throws {
-        guard let token = try await Clerk.shared.session?.getToken() else {
+        let options = Session.GetTokenOptions(skipCache: true)
+        guard let token = try await Clerk.shared.session?.getToken(options) else {
             throw APIError.notAuthenticated
         }
         api.persistToken(token)

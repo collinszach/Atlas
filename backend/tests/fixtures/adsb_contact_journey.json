@@ -1,0 +1,10 @@
+{
+  "provenance": "Hand-authored synthetic targets and coordinates; no captured traffic.",
+  "frames": [
+    {"name": "fresh", "elapsed_seconds": 0, "aircraft": [{"hex": "abc001", "flight": "SYN001", "lat": 0.01, "lon": 0.02, "seen": 0, "seen_pos": 0}]},
+    {"name": "stale_position_recent_message", "elapsed_seconds": 120, "aircraft": [{"hex": "abc001", "flight": "SYN001", "lat": 0.01, "lon": 0.02, "seen": 0, "seen_pos": 120}]},
+    {"name": "missing_position", "elapsed_seconds": 150, "aircraft": [{"hex": "abc001", "flight": "SYN001", "seen": 0}]},
+    {"name": "lost_contact", "elapsed_seconds": 180, "aircraft": []},
+    {"name": "reacquired", "elapsed_seconds": 210, "aircraft": [{"hex": "abc001", "flight": "SYN001", "lat": 0.03, "lon": 0.04, "seen": 0, "seen_pos": 0}]}
+  ]
+}

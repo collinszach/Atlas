@@ -9,6 +9,7 @@ pydantic==2.10.3
 pydantic-settings==2.7.0
 redis[hiredis]==5.2.1
 httpx[http2]==0.28.1
+Pillow==11.0.0
 standardwebhooks==1.0.1
 python-multipart==0.0.20
 aiobotocore[boto3]==2.15.2

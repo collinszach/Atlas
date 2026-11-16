@@ -1,0 +1,11 @@
+{
+  "revision": "89e7b685ae10b1e3d54ff6178342b2c773fc706f",
+  "start_utc": "2026-11-16T15:49:02.803843+00:00",
+  "elapsed_seconds": 4.874,
+  "timeout_seconds": 120,
+  "timed_out": false,
+  "exit_code": 1,
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "platform": "Linux-6.14.0-36-generic-x86_64-with-glibc2.39",
+  "changed_source_files": []
+}

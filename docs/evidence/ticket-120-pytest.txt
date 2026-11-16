@@ -1,0 +1,590 @@
+........................................................................ [ 44%]
+F.....................................EEE............................... [ 89%]
+................F                                                        [100%]
+==================================== ERRORS ====================================
+________ ERROR at setup of test_from_text_endpoint_persists_preferences ________
+
+request = <SubRequest 'seed_test_users' for <Coroutine test_from_text_endpoint_persists_preferences>>
+kwargs = {'db_session': <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x7856d14109e0>}
+func = <function seed_test_users at 0x7856f7a18ea0>
+event_loop_fixture_id = 'event_loop'
+setup = <function _wrap_asyncgen_fixture.<locals>._asyncgen_fixture_wrapper.<locals>.setup at 0x7856d146ff60>
+setup_task = <Task finished name='Task-118' coro=<_wrap_asyncgen_fixture.<locals>._asyncgen_fixture_wrapper.<locals>.setup() done, ...cdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:323> exception=PermissionError(1, 'Operation not permitted')>
+
+    @functools.wraps(fixture)
+    def _asyncgen_fixture_wrapper(request: FixtureRequest, **kwargs: Any):
+        func = _perhaps_rebind_fixture_func(fixture, request.instance)
+        event_loop_fixture_id = _get_event_loop_fixture_id_for_async_fixture(
+            request, func
+        )
+        event_loop = request.getfixturevalue(event_loop_fixture_id)
+        kwargs.pop(event_loop_fixture_id, None)
+        gen_obj = func(**_add_kwargs(func, kwargs, event_loop, request))
+    
+        async def setup():
+            res = await gen_obj.__anext__()  # type: ignore[union-attr]
+            return res
+    
+        context = contextvars.copy_context()
+        setup_task = _create_task_in_context(event_loop, setup(), context)
+>       result = event_loop.run_until_complete(setup_task)
+
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:324: in setup
+    res = await gen_obj.__anext__()  # type: ignore[union-attr]
+tests/conftest.py:90: in seed_test_users
+    await db_session.execute(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py:461: in execute
+    result = await greenlet_spawn(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2362: in execute
+    return self._execute_internal(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2237: in _execute_internal
+    conn = self._connection_for_bind(bind)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2106: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1189: in _connection_for_bind
+    conn = bind.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3278: in connect
+    return self._connection_cls(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:146: in __init__
+    self._dbapi_connection = engine.raw_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3302: in raw_connection
+    return self.pool.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:449: in connect
+    return _ConnectionFairy._checkout(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1263: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:712: in checkout
+    rec = pool._do_get()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/impl.py:308: in _do_get
+    return self._create_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:390: in _create_connection
+    return _ConnectionRecord(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:674: in __init__
+    self.__connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:900: in __connect
+    with util.safe_reraise():
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:896: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/create.py:643: in connect
+    return dialect.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/default.py:621: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:949: in connect
+    await_only(creator_fn(*arg, **kw)),
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connection.py:2421: in connect
+    return await connect_utils._connect(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1075: in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1049: in _connect
+    conn = await _connect_addr(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:886: in _connect_addr
+    return await __connect_addr(params, True, *args)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:931: in __connect_addr
+    tr, pr = await connector
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:802: in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+/usr/lib/python3.12/asyncio/base_events.py:1122: in create_connection
+    raise exceptions[0]
+/usr/lib/python3.12/asyncio/base_events.py:1104: in create_connection
+    sock = await self._connect_sock(
+/usr/lib/python3.12/asyncio/base_events.py:984: in _connect_sock
+    sock = socket.socket(family=family, type=type_, proto=proto)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <socket.socket fd=-1, family=0, type=0, proto=0>
+family = <AddressFamily.AF_INET: 2>, type = <SocketKind.SOCK_STREAM: 1>
+proto = 6, fileno = None
+
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=None):
+        # For user code address family and type values are IntEnum members, but
+        # for the underlying _socket.socket they're just integers. The
+        # constructor of _socket.socket converts the given argument to an
+        # integer automatically.
+        if fileno is None:
+            if family == -1:
+                family = AF_INET
+            if type == -1:
+                type = SOCK_STREAM
+            if proto == -1:
+                proto = 0
+>       _socket.socket.__init__(self, family, type, proto, fileno)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/usr/lib/python3.12/socket.py:233: PermissionError
+_______ ERROR at setup of test_from_text_endpoint_maps_llm_error_to_503 ________
+
+request = <SubRequest 'seed_test_users' for <Coroutine test_from_text_endpoint_maps_llm_error_to_503>>
+kwargs = {'db_session': <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x7856d140ffe0>}
+func = <function seed_test_users at 0x7856f7a18ea0>
+event_loop_fixture_id = 'event_loop'
+setup = <function _wrap_asyncgen_fixture.<locals>._asyncgen_fixture_wrapper.<locals>.setup at 0x7856d146f7e0>
+setup_task = <Task finished name='Task-126' coro=<_wrap_asyncgen_fixture.<locals>._asyncgen_fixture_wrapper.<locals>.setup() done, ...cdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:323> exception=PermissionError(1, 'Operation not permitted')>
+
+    @functools.wraps(fixture)
+    def _asyncgen_fixture_wrapper(request: FixtureRequest, **kwargs: Any):
+        func = _perhaps_rebind_fixture_func(fixture, request.instance)
+        event_loop_fixture_id = _get_event_loop_fixture_id_for_async_fixture(
+            request, func
+        )
+        event_loop = request.getfixturevalue(event_loop_fixture_id)
+        kwargs.pop(event_loop_fixture_id, None)
+        gen_obj = func(**_add_kwargs(func, kwargs, event_loop, request))
+    
+        async def setup():
+            res = await gen_obj.__anext__()  # type: ignore[union-attr]
+            return res
+    
+        context = contextvars.copy_context()
+        setup_task = _create_task_in_context(event_loop, setup(), context)
+>       result = event_loop.run_until_complete(setup_task)
+
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:324: in setup
+    res = await gen_obj.__anext__()  # type: ignore[union-attr]
+tests/conftest.py:90: in seed_test_users
+    await db_session.execute(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py:461: in execute
+    result = await greenlet_spawn(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2362: in execute
+    return self._execute_internal(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2237: in _execute_internal
+    conn = self._connection_for_bind(bind)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2106: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1189: in _connection_for_bind
+    conn = bind.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3278: in connect
+    return self._connection_cls(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:146: in __init__
+    self._dbapi_connection = engine.raw_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3302: in raw_connection
+    return self.pool.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:449: in connect
+    return _ConnectionFairy._checkout(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1263: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:712: in checkout
+    rec = pool._do_get()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/impl.py:308: in _do_get
+    return self._create_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:390: in _create_connection
+    return _ConnectionRecord(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:674: in __init__
+    self.__connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:900: in __connect
+    with util.safe_reraise():
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:896: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/create.py:643: in connect
+    return dialect.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/default.py:621: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:949: in connect
+    await_only(creator_fn(*arg, **kw)),
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connection.py:2421: in connect
+    return await connect_utils._connect(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1075: in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1049: in _connect
+    conn = await _connect_addr(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:886: in _connect_addr
+    return await __connect_addr(params, True, *args)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:931: in __connect_addr
+    tr, pr = await connector
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:802: in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+/usr/lib/python3.12/asyncio/base_events.py:1122: in create_connection
+    raise exceptions[0]
+/usr/lib/python3.12/asyncio/base_events.py:1104: in create_connection
+    sock = await self._connect_sock(
+/usr/lib/python3.12/asyncio/base_events.py:984: in _connect_sock
+    sock = socket.socket(family=family, type=type_, proto=proto)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <socket.socket fd=-1, family=0, type=0, proto=0>
+family = <AddressFamily.AF_INET: 2>, type = <SocketKind.SOCK_STREAM: 1>
+proto = 6, fileno = None
+
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=None):
+        # For user code address family and type values are IntEnum members, but
+        # for the underlying _socket.socket they're just integers. The
+        # constructor of _socket.socket converts the given argument to an
+        # integer automatically.
+        if fileno is None:
+            if family == -1:
+                family = AF_INET
+            if type == -1:
+                type = SOCK_STREAM
+            if proto == -1:
+                proto = 0
+>       _socket.socket.__init__(self, family, type, proto, fileno)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/usr/lib/python3.12/socket.py:233: PermissionError
+_________ ERROR at setup of test_from_text_endpoint_rejects_empty_text _________
+
+request = <SubRequest 'seed_test_users' for <Coroutine test_from_text_endpoint_rejects_empty_text>>
+kwargs = {'db_session': <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x7856d144a7b0>}
+func = <function seed_test_users at 0x7856f7a18ea0>
+event_loop_fixture_id = 'event_loop'
+setup = <function _wrap_asyncgen_fixture.<locals>._asyncgen_fixture_wrapper.<locals>.setup at 0x7856d14174c0>
+setup_task = <Task finished name='Task-134' coro=<_wrap_asyncgen_fixture.<locals>._asyncgen_fixture_wrapper.<locals>.setup() done, ...cdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:323> exception=PermissionError(1, 'Operation not permitted')>
+
+    @functools.wraps(fixture)
+    def _asyncgen_fixture_wrapper(request: FixtureRequest, **kwargs: Any):
+        func = _perhaps_rebind_fixture_func(fixture, request.instance)
+        event_loop_fixture_id = _get_event_loop_fixture_id_for_async_fixture(
+            request, func
+        )
+        event_loop = request.getfixturevalue(event_loop_fixture_id)
+        kwargs.pop(event_loop_fixture_id, None)
+        gen_obj = func(**_add_kwargs(func, kwargs, event_loop, request))
+    
+        async def setup():
+            res = await gen_obj.__anext__()  # type: ignore[union-attr]
+            return res
+    
+        context = contextvars.copy_context()
+        setup_task = _create_task_in_context(event_loop, setup(), context)
+>       result = event_loop.run_until_complete(setup_task)
+
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/pytest_asyncio/plugin.py:324: in setup
+    res = await gen_obj.__anext__()  # type: ignore[union-attr]
+tests/conftest.py:90: in seed_test_users
+    await db_session.execute(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py:461: in execute
+    result = await greenlet_spawn(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2362: in execute
+    return self._execute_internal(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2237: in _execute_internal
+    conn = self._connection_for_bind(bind)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2106: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1189: in _connection_for_bind
+    conn = bind.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3278: in connect
+    return self._connection_cls(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:146: in __init__
+    self._dbapi_connection = engine.raw_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3302: in raw_connection
+    return self.pool.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:449: in connect
+    return _ConnectionFairy._checkout(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1263: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:712: in checkout
+    rec = pool._do_get()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/impl.py:308: in _do_get
+    return self._create_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:390: in _create_connection
+    return _ConnectionRecord(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:674: in __init__
+    self.__connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:900: in __connect
+    with util.safe_reraise():
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:896: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/create.py:643: in connect
+    return dialect.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/default.py:621: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:949: in connect
+    await_only(creator_fn(*arg, **kw)),
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connection.py:2421: in connect
+    return await connect_utils._connect(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1075: in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1049: in _connect
+    conn = await _connect_addr(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:886: in _connect_addr
+    return await __connect_addr(params, True, *args)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:931: in __connect_addr
+    tr, pr = await connector
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:802: in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+/usr/lib/python3.12/asyncio/base_events.py:1122: in create_connection
+    raise exceptions[0]
+/usr/lib/python3.12/asyncio/base_events.py:1104: in create_connection
+    sock = await self._connect_sock(
+/usr/lib/python3.12/asyncio/base_events.py:984: in _connect_sock
+    sock = socket.socket(family=family, type=type_, proto=proto)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <socket.socket fd=-1, family=0, type=0, proto=0>
+family = <AddressFamily.AF_INET: 2>, type = <SocketKind.SOCK_STREAM: 1>
+proto = 6, fileno = None
+
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=None):
+        # For user code address family and type values are IntEnum members, but
+        # for the underlying _socket.socket they're just integers. The
+        # constructor of _socket.socket converts the given argument to an
+        # integer automatically.
+        if fileno is None:
+            if family == -1:
+                family = AF_INET
+            if type == -1:
+                type = SOCK_STREAM
+            if proto == -1:
+                proto = 0
+>       _socket.socket.__init__(self, family, type, proto, fileno)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/usr/lib/python3.12/socket.py:233: PermissionError
+=================================== FAILURES ===================================
+___________________________ test_photos_table_exists ___________________________
+
+db_session = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x7856d1ea19d0>
+
+    @pytest.mark.asyncio
+    async def test_photos_table_exists(db_session):
+        from sqlalchemy import text
+>       result = await db_session.execute(
+            text("SELECT 1 FROM information_schema.tables WHERE table_name = 'photos'")
+        )
+
+tests/test_photo_model.py:18: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py:461: in execute
+    result = await greenlet_spawn(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2362: in execute
+    return self._execute_internal(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2237: in _execute_internal
+    conn = self._connection_for_bind(bind)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2106: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+<string>:2: in _connection_for_bind
+    ???
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1189: in _connection_for_bind
+    conn = bind.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3278: in connect
+    return self._connection_cls(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:146: in __init__
+    self._dbapi_connection = engine.raw_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3302: in raw_connection
+    return self.pool.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:449: in connect
+    return _ConnectionFairy._checkout(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1263: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:712: in checkout
+    rec = pool._do_get()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/impl.py:308: in _do_get
+    return self._create_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:390: in _create_connection
+    return _ConnectionRecord(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:674: in __init__
+    self.__connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:900: in __connect
+    with util.safe_reraise():
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:896: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/create.py:643: in connect
+    return dialect.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/default.py:621: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:949: in connect
+    await_only(creator_fn(*arg, **kw)),
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connection.py:2421: in connect
+    return await connect_utils._connect(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1075: in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1049: in _connect
+    conn = await _connect_addr(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:886: in _connect_addr
+    return await __connect_addr(params, True, *args)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:931: in __connect_addr
+    tr, pr = await connector
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:802: in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+/usr/lib/python3.12/asyncio/base_events.py:1122: in create_connection
+    raise exceptions[0]
+/usr/lib/python3.12/asyncio/base_events.py:1104: in create_connection
+    sock = await self._connect_sock(
+/usr/lib/python3.12/asyncio/base_events.py:984: in _connect_sock
+    sock = socket.socket(family=family, type=type_, proto=proto)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <socket.socket fd=-1, family=0, type=0, proto=0>
+family = <AddressFamily.AF_INET: 2>, type = <SocketKind.SOCK_STREAM: 1>
+proto = 6, fileno = None
+
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=None):
+        # For user code address family and type values are IntEnum members, but
+        # for the underlying _socket.socket they're just integers. The
+        # constructor of _socket.socket converts the given argument to an
+        # integer automatically.
+        if fileno is None:
+            if family == -1:
+                family = AF_INET
+            if type == -1:
+                type = SOCK_STREAM
+            if proto == -1:
+                proto = 0
+>       _socket.socket.__init__(self, family, type, proto, fileno)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/usr/lib/python3.12/socket.py:233: PermissionError
+_____________________ test_transport_table_has_geo_columns _____________________
+
+db_session = <sqlalchemy.ext.asyncio.session.AsyncSession object at 0x7856d1430fe0>
+
+    @pytest.mark.asyncio
+    async def test_transport_table_has_geo_columns(db_session):
+        from sqlalchemy import text
+>       result = await db_session.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = 'transport_legs'"
+            )
+        )
+
+tests/test_transport_model.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/ext/asyncio/session.py:461: in execute
+    result = await greenlet_spawn(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:201: in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2362: in execute
+    return self._execute_internal(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2237: in _execute_internal
+    conn = self._connection_for_bind(bind)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:2106: in _connection_for_bind
+    return trans._connection_for_bind(engine, execution_options)
+<string>:2: in _connection_for_bind
+    ???
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/state_changes.py:139: in _go
+    ret_value = fn(self, *arg, **kw)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/orm/session.py:1189: in _connection_for_bind
+    conn = bind.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3278: in connect
+    return self._connection_cls(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:146: in __init__
+    self._dbapi_connection = engine.raw_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/base.py:3302: in raw_connection
+    return self.pool.connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:449: in connect
+    return _ConnectionFairy._checkout(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:1263: in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:712: in checkout
+    rec = pool._do_get()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/impl.py:308: in _do_get
+    return self._create_connection()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:390: in _create_connection
+    return _ConnectionRecord(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:674: in __init__
+    self.__connect()
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:900: in __connect
+    with util.safe_reraise():
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/pool/base.py:896: in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/create.py:643: in connect
+    return dialect.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/engine/default.py:621: in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py:949: in connect
+    await_only(creator_fn(*arg, **kw)),
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:132: in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py:196: in greenlet_spawn
+    value = await result
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connection.py:2421: in connect
+    return await connect_utils._connect(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1075: in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:1049: in _connect
+    conn = await _connect_addr(
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:886: in _connect_addr
+    return await __connect_addr(params, True, *args)
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:931: in __connect_addr
+    tr, pr = await connector
+/var/lib/hqrunner/envs/atlas-364c34c910b7acdd/lib/python3.12/site-packages/asyncpg/connect_utils.py:802: in _create_ssl_connection
+    tr, pr = await loop.create_connection(
+/usr/lib/python3.12/asyncio/base_events.py:1122: in create_connection
+    raise exceptions[0]
+/usr/lib/python3.12/asyncio/base_events.py:1104: in create_connection
+    sock = await self._connect_sock(
+/usr/lib/python3.12/asyncio/base_events.py:984: in _connect_sock
+    sock = socket.socket(family=family, type=type_, proto=proto)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <socket.socket fd=-1, family=0, type=0, proto=0>
+family = <AddressFamily.AF_INET: 2>, type = <SocketKind.SOCK_STREAM: 1>
+proto = 6, fileno = None
+
+    def __init__(self, family=-1, type=-1, proto=-1, fileno=None):
+        # For user code address family and type values are IntEnum members, but
+        # for the underlying _socket.socket they're just integers. The
+        # constructor of _socket.socket converts the given argument to an
+        # integer automatically.
+        if fileno is None:
+            if family == -1:
+                family = AF_INET
+            if type == -1:
+                type = SOCK_STREAM
+            if proto == -1:
+                proto = 0
+>       _socket.socket.__init__(self, family, type, proto, fileno)
+E       PermissionError: [Errno 1] Operation not permitted
+
+/usr/lib/python3.12/socket.py:233: PermissionError
+=========================== short test summary info ============================
+FAILED tests/test_photo_model.py::test_photos_table_exists - PermissionError:...
+FAILED tests/test_transport_model.py::test_transport_table_has_geo_columns - ...
+ERROR tests/test_skywatch_llm.py::test_from_text_endpoint_persists_preferences
+ERROR tests/test_skywatch_llm.py::test_from_text_endpoint_maps_llm_error_to_503
+ERROR tests/test_skywatch_llm.py::test_from_text_endpoint_rejects_empty_text
+2 failed, 156 passed, 53 deselected, 3 errors in 3.95s

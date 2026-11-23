@@ -58,7 +58,12 @@ jobs:
     name: iOS tests
     # GitHub-hosted, not the gs65 fleet: that runner is Linux, and there is exactly
     # one of it. macOS minutes are free for public repositories.
-    runs-on: macos-15
+    #
+    # macos-26, not macos-15: ClerkKit's Package.swift declares swift-tools 6.2.0,
+    # which the Xcode on macos-15 cannot parse — it fails resolution with
+    # "'clerk-ios' >= 1.2.0 contains incompatible tools version (6.2.0)" before any
+    # code is compiled. macos-latest still points at the older image, so pin it.
+    runs-on: macos-26
     timeout-minutes: 30
     defaults:
       run:
@@ -70,6 +75,10 @@ jobs:
         run: |
           brew install xcodegen
           xcodegen generate
+      # Printed so a future tools-version bump fails with an obvious cause rather
+      # than an opaque dependency-resolution error.
+      - name: Toolchain
+        run: xcodebuild -version && swift --version
       # Pick whatever iPhone simulator the runner image actually has, rather than
       # pinning a name that silently disappears when the image is bumped.
       - name: Test

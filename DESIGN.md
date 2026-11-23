@@ -200,8 +200,11 @@ critique and waivers. `frontend/src/app/globals.css` was written by hand, not bu
 a stamp there would assert a build that never happened. The gate is **excluded in CI** rather than
 satisfied by a forged stamp. It is the only exclusion; everything else is fixed.
 
+`tools/sloplint.mjs` is the vendored copy CI runs, byte-identical to the skill's
+(`tools/README.md` says why). Locally either path works:
+
 ```bash
 # the CI gate: fail on Floor findings, minus the one inapplicable gate
-node .agents/skills/hallmark/scripts/sloplint.mjs frontend/src --scope app --genre atmospheric --json \
+node tools/sloplint.mjs frontend/src --scope app --genre atmospheric --json \
   | python3 -c "import json,sys; f=[x for x in json.load(sys.stdin)['findings'] if x['grade']=='FAIL' and str(x['gate'])!='20']; print(*(('%s %s:%s %s'%(x['gate'],x['file'],x['line'],x['evidence'])) for x in f), sep='\n'); sys.exit(1 if f else 0)"
 ```

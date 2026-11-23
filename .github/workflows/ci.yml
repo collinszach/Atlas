@@ -54,6 +54,35 @@ jobs:
       # Integration tests (marked) are deselected by pytest.ini.
       - run: pytest -q
 
+  ios:
+    name: iOS tests
+    # GitHub-hosted, not the gs65 fleet: that runner is Linux, and there is exactly
+    # one of it. macOS minutes are free for public repositories.
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: iOS
+    steps:
+      - uses: actions/checkout@v4
+      # The .xcodeproj is gitignored and generated, so this must run before build.
+      - name: Generate project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      # Pick whatever iPhone simulator the runner image actually has, rather than
+      # pinning a name that silently disappears when the image is bumped.
+      - name: Test
+        run: |
+          SIM=$(xcrun simctl list devices available --json \
+            | python3 -c "import json,sys;d=json.load(sys.stdin)['devices'];print(next(x['name'] for r in d.values() for x in r if x['name'].startswith('iPhone')))")
+          echo "Using simulator: $SIM"
+          xcodebuild test \
+            -project Atlas.xcodeproj -scheme Atlas \
+            -destination "platform=iOS Simulator,name=$SIM" \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+
   frontend:
     name: Frontend checks
     runs-on: [self-hosted, gs65-vm]
@@ -75,3 +104,25 @@ jobs:
         run: npx vitest run
       - name: Build
         run: npm run build
+
+      # Hallmark's Floor: contrast, focus, reduced motion, invented facts, broken
+      # phone layout. DESIGN.md is the locked system and records the waived
+      # reflexes; see tools/README.md for why sloplint is vendored.
+      #
+      # Gate 20 is excluded. It requires a Hallmark build stamp on line 1 of every
+      # CSS file, carrying that build's picks and critique. globals.css was written
+      # by hand, so a stamp there would assert a build that never happened.
+      - name: Design Floor (sloplint)
+        working-directory: .
+        run: |
+          node tools/sloplint.mjs frontend/src --scope app --genre atmospheric --json \
+            > /tmp/sloplint.json
+          python3 - <<'EOF'
+          import json, sys
+          findings = json.load(open('/tmp/sloplint.json'))['findings']
+          floor = [f for f in findings if f['grade'] == 'FAIL' and str(f['gate']) != '20']
+          for f in floor:
+              print(f"FAIL gate {f['gate']} {f['file']}:{f['line']} {f['evidence']}")
+          print(f"{len(floor)} Floor violation(s)")
+          sys.exit(1 if floor else 0)
+          EOF

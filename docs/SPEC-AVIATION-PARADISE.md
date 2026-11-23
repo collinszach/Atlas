@@ -253,13 +253,16 @@ Checked against the running NUC rather than `STATUS.md`. **A1 is done and the re
 - **A1. MinIO. ✅ DONE.** `atlas-minio` is `Up 2 weeks (healthy)`. The photo path is no longer
   blocked at the storage layer. What is *not* verified is an end-to-end upload through
   `routers/photos.py` to that bucket — do that before trusting it.
-- **A2. The deploy story changed, and the docs did not.** `CLAUDE.md` § Infrastructure still
-  describes `atlas-backend`, `atlas-db` and `atlas-redis` on an `atlas-network` bridge. None of
-  those containers exist. What runs is `nuc-backend-1`, with shared `infra-postgres-1` and
-  `infra-redis-1` alongside `atlas-minio`. Either the stack was consolidated onto shared infra or
-  Atlas is co-tenanted with other projects on that box; **establish which before changing
-  anything**, because a `docker compose down` against the documented names would either no-op or
-  hit a neighbour. Fix `CLAUDE.md` to match whatever is true.
+- **A2. ~~The documented stack does not exist.~~ Retracted 2026-11-23 — it does.**
+  `atlas-backend`, `atlas-db`, `atlas-redis` and `atlas-minio` are all running, and the API answers
+  `200` on `/health`. The earlier claim came from a `docker ps` truncated by `head -25` on a host
+  running **59** containers: the Atlas ones sort below the cut, and absence of evidence was read as
+  evidence of absence. `CLAUDE.md` § Infrastructure is accurate; nothing needs reconciling.
+  One real detail survives the retraction: **`atlas-backend` has been up 5 weeks and `atlas-minio`
+  only 2**, so the backend has never been restarted since storage appeared. Boot-time
+  `ensure_bucket_exists` would have failed when it started. `upload_file` builds a client per call,
+  so uploads can still work provided the bucket exists — but that is worth confirming rather than
+  assuming, and a restart is the cheap fix if it does not.
 - **A3. Web hosting — still open, still the blocking product decision.** Unchanged: Vercel makes
   the shared pages real but needs the backend publicly reachable; a NUC container keeps everything
   private and makes "share this flight" useless off-tailnet.

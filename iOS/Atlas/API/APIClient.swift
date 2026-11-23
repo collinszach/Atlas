@@ -1,5 +1,6 @@
 import Foundation
 import KeychainSwift
+import OSLog
 
 enum APIError: LocalizedError {
     case notAuthenticated
@@ -23,6 +24,14 @@ enum APIError: LocalizedError {
 
 @Observable
 final class APIClient {
+    /// Subsystem is the bundle id so `log stream --predicate` can isolate the app.
+    /// Never log a token or an Authorization header: paths and status codes only.
+    static let log = Logger(subsystem: "com.zacharyjcollins.atlas", category: "api")
+
+    /// Mirrored to Documents so a device build can be inspected after the fact;
+    /// see `DiagnosticLog`.
+    static let logFile = "api.log"
+
     var token: String?
 
     /// Supplies a fresh, unexpired token per request (Clerk tokens live ~60s).
@@ -285,12 +294,28 @@ final class APIClient {
     /// replaying a non-idempotent write (a logged flight, a photo upload) against a
     /// server that already accepted it.
     private func send(_ makeReq: @escaping (Bool) async -> URLRequest) async throws -> Data {
-        var (data, http) = try await roundTrip(makeReq(false))
+        var request = await makeReq(false)
+        let path = request.url?.path ?? "?"
+        var (data, http) = try await roundTrip(request)
         if http.statusCode == 401 {
-            (data, http) = try await roundTrip(makeReq(true))
-            if http.statusCode == 401 { throw APIError.notAuthenticated }
+            Self.log.notice("401 on \(path, privacy: .public) — refreshing token and retrying once")
+            DiagnosticLog.append("401 on \(path) — refreshing token and retrying once", to: Self.logFile)
+            request = await makeReq(true)
+            (data, http) = try await roundTrip(request)
+            if http.statusCode == 401 {
+                Self.log.error("401 again on \(path, privacy: .public) — not authenticated")
+                DiagnosticLog.append("401 again on \(path) — not authenticated", to: Self.logFile)
+                throw APIError.notAuthenticated
+            }
+            Self.log.notice(
+                "retry of \(path, privacy: .public) returned \(http.statusCode, privacy: .public)"
+            )
+            DiagnosticLog.append("retry of \(path) returned \(http.statusCode)", to: Self.logFile)
         }
         guard (200..<300).contains(http.statusCode) else {
+            Self.log.error(
+                "\(http.statusCode, privacy: .public) on \(path, privacy: .public) — not retried"
+            )
             throw APIError.httpError(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         }
         return data

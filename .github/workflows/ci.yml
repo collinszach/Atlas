@@ -124,8 +124,11 @@ jobs:
       - name: Design Floor (sloplint)
         working-directory: .
         run: |
+          # sloplint exits non-zero on any FAIL, gate 20 included, and Actions runs
+          # this under `bash -e` — so its status must be ignored here and the
+          # decision left to the filter below, which excludes gate 20.
           node tools/sloplint.mjs frontend/src --scope app --genre atmospheric --json \
-            > /tmp/sloplint.json
+            > /tmp/sloplint.json || true
           python3 - <<'EOF'
           import json, sys
           findings = json.load(open('/tmp/sloplint.json'))['findings']

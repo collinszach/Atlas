@@ -246,19 +246,27 @@ without an airframe and the UI offers "add the tail" later — never a guessed r
 
 Ordered by leverage. Each names the files it touches.
 
-### EPIC A — Unblock what is already built  *(prerequisite, small)*
-`STATUS.md` has three blockers standing in front of finished code. Nothing below is worth building
-on top of them.
+### EPIC A — Unblock what is already built  *(re-verified 2026-11-23)*
 
-- **A1. Bring up MinIO.** Remap host ports to 9002/9003 (`:9000` is taken on the NUC), create the
-  `minio_data` volume, update `MINIO_PUBLIC_URL`. Every photo path in `backend/app/routers/photos.py`
-  and `services/storage.py` currently fails. → `docker-compose.yml`, `docker-compose.prod.yml`, `.env`
-- **A2. Replace the hand-synced bind mount.** `/home/zach/atlas/backend` → `/app` with
-  `--reload` means merging a branch does not change what is deployed. Build an image, or at minimum
-  document the sync step. → `docker-compose.prod.yml`, a deploy script in `scripts/`
-- **A3. Deploy the web frontend.** `NEXT_PUBLIC_API_BASE` still points at `localhost:8000` and
-  nothing is hosted. Decide Vercel (per `CLAUDE.md`) vs. a NUC container; the public pages in
-  EPIC D need a real origin. → `frontend/.env.local`, Vercel project or `docker-compose.prod.yml`
+Checked against the running NUC rather than `STATUS.md`. **A1 is done and the rest moved.**
+
+- **A1. MinIO. ✅ DONE.** `atlas-minio` is `Up 2 weeks (healthy)`. The photo path is no longer
+  blocked at the storage layer. What is *not* verified is an end-to-end upload through
+  `routers/photos.py` to that bucket — do that before trusting it.
+- **A2. The deploy story changed, and the docs did not.** `CLAUDE.md` § Infrastructure still
+  describes `atlas-backend`, `atlas-db` and `atlas-redis` on an `atlas-network` bridge. None of
+  those containers exist. What runs is `nuc-backend-1`, with shared `infra-postgres-1` and
+  `infra-redis-1` alongside `atlas-minio`. Either the stack was consolidated onto shared infra or
+  Atlas is co-tenanted with other projects on that box; **establish which before changing
+  anything**, because a `docker compose down` against the documented names would either no-op or
+  hit a neighbour. Fix `CLAUDE.md` to match whatever is true.
+- **A3. Web hosting — still open, still the blocking product decision.** Unchanged: Vercel makes
+  the shared pages real but needs the backend publicly reachable; a NUC container keeps everything
+  private and makes "share this flight" useless off-tailnet.
+- **A4. New: CI exists now** (`.github/workflows/ci.yml`, self-hosted `gs65-vm` runners, backend
+  pytest + frontend typecheck/vitest/build). Two gaps worth closing: it has **no iOS job**, so the
+  Swift tests only ever run on someone's laptop, and **no sloplint gate**, so the Hallmark Floor
+  that `DESIGN.md` documents is not actually enforced on anything.
 
 ### EPIC B — The life list  *(the spine; see § 1)*
 - **B1.** Alembic migration: `airframes`, `airframe_encounters`, three columns on `transport_legs`.
